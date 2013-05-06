@@ -32,4 +32,3 @@ class CtableExtractor(object):
             if c.matches(key):
                 row[c.name] = c.get_value(key, value)
         return row
-

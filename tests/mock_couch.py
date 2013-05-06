@@ -1,23 +1,4 @@
 class MockCouch(object):
-    """
-    An in-memory mock of the CouchDBKit db, instantiated
-    with a simple mapping of resource and params to results.
-
-    Since dictionaries are not hashable, the mapping is
-    written as a pair of tuples, handled appropriately
-    internallly.
-
-    MockCommCareHqClient({
-        'forms': [
-            (
-                {'_search': 'test1'},
-                [
-                   ... objects ...
-                ]
-            ),
-        ]
-    })
-    """
     def __init__(self, mock_data):
         self.mock_data = mock_data
 

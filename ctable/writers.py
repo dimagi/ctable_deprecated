@@ -20,8 +20,8 @@ class SqlTableWriter(object):
         self.sql_extract = sql_extract
 
     def __enter__(self):
-        self.connection = self.base_connection.connect() # "forks" the SqlAlchemy connection
-        return self # TODO: A safe context manager so this can be called many times
+        self.connection = self.base_connection.connect()  # "forks" the SqlAlchemy connection
+        return self  # TODO: A safe context manager so this can be called many times
 
     def __exit__(self, type, value, traceback):
         self.connection.close()

@@ -2,7 +2,12 @@ language: python
 python:
  - "2.7"
 install:
- - pip install . --use-mirrors
+ - pip install pep8 --use-mirrors
+ - pip install https://github.com/dcramer/pyflakes/tarball/master
+ - pip install -q -e . --use-mirrors
+before_script:
+  - pep8 --ignore=E501 ctable tests
+  - pyflakes -x W ctable
 script:
  - python -m unittest discover
 

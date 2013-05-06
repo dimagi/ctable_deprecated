@@ -1,6 +1,5 @@
-from couchdbkit.ext.django.schema import (Document, StringProperty, BooleanProperty, DateTimeProperty, IntegerProperty,
-                                          DocumentSchema, SchemaProperty, DictProperty, ListProperty,
-                                          StringListProperty, SchemaListProperty)
+from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty,
+                                          DocumentSchema, DictProperty, SchemaListProperty)
 from django.conf import settings
 import sqlalchemy
 import datetime
@@ -61,7 +60,7 @@ class ColumnDef(DocumentSchema):
     def sql_column(self):
         opts = {}
         if self.is_key_column:
-            opts = {"primary_key": True,  "nullable": False, "autoincrement": False}
+            opts = {"primary_key": True, "nullable": False, "autoincrement": False}
         return sqlalchemy.Column(self.name, self.sql_type, **opts)
 
     @property
@@ -77,12 +76,12 @@ class SqlExtract(Document):
     def by_domain(cls, domain):
         key = [domain, cls.__name__]
         return cls.view('domain/docs',
-            startkey=key,
-            endkey=key + [{}],
-            reduce=False,
-            include_docs=True,
-            stale=settings.COUCH_STALE_QUERY,
-        ).all()
+                        startkey=key,
+                        endkey=key + [{}],
+                        reduce=False,
+                        include_docs=True,
+                        stale=settings.COUCH_STALE_QUERY
+                        ).all()
 
     @property
     def key_columns(self):
