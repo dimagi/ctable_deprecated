@@ -15,6 +15,7 @@ setup(
     install_requires=[
         'SQLAlchemy>=0.8.0',
         'django>=1.3.1',
-        'couchdbkit>=0.5.7'
+        'couchdbkit>=0.5.7',
+        'six>=1.3.0'
     ]
 )
