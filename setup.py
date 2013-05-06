@@ -16,6 +16,7 @@ setup(
         'SQLAlchemy>=0.8.0',
         'django>=1.3.1',
         'couchdbkit>=0.5.7',
-        'six>=1.3.0'
+        'six>=1.3.0',
+        'alembic>=0.5.0'
     ]
 )
