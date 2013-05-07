@@ -11,7 +11,6 @@ from mock_couch import MockCouch
 class TestCouchPull(unittest.TestCase):
     def setUp(cls):
         cls.TEST_SQLITE_URL = 'sqlite:///:memory:'
-        cls.TEST_POSTGRESQL_URL = "postgresql://postgres:password@localhost/care_benin"
         cls.connection = sqlalchemy.create_engine(cls.TEST_SQLITE_URL).connect()
 
     def test_basic(self):
