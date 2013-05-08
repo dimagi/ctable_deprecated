@@ -56,7 +56,7 @@ class CtableExtractor(object):
             columns.append(ColumnDef(name=group,
                                      data_type='string',
                                      value_source='key',
-                                     value_index=i+1))
+                                     value_index=i + 1))
 
         num_groups = len(diff['group_names'])
         columns.append(ColumnDef(name='emitted_value',
@@ -76,4 +76,3 @@ class CtableExtractor(object):
                                      ]))
         mapping.columns = columns
         return mapping
-

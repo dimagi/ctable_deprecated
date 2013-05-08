@@ -99,8 +99,7 @@ class SqlExtractMapping(Document):
                         endkey=key + [{}],
                         reduce=False,
                         include_docs=True,
-                        stale=settings.COUCH_STALE_QUERY
-        ).all()
+                        stale=settings.COUCH_STALE_QUERY).all()
 
     @property
     def key_columns(self):
