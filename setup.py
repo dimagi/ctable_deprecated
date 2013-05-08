@@ -5,12 +5,13 @@ except ImportError:
 
 setup(
     name='ctable',
-    version='0.1.0',
-    description='Basic CouchDB view to SQL table ETL',
-    author='Simon Kelly',
-    author_email='skelly@dimagi.com',
+    version='0.0.1',
+    description='CouchDB view to SQL table',
+    author='Dimagi',
+    author_email='dev@dimagi.com',
     url='http://github.com/dimagi/ctable',
     packages=['ctable'],
+    test_suite='tests',
     license='MIT',
     install_requires=[
         'SQLAlchemy',
@@ -20,9 +21,9 @@ setup(
         'alembic'
     ],
     tests_require=[
-        'dimagi-test-utils'
+        'fakecouch',
     ],
     dependency_links=[
-        'http://github.com/dimagi/test-utils/tarball/master#egg=dimagi-test-utils-1.0.0',
+        'http://github.com/dimagi/fakecouch/tarball/master#egg=fakecouch-0.0.1',
     ],
 )

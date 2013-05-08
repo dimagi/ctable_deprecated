@@ -8,7 +8,7 @@ import sqlalchemy
 from datetime import date
 from ctable.models import RowMatch
 from ctable import CtableExtractor, SqlExtractMapping, ColumnDef
-from dimagitest import MockCouchDb
+from fakecouch import FakeCouchDb
 
 
 class TestCouchPull(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestCouchPull(unittest.TestCase):
         cls.connection = sqlalchemy.create_engine(cls.TEST_SQLITE_URL).connect()
 
     def setUp(self):
-        self.db = MockCouchDb()
+        self.db = FakeCouchDb()
         self.ctable = CtableExtractor(self.connection, self.db)
 
     def test_basic(self):
