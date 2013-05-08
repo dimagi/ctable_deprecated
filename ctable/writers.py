@@ -12,12 +12,11 @@ class SqlTableWriter(object):
     (TODO) with "upsert" based on primary key.
     """
 
-    def __init__(self, url_or_connection, sql_extract):
+    def __init__(self, url_or_connection):
         if isinstance(url_or_connection, six.string_types):
             self.base_connection = sqlalchemy.create_engine(url_or_connection)
         else:
             self.base_connection = url_or_connection
-        self.sql_extract = sql_extract
 
     def __enter__(self):
         self.connection = self.base_connection.connect()  # "forks" the SqlAlchemy connection
@@ -61,17 +60,17 @@ class SqlTableWriter(object):
             raise Exception("Table does not exist", table_name)
 
         for column in column_defs:
-            if not column in [c.name for c in self.table(table_name).columns]:
+            if not column.name in [c.name for c in self.table(table_name).columns]:
                 op.add_column(table_name, column.sql_column)
                 self.metadata.clear()
                 self.metadata.reflect()
-
             else:
                 columns = dict([(c.name, c) for c in self.table(table_name).columns])
-                current_ty = columns[column].type
-
+                current_ty = columns[column.name].type
                 if current_ty != column.sql_type:
-                    raise Exception("Column types don't match", column.name)
+                    #  this comparison doesn't work because the db type can get downgraded e.g unicode to varchar
+                    logger.warn("Column type mismatch for column %s: %s - %s", column.name, current_ty, column.sql_type)
+                    #  raise Exception("Column types don't match", column.name)
 
     def upsert(self, table, row_dict, key_columns):
 
@@ -89,9 +88,10 @@ class SqlTableWriter(object):
             update = update.values(**row_dict)
             self.connection.execute(update)
 
-    def write_table(self, table_name, rows):
-        columns = self.sql_extract.columns
-        key_columns = self.sql_extract.key_columns
+    def write_table(self, rows, extract_mapping):
+        table_name = extract_mapping.table_name
+        columns = extract_mapping.columns
+        key_columns = extract_mapping.key_columns
 
         self.init_table(table_name, columns)
 

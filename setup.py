@@ -13,10 +13,16 @@ setup(
     packages=['ctable'],
     license='MIT',
     install_requires=[
-        'SQLAlchemy>=0.8.0',
-        'django>=1.3.1',
-        'couchdbkit>=0.5.7',
-        'six>=1.3.0',
-        'alembic>=0.5.0'
-    ]
+        'SQLAlchemy',
+        'django',
+        'couchdbkit',
+        'six',
+        'alembic'
+    ],
+    tests_require=[
+        'dimagi-test-utils'
+    ],
+    dependency_links=[
+        'http://github.com/dimagi/test-utils/tarball/master#egg=dimagi-test-utils-1.0.0',
+    ],
 )

@@ -70,7 +70,7 @@ ColumnDef(
 ## Usage
 ```python
 # create extract configuration
-extract = SqlExtract(columns=[...])
+extract = SqlExtractMapping(columns=[...])
 
 # perform extraction
 ex = CtableExtractor(sql_connection_or_url, couchdb, extract)

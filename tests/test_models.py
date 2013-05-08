@@ -1,9 +1,28 @@
+from django.conf import settings
+if not settings.configured:
+    settings.configure(DEBUG=True)
+
 import unittest
+from couchdbkit import BadValueError
+from ctable.models import RowMatch
 from datetime import date, datetime
-from ctable import ColumnDef
+from ctable import ColumnDef, SqlExtractMapping
 
 
 class TestModels(unittest.TestCase):
+
+    def test_sql_extract_empty_name(self):
+        with self.assertRaises(BadValueError):
+            SqlExtractMapping(name="")
+
+    def test_sql_extract_illegal_chars(self):
+        with self.assertRaises(BadValueError):
+            SqlExtractMapping(name="name_with_bang!")
+
+    def test_sql_extract_table_name(self):
+        e = SqlExtractMapping(name="demo_name", domain="test")
+        self.assertEqual("test_demo_name", e.table_name)
+
     def test_column_match_all(self):
         col = ColumnDef(name="user", data_type="string", max_length=50, value_source="key", value_index=0)
         val = self._get_column_values(col)
@@ -11,12 +30,23 @@ class TestModels(unittest.TestCase):
 
     def test_column_match(self):
         col = ColumnDef(name="indicator_a", data_type="integer", value_source="value", value_attribute="sum",
-                        match_key={
-                            "index": 1,
-                            "value": "indicator_a"
-                        })
+                        match_keys=[RowMatch(index=1, value="indicator_a")])
         val = self._get_column_values(col)
         self.assertEqual(val, [1])
+
+    def test_column_match_multi_pass(self):
+        col = ColumnDef(name="indicator_a", data_type="integer", value_source="value", value_attribute="sum",
+                        match_keys=[RowMatch(index=1, value="indicator_a"),
+                                    RowMatch(index=0, value="1")])
+        val = self._get_column_values(col)
+        self.assertEqual(val, [1])
+
+    def test_column_match_multi_fail(self):
+        col = ColumnDef(name="indicator_a", data_type="integer", value_source="value", value_attribute="sum",
+                        match_keys=[RowMatch(index=1, value="indicator_a"),
+                                    RowMatch(index=0, value="2")])
+        val = self._get_column_values(col)
+        self.assertEqual(val, [])
 
     def test_column_date(self):
         col = ColumnDef(name="date", data_type="date", data_format="%Y-%m-%dT%H:%M:%S.%fZ",

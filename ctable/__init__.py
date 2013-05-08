@@ -1,2 +1,2 @@
-from .models import ColumnDef, SqlExtract
+from .models import ColumnDef, SqlExtractMapping
 from .base import CtableExtractor
