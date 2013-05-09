@@ -6,8 +6,8 @@ install:
  - "pip install https://github.com/dcramer/pyflakes/tarball/master"
  - "pip install -q -e . --use-mirrors"
 before_script:
-  - "pep8 --ignore=E501 ctable tests"
-  - "pyflakes -x W ctable"
+ - "pep8 --ignore=E501 ctable tests"
+ - "pyflakes -x W ctable"
 script:
-  - "python setup.py test"
+ - "python setup.py test"
 

@@ -85,6 +85,7 @@ def check_string(value, search=re.compile(r'[^a-zA-Z0-9_]').search):
 class SqlExtractMapping(Document):
     domain = StringProperty()
     name = StringProperty(validators=check_string)
+    couch_view = StringProperty()
     columns = SchemaListProperty(ColumnDef)
 
     @property
