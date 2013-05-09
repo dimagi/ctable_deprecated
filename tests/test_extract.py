@@ -185,7 +185,6 @@ class TestCouchPull(unittest.TestCase):
         self.assertEqual(result['123_2012-02-24']['visits_week_all_visits'], 2)
         self.assertEqual(result['123_2012-02-25']['visits_week_all_visits'], 7)
 
-
     def _get_fluff_diff(self, emitters=['all_visits', 'null_emitter'],
                         group_values=['123'],
                         group_names=['owner_id']):
