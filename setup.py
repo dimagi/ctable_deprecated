@@ -11,7 +11,6 @@ setup(
     author_email='dev@dimagi.com',
     url='http://github.com/dimagi/ctable',
     packages=['ctable'],
-    test_suite='tests',
     license='MIT',
     install_requires=[
         'SQLAlchemy',
@@ -22,6 +21,7 @@ setup(
     ],
     tests_require=[
         'fakecouch',
+        'nose',
     ],
     dependency_links=[
         'http://github.com/dimagi/fakecouch/tarball/master#egg=fakecouch-0.0.1',

@@ -1,9 +1,8 @@
 from django.conf import settings
-
 if not settings.configured:
     settings.configure(DEBUG=True)
 
-import unittest
+from unittest2 import TestCase
 import sqlalchemy
 
 from datetime import date
@@ -19,7 +18,7 @@ logging.basicConfig()
 TEST_SQLITE_URL = 'sqlite:///:memory:'
 
 
-class TestCouchPull(unittest.TestCase):
+class TestCouchPull(TestCase):
     def setUp(self):
         self.connection = sqlalchemy.create_engine(TEST_SQLITE_URL).connect()
         self.db = FakeCouchDb()

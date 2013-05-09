@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = fluff
+source = ctable
 
 [html]
 directory = coverage-report

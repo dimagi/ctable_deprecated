@@ -2,14 +2,14 @@ from django.conf import settings
 if not settings.configured:
     settings.configure(DEBUG=True)
 
-import unittest
+from unittest2 import TestCase
 from couchdbkit import BadValueError
 from ctable.models import RowMatch
 from datetime import date, datetime
 from ctable import ColumnDef, SqlExtractMapping
 
 
-class TestModels(unittest.TestCase):
+class TestModels(TestCase):
 
     def test_sql_extract_empty_name(self):
         with self.assertRaises(BadValueError):
