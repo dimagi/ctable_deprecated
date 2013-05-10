@@ -1,7 +1,6 @@
 from datetime import datetime
 from celery.schedules import crontab
 from celery.task import periodic_task, task
-from celery.utils.log import get_task_logger
 from ctable import CtableExtractor
 from ctable.models import SqlExtractMapping, UnsupportedScheduledExtractError
 from django.conf import settings

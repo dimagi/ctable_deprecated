@@ -49,8 +49,7 @@ class ColumnDef(DocumentSchema):
         if not self.match_keys:
             return True
         else:
-            matches = [match_key.matches(key, value) for match_key in self.match_keys]
-            return reduce(lambda x, y: x and y, matches)
+            return all([match_key.matches(key, value) for match_key in self.match_keys])
 
     def get_value(self, key, value):
         val = self._get_raw_value(key, value)
