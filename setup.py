@@ -20,7 +20,8 @@ setup(
         'couchdbkit',
         'six',
         'alembic',
-        'celery'
+        'celery',
+        'fluff'
     ],
     tests_require=[
         'unittest2',
@@ -28,5 +29,6 @@ setup(
     ],
     dependency_links=[
         'http://github.com/dimagi/fakecouch/tarball/master#egg=fakecouch-0.0.1',
+        'http://github.com/dimagi/fluff/tarball/master#egg=fluff',
     ],
 )

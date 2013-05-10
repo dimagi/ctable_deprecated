@@ -15,12 +15,12 @@ import logging
 
 logging.basicConfig()
 
-TEST_SQLITE_URL = 'sqlite:///:memory:'
+TEST_DB_URL = 'postgresql://postgres:@localhost/ctable_test'
 
 
 class TestCouchPull(TestCase):
     def setUp(self):
-        self.connection = sqlalchemy.create_engine(TEST_SQLITE_URL).connect()
+        self.connection = sqlalchemy.create_engine(TEST_DB_URL).connect()
         self.db = FakeCouchDb()
         self.ctable = CtableExtractor(self.connection, self.db)
         self.connection.execute('DROP TABLE IF EXISTS %s' % self._get_fluff_diff()['doc_type'])
