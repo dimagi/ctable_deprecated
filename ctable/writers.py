@@ -8,8 +8,7 @@ logger = logging.getLogger(__name__)
 
 class SqlTableWriter(object):
     """
-    Write tables to a database specified by URL
-    (TODO) with "upsert" based on primary key.
+    Write rows to a database specified by URL
     """
 
     def __init__(self, url_or_connection):
@@ -51,8 +50,6 @@ class SqlTableWriter(object):
             self.make_table_compatible(table_name, column_defs)
 
     def make_table_compatible(self, table_name, column_defs):
-        # FIXME: This does lots of redundant checks in a tight loop. Stop doing that.
-
         ctx = alembic.migration.MigrationContext.configure(self.connection)
         op = alembic.operations.Operations(ctx)
 

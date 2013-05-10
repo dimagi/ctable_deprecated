@@ -7,32 +7,50 @@ import datetime
 import re
 
 
-class RowMatch(DocumentSchema):
+def validate_name(value, search=re.compile(r'[^a-zA-Z0-9_]').search):
+    if not value or bool(search(value)):
+        raise BadValueError("Only a-z, 0-9 and '_' characters allowed")
+
+
+class RowMatcher(object):
+    def matches(self, row_key, row_value):
+        raise NotImplementedError()
+
+
+class KeyMatcher(DocumentSchema, RowMatcher):
     index = IntegerProperty()
     value = StringProperty()
+
+    def matches(self, row_key, row_value):
+        return row_key[self.index] == self.value
 
 
 class ColumnDef(DocumentSchema):
     name = StringProperty(required=True)
     data_type = StringProperty(required=True, choices=["string", "integer", "date", "datetime"])
-    data_format = StringProperty()
-    max_length = IntegerProperty()  # only applies to string columns
+    date_format = StringProperty()
+    """Format string for date columns"""
+    max_length = IntegerProperty()
+    """Max length for string columns"""
     value_source = StringProperty(required=True, choices=["key", "value"])
-    value_attribute = StringProperty()  # attribute accessor for value e.g. value["sum"]
-    value_index = IntegerProperty()  # index accessor for value e.g. key[1]
-    match_keys = SchemaListProperty(RowMatch)  # used to determine when this column is relevant
-                                               # e.g. rows where key[1] = 'indicator_a'
+    value_attribute = StringProperty()
+    """Attribute accessor for value e.g. value["sum"]"""
+    value_index = IntegerProperty()
+    """Index accessor for value e.g. key[1]"""
+    match_keys = SchemaListProperty(KeyMatcher)
+    """List of KeyMatcher objects used to determine when this columns is relevant
+    e.g. rows where key[1] = 'indicator_a' and key[2] = 'count'"""
 
-    def matches(self, key):
+    def matches(self, key, value):
         if not self.match_keys:
             return True
         else:
-            matches = [key[match_key.index] == match_key.value for match_key in self.match_keys]
+            matches = [match_key.matches(key, value) for match_key in self.match_keys]
             return reduce(lambda x, y: x and y, matches)
 
     def get_value(self, key, value):
         val = self._get_raw_value(key, value)
-        return self._convert_type(val)
+        return self.convert_type(val)
 
     def _get_raw_value(self, key, value):
         use_index = self.value_index is not None
@@ -45,9 +63,12 @@ class ColumnDef(DocumentSchema):
         else:
             return value
 
-    def _convert_type(self, value):
-        if value and (self.data_type == "date" or self.data_type == "datetime"):
-            converted = datetime.datetime.strptime(value, self.data_format or "%Y-%m-%d")
+    def convert_type(self, value):
+        if value is None:
+            return value
+
+        if self.data_type == "date" or self.data_type == "datetime":
+            converted = datetime.datetime.strptime(value, self.date_format or "%Y-%m-%d")
             return converted.date() if self.data_type == "date" else converted
         elif self.data_type == "integer":
             return int(value)
@@ -77,16 +98,11 @@ class ColumnDef(DocumentSchema):
         return not self.match_keys
 
 
-def check_string(value, search=re.compile(r'[^a-zA-Z0-9_]').search):
-    if not value or bool(search(value)):
-        raise BadValueError("Only a-z, 0-9 and '_' characters allowed")
-
-
 class SqlExtractMapping(Document):
     domain = StringProperty()
-    name = StringProperty(validators=check_string)
-    couch_view = StringProperty()
-    columns = SchemaListProperty(ColumnDef)
+    name = StringProperty(required=True, validators=validate_name)
+    couch_view = StringProperty(required=True)
+    columns = SchemaListProperty(ColumnDef, required=True)
 
     @property
     def table_name(self):
