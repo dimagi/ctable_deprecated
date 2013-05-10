@@ -74,5 +74,5 @@ extract = SqlExtractMapping(columns=[...])
 
 # perform extraction
 ex = CtableExtractor(sql_connection_or_url, couchdb, extract)
-ex.pull("my_table", "my_couch_db/view")
+ex.extract("my_table", "my_couch_db/view")
 ```

@@ -1,6 +1,6 @@
 from couchdbkit import BadValueError
 from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty,
-                                          DocumentSchema, DictProperty, SchemaListProperty)
+                                          DocumentSchema, SchemaListProperty)
 from django.conf import settings
 import sqlalchemy
 import datetime
