@@ -1,7 +1,6 @@
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+import os.path
+import glob
+from setuptools import setup, find_packages
 
 setup(
     name='ctable',
@@ -11,6 +10,7 @@ setup(
     author_email='dev@dimagi.com',
     url='http://github.com/dimagi/ctable',
     packages=['ctable'],
+    include_package_data=True,
     test_suite='tests',
     test_loader='unittest2:TestLoader',
     license='MIT',
