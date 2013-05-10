@@ -19,7 +19,8 @@ setup(
         'django',
         'couchdbkit',
         'six',
-        'alembic'
+        'alembic',
+        'celery'
     ],
     tests_require=[
         'unittest2',

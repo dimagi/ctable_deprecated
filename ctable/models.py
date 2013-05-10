@@ -1,6 +1,6 @@
 from couchdbkit import BadValueError
 from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty,
-                                          DocumentSchema, SchemaListProperty)
+                                          DocumentSchema, SchemaListProperty, ListProperty)
 from django.conf import settings
 import sqlalchemy
 import datetime
@@ -10,6 +10,10 @@ import re
 def validate_name(value, search=re.compile(r'[^a-zA-Z0-9_]').search):
     if not value or bool(search(value)):
         raise BadValueError("Only a-z, 0-9 and '_' characters allowed")
+
+
+class UnsupportedScheduledExtractError(Exception):
+    pass
 
 
 class RowMatcher(object):
@@ -101,8 +105,16 @@ class ColumnDef(DocumentSchema):
 class SqlExtractMapping(Document):
     domain = StringProperty()
     name = StringProperty(required=True, validators=validate_name)
-    couch_view = StringProperty(required=True)
     columns = SchemaListProperty(ColumnDef, required=True)
+
+    schedule_type = StringProperty(choices=['daily', 'weekly', 'monthly'])
+    hour = IntegerProperty(default=8)
+    day_of_week_month = IntegerProperty(default=-1)
+    """Day of week for weekly, day of month for monthly, -1 for daily"""
+
+    couch_view = StringProperty(required=True)
+    couch_startkey = ListProperty(default=[])
+    couch_endkey = ListProperty(default=[{}])
 
     @property
     def table_name(self):

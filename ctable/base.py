@@ -14,11 +14,13 @@ class CtableExtractor(object):
         self.sql_connection_or_url = sql_connection_or_url
         self.writer = SqlTableWriter(self.sql_connection_or_url)
 
-    def extract(self, extract_mapping, startkey=[], endkey=[{}], **kwargs):
+    def extract(self, extract_mapping):
         """
         Extract data from a CouchDb view into SQL
         """
-        result = self.get_couch_rows(extract_mapping.couch_view, startkey, endkey, **kwargs)
+        result = self.get_couch_rows(extract_mapping.couch_view,
+                                     extract_mapping.couch_startkey,
+                                     extract_mapping.couch_endkey)
 
         logger.info("Total rows: %d", result.total_rows)
         rows = self.couch_rows_to_sql_rows(result, extract_mapping)
