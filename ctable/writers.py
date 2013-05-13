@@ -77,8 +77,7 @@ class SqlTableWriter(object):
         try:
             insert = table.insert().values(**row_dict)
             self.connection.execute(insert)
-        except sqlalchemy.exc.IntegrityError, ex:
-            print ex
+        except sqlalchemy.exc.IntegrityError:
             update = table.update()
             for k in key_columns:
                 k_val = row_dict.pop(k)
