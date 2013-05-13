@@ -15,13 +15,14 @@ setup(
     test_loader='unittest2:TestLoader',
     license='MIT',
     install_requires=[
-        'SQLAlchemy',
-        'django',
-        'couchdbkit',
-        'six',
-        'alembic',
-        'celery',
-        'fluff'
+        'SQLAlchemy>=0.8.1',
+        'django>=1.3.1',
+        'couchdbkit>=0.5.7',
+        'six>=1.2.0',
+        'alembic>=0.5.0',
+        'celery>=3.0.15',
+        'psycopg2>=2.4.1',
+        'fluff',
     ],
     tests_require=[
         'unittest2',
