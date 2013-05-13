@@ -40,10 +40,10 @@ class SqlTableWriter(object):
         op = alembic.operations.Operations(ctx)
 
         if not table_name in self.metadata.tables:
-            columns = []
-            for c in column_defs:
-                columns.append(c.sql_column)
-
+            columns = [c.sql_column for c in column_defs]
+            unique_columns = [c.name for c in column_defs if c.is_key_column]
+            if unique_columns:
+                columns.append(sqlalchemy.UniqueConstraint(*unique_columns))
             op.create_table(table_name, *columns)
             self.metadata.reflect()
         else:
@@ -77,7 +77,8 @@ class SqlTableWriter(object):
         try:
             insert = table.insert().values(**row_dict)
             self.connection.execute(insert)
-        except sqlalchemy.exc.IntegrityError:
+        except sqlalchemy.exc.IntegrityError, ex:
+            print ex
             update = table.update()
             for k in key_columns:
                 k_val = row_dict.pop(k)
@@ -96,5 +97,3 @@ class SqlTableWriter(object):
             logger.debug(".")
 
             self.upsert(self.table(table_name), row_dict, key_columns)
-
-        logger.debug("\n")

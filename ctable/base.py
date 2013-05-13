@@ -1,5 +1,4 @@
-from ctable import SqlExtractMapping
-from ctable.models import ColumnDef, KeyMatcher
+from .models import SqlExtractMapping, ColumnDef, KeyMatcher
 from .writers import SqlTableWriter
 import logging
 
@@ -22,9 +21,11 @@ class CtableExtractor(object):
                                      extract_mapping.couch_startkey,
                                      extract_mapping.couch_endkey)
 
-        logger.info("Total rows: %d", result.total_rows)
-        rows = self.couch_rows_to_sql_rows(result, extract_mapping)
-        self.write_rows_to_sql(rows, extract_mapping)
+        total_rows = result.total_rows
+        if total_rows > 0:
+            logger.info("Total rows: %d", total_rows)
+            rows = self.couch_rows_to_sql_rows(result, extract_mapping)
+            self.write_rows_to_sql(rows, extract_mapping)
 
     def process_fluff_diff(self, diff):
         """
@@ -71,6 +72,9 @@ class CtableExtractor(object):
             key_prefix = [diff['doc_type']] + groups + [ind['calculator'], ind['emitter']]
             if ind['emitter_type'] == 'null':
                 yield key_prefix + [None]
+            elif ind['emitter_type'] == 'date':
+                for value in ind['values']:
+                    yield key_prefix + [value.strftime("%Y-%m-%dT%H:%M:%S.000Z")]
             else:
                 for value in ind['values']:
                     yield key_prefix + [value]

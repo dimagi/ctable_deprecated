@@ -71,7 +71,7 @@ class ColumnDef(DocumentSchema):
             return value
 
         if self.data_type == "date" or self.data_type == "datetime":
-            converted = datetime.datetime.strptime(value, self.date_format or "%Y-%m-%d")
+            converted = datetime.datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%S.000Z")
             return converted.date() if self.data_type == "date" else converted
         elif self.data_type == "integer":
             return int(value)
@@ -91,10 +91,7 @@ class ColumnDef(DocumentSchema):
 
     @property
     def sql_column(self):
-        opts = {}
-        if self.is_key_column:
-            opts = {"primary_key": True, "nullable": True, "autoincrement": False}
-        return sqlalchemy.Column(self.name, self.sql_type, **opts)
+        return sqlalchemy.Column(self.name, self.sql_type, nullable=True)
 
     @property
     def is_key_column(self):
