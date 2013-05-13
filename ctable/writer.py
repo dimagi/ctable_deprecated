@@ -5,6 +5,15 @@ import alembic
 
 logger = logging.getLogger(__name__)
 
+BASE_TYPE_MAP = dict(string=sqlalchemy.String,
+                     integer=sqlalchemy.Integer,
+                     date=sqlalchemy.Date,
+                     datetime=sqlalchemy.DateTime)
+
+
+class ColumnTypeException(Exception):
+    pass
+
 
 class SqlTableWriter(object):
     """
@@ -40,10 +49,10 @@ class SqlTableWriter(object):
         op = alembic.operations.Operations(ctx)
 
         if not table_name in self.metadata.tables:
-            columns = []
-            for c in column_defs:
-                columns.append(c.sql_column)
-
+            columns = [c.sql_column for c in column_defs]
+            unique_columns = [c.name for c in column_defs if c.is_key_column]
+            if unique_columns:
+                columns.append(sqlalchemy.UniqueConstraint(*unique_columns))
             op.create_table(table_name, *columns)
             self.metadata.reflect()
         else:
@@ -64,10 +73,8 @@ class SqlTableWriter(object):
             else:
                 columns = dict([(c.name, c) for c in self.table(table_name).columns])
                 current_ty = columns[column.name].type
-                if current_ty != column.sql_type:
-                    #  this comparison doesn't work because the db type can get downgraded e.g unicode to varchar
-                    logger.warn("Column type mismatch for column %s: %s - %s", column.name, current_ty, column.sql_type)
-                    #  raise Exception("Column types don't match", column.name)
+                if not isinstance(current_ty, BASE_TYPE_MAP[column.data_type]):
+                    raise ColumnTypeException("Column types don't match", column.name)
 
     def upsert(self, table, row_dict, key_columns):
 
@@ -96,5 +103,3 @@ class SqlTableWriter(object):
             logger.debug(".")
 
             self.upsert(self.table(table_name), row_dict, key_columns)
-
-        logger.debug("\n")

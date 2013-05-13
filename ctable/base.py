@@ -1,6 +1,6 @@
-from ctable import SqlExtractMapping
-from ctable.models import ColumnDef, KeyMatcher
-from .writers import SqlTableWriter
+from .models import SqlExtractMapping, ColumnDef, KeyMatcher
+from .writer import SqlTableWriter
+from couchdbkit.ext.django.loading import get_db
 import logging
 
 logger = logging.getLogger("ctable")
@@ -14,15 +14,19 @@ class CtableExtractor(object):
         self.sql_connection_or_url = sql_connection_or_url
         self.writer = SqlTableWriter(self.sql_connection_or_url)
 
-    def extract(self, extract_mapping, startkey=[], endkey=[{}], **kwargs):
+    def extract(self, extract_mapping):
         """
         Extract data from a CouchDb view into SQL
         """
-        result = self.get_couch_rows(extract_mapping.couch_view, startkey, endkey, **kwargs)
+        result = self.get_couch_rows(extract_mapping.couch_view,
+                                     extract_mapping.couch_startkey,
+                                     extract_mapping.couch_endkey)
 
-        logger.info("Total rows: %d", result.total_rows)
-        rows = self.couch_rows_to_sql_rows(result, extract_mapping)
-        self.write_rows_to_sql(rows, extract_mapping)
+        total_rows = result.total_rows
+        if total_rows > 0:
+            logger.info("Total rows: %d", total_rows)
+            rows = self.couch_rows_to_sql_rows(result, extract_mapping)
+            self.write_rows_to_sql(rows, extract_mapping)
 
     def process_fluff_diff(self, diff):
         """
@@ -31,12 +35,13 @@ class CtableExtractor(object):
         """
         mapping = self.get_extract_mapping(diff)
         grains = self.get_fluff_grains(diff)
-        couch_rows = self.recalculate_grains(grains)
+        couch_rows = self.recalculate_grains(grains, diff['database'])
         sql_rows = self.couch_rows_to_sql_rows(couch_rows, mapping)
         self.write_rows_to_sql(sql_rows, mapping)
 
-    def get_couch_rows(self, couch_view, startkey, endkey, **kwargs):
-        result = self.db.view(
+    def get_couch_rows(self, couch_view, startkey, endkey, db=None, **kwargs):
+        db = db or self.db
+        result = db.view(
             couch_view,
             reduce=True,
             group=True,
@@ -69,6 +74,9 @@ class CtableExtractor(object):
             key_prefix = [diff['doc_type']] + groups + [ind['calculator'], ind['emitter']]
             if ind['emitter_type'] == 'null':
                 yield key_prefix + [None]
+            elif ind['emitter_type'] == 'date':
+                for value in ind['values']:
+                    yield key_prefix + [value.strftime("%Y-%m-%dT%H:%M:%SZ")]
             else:
                 for value in ind['values']:
                     yield key_prefix + [value]
@@ -107,11 +115,11 @@ class CtableExtractor(object):
         mapping.columns = columns
         return mapping
 
-    def recalculate_grains(self, grains):
+    def recalculate_grains(self, grains, database):
         """
         Query CouchDB to get the updated value for the grains.
         """
         result = []
         for grain in grains:
-            result.extend(self.get_couch_rows(fluff_view, grain, grain + [{}]))
+            result.extend(self.get_couch_rows(fluff_view, grain, grain + [{}], db=get_db(database)))
         return result

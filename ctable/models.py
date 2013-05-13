@@ -1,6 +1,6 @@
 from couchdbkit import BadValueError
 from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty,
-                                          DocumentSchema, SchemaListProperty)
+                                          DocumentSchema, SchemaListProperty, ListProperty)
 from django.conf import settings
 import sqlalchemy
 import datetime
@@ -10,6 +10,10 @@ import re
 def validate_name(value, search=re.compile(r'[^a-zA-Z0-9_]').search):
     if not value or bool(search(value)):
         raise BadValueError("Only a-z, 0-9 and '_' characters allowed")
+
+
+class UnsupportedScheduledExtractError(Exception):
+    pass
 
 
 class RowMatcher(object):
@@ -45,8 +49,7 @@ class ColumnDef(DocumentSchema):
         if not self.match_keys:
             return True
         else:
-            matches = [match_key.matches(key, value) for match_key in self.match_keys]
-            return reduce(lambda x, y: x and y, matches)
+            return all([match_key.matches(key, value) for match_key in self.match_keys])
 
     def get_value(self, key, value):
         val = self._get_raw_value(key, value)
@@ -68,7 +71,7 @@ class ColumnDef(DocumentSchema):
             return value
 
         if self.data_type == "date" or self.data_type == "datetime":
-            converted = datetime.datetime.strptime(value, self.date_format or "%Y-%m-%d")
+            converted = datetime.datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%SZ")
             return converted.date() if self.data_type == "date" else converted
         elif self.data_type == "integer":
             return int(value)
@@ -83,15 +86,14 @@ class ColumnDef(DocumentSchema):
             return sqlalchemy.Integer
         elif self.data_type == "date":
             return sqlalchemy.Date
+        elif self.data_type == 'datetime':
+            return sqlalchemy.DateTime
         else:
             raise Exception("Unexpected type", self.data_type)
 
     @property
     def sql_column(self):
-        opts = {}
-        if self.is_key_column:
-            opts = {"primary_key": True, "nullable": True, "autoincrement": False}
-        return sqlalchemy.Column(self.name, self.sql_type, **opts)
+        return sqlalchemy.Column(self.name, self.sql_type, nullable=True)
 
     @property
     def is_key_column(self):
@@ -101,8 +103,16 @@ class ColumnDef(DocumentSchema):
 class SqlExtractMapping(Document):
     domain = StringProperty()
     name = StringProperty(required=True, validators=validate_name)
-    couch_view = StringProperty(required=True)
     columns = SchemaListProperty(ColumnDef, required=True)
+
+    schedule_type = StringProperty(choices=['daily', 'weekly', 'monthly'])
+    hour = IntegerProperty(default=8)
+    day_of_week_month = IntegerProperty(default=-1)
+    """Day of week for weekly, day of month for monthly, -1 for daily"""
+
+    couch_view = StringProperty(required=True)
+    couch_startkey = ListProperty(default=[])
+    couch_endkey = ListProperty(default=[{}])
 
     @property
     def table_name(self):

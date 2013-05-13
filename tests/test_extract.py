@@ -10,20 +10,36 @@ from ctable.models import KeyMatcher
 from ctable import CtableExtractor, SqlExtractMapping, ColumnDef
 from ctable.base import fluff_view
 from fakecouch import FakeCouchDb
+from couchdbkit.ext.django.loading import couchdbkit_handler
 
 import logging
 
 logging.basicConfig()
 
-TEST_SQLITE_URL = 'sqlite:///:memory:'
+TEST_DB_URL = 'postgresql://postgres:@localhost/ctable_test'
+engine = sqlalchemy.create_engine(TEST_DB_URL)
+
+DOMAIN = "test"
+MAPPING_NAME = "demo_extract"
+TABLE = "%s_%s" %(DOMAIN, MAPPING_NAME)
 
 
-class TestCouchPull(TestCase):
+class TestCTable(TestCase):
     def setUp(self):
-        self.connection = sqlalchemy.create_engine(TEST_SQLITE_URL).connect()
+        self.connection = engine.connect()
+        self.trans = self.connection.begin()
         self.db = FakeCouchDb()
+        couchdbkit_handler._databases = {'fluff': self.db}
         self.ctable = CtableExtractor(self.connection, self.db)
-        self.connection.execute('DROP TABLE IF EXISTS %s' % self._get_fluff_diff()['doc_type'])
+
+    def tearDown(self):
+        super(TestCTable, self).tearDown()
+        self.trans.rollback()
+        self.trans = self.connection.begin()
+        self.connection.execute('DROP TABLE IF EXISTS "%s"' % TABLE)
+        self.connection.execute('DROP TABLE IF EXISTS "%s"' % self._get_fluff_diff()['doc_type'])
+        self.trans.commit()
+        self.connection.close()
 
     def test_basic(self):
         self.db.add_view('c/view', [
@@ -40,7 +56,7 @@ class TestCouchPull(TestCase):
             )
         ])
 
-        extract = SqlExtractMapping(domain="test", name="demo_extract", couch_view="c/view", columns=[
+        extract = SqlExtractMapping(domain=DOMAIN, name=MAPPING_NAME, couch_view="c/view", columns=[
             ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
             ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
                       value_source="key", value_index=2),
@@ -55,7 +71,7 @@ class TestCouchPull(TestCase):
         self.ctable.extract(extract)
 
         result = dict(
-            [(row.username + "_" + row.date, row) for row in
+            [(row.username + "_" + row.date.strftime("%Y-%m-%d"), row) for row in
              self.connection.execute('SELECT * FROM %s' % extract.table_name)])
         self.assertEqual(result['1_2013-03-01']['rename_indicator_a'], 1)
         self.assertEqual(result['1_2013-03-01']['indicator_b'], 2)
@@ -72,7 +88,7 @@ class TestCouchPull(TestCase):
             )
         ])
 
-        extract = SqlExtractMapping(domain="test", name="demo_extract1", couch_view="c/view", columns=[
+        extract = SqlExtractMapping(domain=DOMAIN, name=MAPPING_NAME, couch_view="c/view", columns=[
             ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
             ColumnDef(name="date", data_type="date", data_format="%Y-%m-%dT%H:%M:%S.%fZ",
                       value_source="key", value_index=2),
@@ -88,14 +104,15 @@ class TestCouchPull(TestCase):
         self.assertEqual(result['indicator'], 1)
 
     def test_empty_view_result(self):
-        extract = SqlExtractMapping(domain="test", name="demo_extract1", couch_view="c/view", columns=[
+        extract = SqlExtractMapping(domain=DOMAIN, name=MAPPING_NAME, couch_view="c/view", columns=[
             ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0)
         ])
 
         self.ctable.extract(extract)
 
-        result = self.connection.execute('SELECT * FROM %s' % extract.table_name).first()
-        self.assertIsNone(result)
+        metadata = sqlalchemy.MetaData(bind=engine)
+        metadata.reflect()
+        self.assertNotIn(extract.table_name, metadata.tables)
 
     def test_convert_indicator_diff_to_grains_date(self):
         diff = self._get_fluff_diff(['all_visits'],
@@ -104,8 +121,10 @@ class TestCouchPull(TestCase):
 
         grains = list(self.ctable.get_fluff_grains(diff))
         self.assertEqual(2, len(grains))
-        self.assertEqual(grains[0], ['MockIndicators', 'mock', '123', 'visits_week', 'all_visits', date(2012, 2, 24)])
-        self.assertEqual(grains[1], ['MockIndicators', 'mock', '123', 'visits_week', 'all_visits', date(2012, 2, 25)])
+        key_prefix = ['MockIndicators', 'mock', '123', 'visits_week', 'all_visits']
+        self.assertEqual(grains[0], key_prefix + ["2012-02-24T00:00:00Z"])
+        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00Z"])
+        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00Z"])
 
     def test_convert_indicator_diff_to_grains_null(self):
         diff = self._get_fluff_diff(['null_emitter'])
@@ -142,7 +161,7 @@ class TestCouchPull(TestCase):
 
     def test_get_rows_for_grains(self):
         r1 = {"key": ['a', 'b', None], "value": 3}
-        r2 = {"key": ['a', 'b', date(2013, 01, 03)], "value": 2}
+        r2 = {"key": ['a', 'b', '2013-01-03'], "value": 2}
         self.db.add_view(fluff_view, [
             (
                 {'reduce': True, 'group': True, 'startkey': r1['key'], 'endkey': r1['key'] + [{}]},
@@ -156,38 +175,36 @@ class TestCouchPull(TestCase):
 
         grains = [
             ['a', 'b', None],
-            ['a', 'b', date(2013, 01, 03)],
+            ['a', 'b', '2013-01-03'],
         ]
-        rows = self.ctable.recalculate_grains(grains)
+        rows = self.ctable.recalculate_grains(grains, 'fluff')
         self.assertEqual(len(rows), 2)
         self.assertEqual(rows[0], r1)
         self.assertEqual(rows[1], r2)
 
     def test_extract_fluff_diff(self):
-        rows = [(['MockIndicators', '123', 'visits_week', 'null_emitter', None],
-                 {"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": 3}),
-                (['MockIndicators', '123', 'visits_week', 'all_visits', date(2012, 02, 24)],
-                 {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24'], "value": 2}),
-                (['MockIndicators', '123', 'visits_week', 'all_visits', date(2012, 02, 25)],
-                 {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25'], "value": 7})]
+        rows = [{"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": 3},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00Z'], "value": 2},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00Z'], "value": 7}]
 
-        self.db.add_view(fluff_view, [({'reduce': True, 'group': True, 'startkey': r[0], 'endkey': r[0] + [{}]},
-                                       [r[1]]) for r in rows])
+        self.db.add_view(fluff_view, [({'reduce': True, 'group': True, 'startkey': r['key'], 'endkey': r['key'] + [{}]},
+                                       [r]) for r in rows])
 
         diff = self._get_fluff_diff()
         self.ctable.process_fluff_diff(diff)
         result = dict(
-            [(row.owner_id + "_" + (row.emitter_value or ''), row) for row in
-             self.connection.execute('SELECT * FROM %s' % diff['doc_type'])])
+            [('%s_%s' % (row.owner_id, row.emitter_value), row) for row in
+             self.connection.execute('SELECT * FROM "%s"' % diff['doc_type'])])
         self.assertEqual(len(result), 3)
-        self.assertEqual(result['123_']['visits_week_null_emitter'], 3)
+        self.assertEqual(result['123_None']['visits_week_null_emitter'], 3)
         self.assertEqual(result['123_2012-02-24']['visits_week_all_visits'], 2)
         self.assertEqual(result['123_2012-02-25']['visits_week_all_visits'], 7)
 
     def _get_fluff_diff(self, emitters=['all_visits', 'null_emitter'],
                         group_values=['123'],
                         group_names=['owner_id']):
-        diff = dict(doc_type='MockIndicators',
+        diff = dict(database='fluff',
+                    doc_type='MockIndicators',
                     group_values=group_values,
                     group_names=group_names)
         indicator_changes = []
