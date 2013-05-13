@@ -86,6 +86,8 @@ class ColumnDef(DocumentSchema):
             return sqlalchemy.Integer
         elif self.data_type == "date":
             return sqlalchemy.Date
+        elif self.data_type == 'datetime':
+            return sqlalchemy.DateTime
         else:
             raise Exception("Unexpected type", self.data_type)
 

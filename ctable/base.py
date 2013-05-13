@@ -1,5 +1,5 @@
 from .models import SqlExtractMapping, ColumnDef, KeyMatcher
-from .writers import SqlTableWriter
+from .writer import SqlTableWriter
 from couchdbkit.ext.django.loading import get_db
 import logging
 

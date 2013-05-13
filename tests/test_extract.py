@@ -24,7 +24,7 @@ MAPPING_NAME = "demo_extract"
 TABLE = "%s_%s" %(DOMAIN, MAPPING_NAME)
 
 
-class TestCouchPull(TestCase):
+class TestCTable(TestCase):
     def setUp(self):
         self.connection = engine.connect()
         self.trans = self.connection.begin()
@@ -33,7 +33,7 @@ class TestCouchPull(TestCase):
         self.ctable = CtableExtractor(self.connection, self.db)
 
     def tearDown(self):
-        super(TestCouchPull, self).tearDown()
+        super(TestCTable, self).tearDown()
         self.trans.rollback()
         self.trans = self.connection.begin()
         self.connection.execute('DROP TABLE IF EXISTS "%s"' % TABLE)
