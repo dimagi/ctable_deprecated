@@ -32,13 +32,10 @@ Fields:
 * value_attribute
   * attribute key used to extract the value from the value_source e.g. value["sum"]
 * max_length (only for string columns)
-* data_format (only for date / datetime columns)
-* match_key
+* date_format (only for date / datetime columns)
+* match_keys
+  * List of KeyMatcher objects
   * used to determine when this column is relevant e.g. rows where key[1] = 'indicator_a'
-  * must contain and _index_ key
-  * may contain a _value_ key
-  * if no _value_ key is supplied it is assumed that the value = column.name
-  * key[index] = value or column.name
 
 ```python
 ColumnDef(
@@ -50,7 +47,7 @@ ColumnDef(
 ColumnDef(
     name="date",
     data_type="date",
-    data_format="%Y-%m-%dT%H:%M:%S.%fZ",
+    date_format="%Y-%m-%dT%H:%M:%S.%fZ",
     value_source="key",
     value_index=2),
 ColumnDef(
@@ -58,21 +55,21 @@ ColumnDef(
     data_type="integer",
     value_source="value",
     value_attribute="sum",
-    match_key={"index": 1, "value": "indicator_a"}),
+    match_keys=[KeyMatcher(index=1, value="indicator_a")]),
 ColumnDef(
     name="indicator_b",
     data_type="integer",
     value_source="value",
     value_attribute="sum",
-    match_key={"index": 1}),
+    match_keys=[KeyMatcher(index=1, value="indicator_b")]),
 ```
 
 ## Usage
 ```python
 # create extract configuration
-extract = SqlExtract(columns=[...])
+extract = SqlExtractMapping(domain='test', name='demo', couch_view='my/view', columns=[...])
 
 # perform extraction
-ex = CtableExtractor(sql_connection_or_url, couchdb, extract)
-ex.pull("my_table", "my_couch_db/view")
+ex = CtableExtractor(sql_connection_or_url, couchdb)
+ex.extract(extract, startkey=[...], endkey=[...])
 ```
