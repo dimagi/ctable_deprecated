@@ -177,7 +177,7 @@ class TestCouchPull(TestCase):
             ['a', 'b', None],
             ['a', 'b', '2013-01-03'],
         ]
-        rows = self.ctable.recalculate_grains(grains)
+        rows = self.ctable.recalculate_grains(grains, 'fluff')
         self.assertEqual(len(rows), 2)
         self.assertEqual(rows[0], r1)
         self.assertEqual(rows[1], r2)
@@ -203,7 +203,8 @@ class TestCouchPull(TestCase):
     def _get_fluff_diff(self, emitters=['all_visits', 'null_emitter'],
                         group_values=['123'],
                         group_names=['owner_id']):
-        diff = dict(doc_type='MockIndicators',
+        diff = dict(database='fluff',
+                    doc_type='MockIndicators',
                     group_values=group_values,
                     group_names=group_names)
         indicator_changes = []

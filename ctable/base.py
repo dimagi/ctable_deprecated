@@ -35,7 +35,7 @@ class CtableExtractor(object):
         """
         mapping = self.get_extract_mapping(diff)
         grains = self.get_fluff_grains(diff)
-        couch_rows = self.recalculate_grains(grains)
+        couch_rows = self.recalculate_grains(grains, diff['database'])
         sql_rows = self.couch_rows_to_sql_rows(couch_rows, mapping)
         self.write_rows_to_sql(sql_rows, mapping)
 
@@ -115,11 +115,11 @@ class CtableExtractor(object):
         mapping.columns = columns
         return mapping
 
-    def recalculate_grains(self, grains):
+    def recalculate_grains(self, grains, database):
         """
         Query CouchDB to get the updated value for the grains.
         """
         result = []
         for grain in grains:
-            result.extend(self.get_couch_rows(fluff_view, grain, grain + [{}], db=get_db('fluff')))
+            result.extend(self.get_couch_rows(fluff_view, grain, grain + [{}], db=get_db(database)))
         return result
