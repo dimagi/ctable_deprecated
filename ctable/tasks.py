@@ -10,8 +10,9 @@ from fluff.signals import indicator_document_updated
 ctable = CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.get_db())
 
 
-def process_fluff_diff(sender, diff, **kwargs):
-    ctable.process_fluff_diff(diff)
+def process_fluff_diff(sender, diff=None, **kwargs):
+    if diff:
+        ctable.process_fluff_diff(diff)
 
 indicator_document_updated.connect(process_fluff_diff)
 

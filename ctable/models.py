@@ -71,7 +71,7 @@ class ColumnDef(DocumentSchema):
             return value
 
         if self.data_type == "date" or self.data_type == "datetime":
-            converted = datetime.datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%S.000Z")
+            converted = datetime.datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%SZ")
             return converted.date() if self.data_type == "date" else converted
         elif self.data_type == "integer":
             return int(value)

@@ -1,5 +1,6 @@
 from .models import SqlExtractMapping, ColumnDef, KeyMatcher
 from .writers import SqlTableWriter
+from couchdbkit.ext.django.loading import get_db
 import logging
 
 logger = logging.getLogger("ctable")
@@ -38,8 +39,9 @@ class CtableExtractor(object):
         sql_rows = self.couch_rows_to_sql_rows(couch_rows, mapping)
         self.write_rows_to_sql(sql_rows, mapping)
 
-    def get_couch_rows(self, couch_view, startkey, endkey, **kwargs):
-        result = self.db.view(
+    def get_couch_rows(self, couch_view, startkey, endkey, db=None, **kwargs):
+        db = db or self.db
+        result = db.view(
             couch_view,
             reduce=True,
             group=True,
@@ -74,7 +76,7 @@ class CtableExtractor(object):
                 yield key_prefix + [None]
             elif ind['emitter_type'] == 'date':
                 for value in ind['values']:
-                    yield key_prefix + [value.strftime("%Y-%m-%dT%H:%M:%S.000Z")]
+                    yield key_prefix + [value.strftime("%Y-%m-%dT%H:%M:%SZ")]
             else:
                 for value in ind['values']:
                     yield key_prefix + [value]
@@ -119,5 +121,5 @@ class CtableExtractor(object):
         """
         result = []
         for grain in grains:
-            result.extend(self.get_couch_rows(fluff_view, grain, grain + [{}]))
+            result.extend(self.get_couch_rows(fluff_view, grain, grain + [{}], db=get_db('fluff')))
         return result

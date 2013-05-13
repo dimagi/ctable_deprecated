@@ -10,6 +10,7 @@ from ctable.models import KeyMatcher
 from ctable import CtableExtractor, SqlExtractMapping, ColumnDef
 from ctable.base import fluff_view
 from fakecouch import FakeCouchDb
+from couchdbkit.ext.django.loading import couchdbkit_handler
 
 import logging
 
@@ -28,6 +29,7 @@ class TestCouchPull(TestCase):
         self.connection = engine.connect()
         self.trans = self.connection.begin()
         self.db = FakeCouchDb()
+        couchdbkit_handler._databases = {'fluff': self.db}
         self.ctable = CtableExtractor(self.connection, self.db)
 
     def tearDown(self):
@@ -120,8 +122,9 @@ class TestCouchPull(TestCase):
         grains = list(self.ctable.get_fluff_grains(diff))
         self.assertEqual(2, len(grains))
         key_prefix = ['MockIndicators', 'mock', '123', 'visits_week', 'all_visits']
-        self.assertEqual(grains[0], key_prefix + ["2012-02-24T00:00:00.000Z"])
-        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00.000Z"])
+        self.assertEqual(grains[0], key_prefix + ["2012-02-24T00:00:00Z"])
+        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00Z"])
+        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00Z"])
 
     def test_convert_indicator_diff_to_grains_null(self):
         diff = self._get_fluff_diff(['null_emitter'])
@@ -181,8 +184,8 @@ class TestCouchPull(TestCase):
 
     def test_extract_fluff_diff(self):
         rows = [{"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": 3},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00.000Z'], "value": 2},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00.000Z'], "value": 7}]
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00Z'], "value": 2},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00Z'], "value": 7}]
 
         self.db.add_view(fluff_view, [({'reduce': True, 'group': True, 'startkey': r['key'], 'endkey': r['key'] + [{}]},
                                        [r]) for r in rows])
