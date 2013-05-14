@@ -105,7 +105,7 @@ class SqlExtractMapping(Document):
     name = StringProperty(required=True, validators=validate_name)
     columns = SchemaListProperty(ColumnDef, required=True)
 
-    schedule_type = StringProperty(choices=['daily', 'weekly', 'monthly'])
+    schedule_type = StringProperty(choices=['daily', 'weekly', 'monthly'], default='daily')
     hour = IntegerProperty(default=8)
     day_of_week_month = IntegerProperty(default=-1)
     """Day of week for weekly, day of month for monthly, -1 for daily"""
