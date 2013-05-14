@@ -60,10 +60,13 @@ class CtableExtractor(object):
         """
         for crow in couch_rows:
             sql_row = {}
+            row_has_value = False
             for mc in extract_mapping.columns:
                 if mc.matches(crow['key'], crow['value']):
                     sql_row[mc.name] = mc.get_value(crow['key'], crow['value'])
-            yield sql_row
+                    row_has_value = row_has_value or not mc.is_key_column
+            if row_has_value:
+                yield sql_row
 
     def get_fluff_grains(self, diff):
         """

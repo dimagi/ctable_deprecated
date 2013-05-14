@@ -90,7 +90,7 @@ class TestCTable(TestCase):
 
         extract = SqlExtractMapping(domain=DOMAIN, name=MAPPING_NAME, couch_view="c/view", columns=[
             ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
-            ColumnDef(name="date", data_type="date", data_format="%Y-%m-%dT%H:%M:%S.%fZ",
+            ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
                       value_source="key", value_index=2),
             ColumnDef(name="indicator", data_type="integer", value_source="value",
                       match_keys=[KeyMatcher(index=1, value="indicator_a")])
@@ -113,6 +113,24 @@ class TestCTable(TestCase):
         metadata = sqlalchemy.MetaData(bind=engine)
         metadata.reflect()
         self.assertNotIn(extract.table_name, metadata.tables)
+
+    def test_couch_rows_to_sql(self):
+        extract = SqlExtractMapping(domain=DOMAIN, name=MAPPING_NAME, couch_view="c/view", columns=[
+            ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
+            ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
+                      value_source="key", value_index=2),
+            ColumnDef(name="indicator", data_type="integer", value_source="value",
+                      match_keys=[KeyMatcher(index=1, value="indicator_a")])
+        ])
+        rows = [
+            dict(key=['user1', 'indicator_a', '2012-02-15T00:00:00.000Z'], value=1),
+            dict(key=['user2', 'indicator_a', '2012-02-15T00:00:00.000Z'], value=2),
+            dict(key=['user1', 'indicator_b', '2012-02-15T00:00:00.000Z'], value=1),
+        ]
+        sql_rows = list(self.ctable.couch_rows_to_sql_rows(rows, extract))
+        self.assertEqual(len(sql_rows), 2)
+        self.assertEqual(sql_rows[0], dict(username='user1', date=date(2012, 02, 15), indicator=1))
+        self.assertEqual(sql_rows[1], dict(username='user2', date=date(2012, 02, 15), indicator=2))
 
     def test_convert_indicator_diff_to_grains_date(self):
         diff = self._get_fluff_diff(['all_visits'],

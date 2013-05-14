@@ -27,7 +27,8 @@ def process_extract(extract_id):
 
 
 @periodic_task(run_every=crontab(hour="*", minute="1", day_of_week="*"))
-def daily_reports():
+def ctable_extract_schedule():
+    logger = ctable_extract_schedule.get_logger()
     now = datetime.utcnow()
     view = "ctable/schedule"
     hour = now.hour
@@ -39,6 +40,8 @@ def daily_reports():
 
     exps.extend(SqlExtractMapping.view(view,
                                        key=['monthly', now.day, hour]).all())
+
+    logger.info("ctable_extract_schedule: processing %s extracts" % len(exps))
 
     for exp in exps:
         process_extract.delay(exp['id'])
