@@ -1,9 +1,9 @@
 from couchdbkit import BadValueError
 from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty,
-                                          DocumentSchema, SchemaListProperty, ListProperty)
+                                          DocumentSchema, SchemaListProperty, ListProperty, BooleanProperty)
 from django.conf import settings
+from datetime import datetime
 import sqlalchemy
-import datetime
 import re
 
 
@@ -71,7 +71,7 @@ class ColumnDef(DocumentSchema):
             return value
 
         if self.data_type == "date" or self.data_type == "datetime":
-            converted = datetime.datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%SZ")
+            converted = datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%SZ")
             return converted.date() if self.data_type == "date" else converted
         elif self.data_type == "integer":
             return int(value)
@@ -100,10 +100,14 @@ class ColumnDef(DocumentSchema):
         return not self.match_keys
 
 
+SCHEDULE_VIEW = "ctable/schedule"
+
+
 class SqlExtractMapping(Document):
     domain = StringProperty()
     name = StringProperty(required=True, validators=validate_name)
     columns = SchemaListProperty(ColumnDef, required=True)
+    active = BooleanProperty(default=False)
 
     schedule_type = StringProperty(choices=['daily', 'weekly', 'monthly'], default='daily')
     schedule_hour = IntegerProperty(default=8)
@@ -122,6 +126,10 @@ class SqlExtractMapping(Document):
     def table_name(self):
         return "{0}_{1}".format(self.domain, self.name) if self.domain else self.name
 
+    @property
+    def key_columns(self):
+        return [c.name for c in self.columns if c.is_key_column]
+
     @classmethod
     def by_domain(cls, domain):
         key = [domain, cls.__name__]
@@ -132,8 +140,32 @@ class SqlExtractMapping(Document):
                         include_docs=True,
                         stale=settings.COUCH_STALE_QUERY).all()
 
-    @property
-    def key_columns(self):
-        return [c.name for c in self.columns if c.is_key_column]
+    @classmethod
+    def daily_schedule(cls, extract_date, active=True):
+        key = [cls._status(active), 'daily', -1, extract_date.hour]
+        return SqlExtractMapping.view(SCHEDULE_VIEW, key=key).all()
+
+    @classmethod
+    def weekly_schedule(cls, extract_date, active=True):
+        key = [cls._status(active), 'weekly', extract_date.weekday(), extract_date.hour]
+        return SqlExtractMapping.view(SCHEDULE_VIEW, key=key).all()
+
+    @classmethod
+    def monthly_schedule(cls, extract_date, active=True):
+        key = [cls._status(active), 'monthly', extract_date.day, extract_date.hour]
+        return SqlExtractMapping.view(SCHEDULE_VIEW, key=key).all()
+
+    @classmethod
+    def schedule(cls, extract_date, active=True):
+        extract_date = extract_date or datetime.utcnow()
+        exps = cls.daily_schedule(extract_date, active)
+        exps.extend(cls.weekly_schedule(extract_date, active))
+        exps.extend(cls.monthly_schedule(extract_date, active))
+        return exps
+
+    @classmethod
+    def _status(cls, active):
+        return 'active' if active else 'inactive'
+
 
 from . import signals

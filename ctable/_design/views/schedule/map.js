@@ -1,5 +1,6 @@
 function (doc) {
     if (doc.doc_type === 'SqlExtractMapping') {
-        emit([doc.schedule_type, doc.schedule_day, doc.schedule_hour], null)
+        var status = doc.active ? 'active' : 'inactive';
+        emit([status, doc.schedule_type, doc.schedule_day, doc.schedule_hour], null)
     }
 }
