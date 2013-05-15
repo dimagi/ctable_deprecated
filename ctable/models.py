@@ -136,4 +136,4 @@ class SqlExtractMapping(Document):
     def key_columns(self):
         return [c.name for c in self.columns if c.is_key_column]
 
-import signals
+from . import signals
