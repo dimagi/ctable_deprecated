@@ -106,13 +106,17 @@ class SqlExtractMapping(Document):
     columns = SchemaListProperty(ColumnDef, required=True)
 
     schedule_type = StringProperty(choices=['daily', 'weekly', 'monthly'], default='daily')
-    hour = IntegerProperty(default=8)
-    day_of_week_month = IntegerProperty(default=-1)
+    schedule_hour = IntegerProperty(default=8)
+    schedule_day = IntegerProperty(default=-1)
     """Day of week for weekly, day of month for monthly, -1 for daily"""
 
     couch_view = StringProperty(required=True)
-    couch_startkey = ListProperty(default=[])
-    couch_endkey = ListProperty(default=[{}])
+    couch_key_prefix = ListProperty(default=[])
+    couch_date_range = IntegerProperty(default=-1)
+    """Number of days in the past to query data for. This assumes that the last
+    element in the view key is a date."""
+    couch_date_format = StringProperty(default='%Y-%m-%dT%H:%M:%S.%fZ')
+    """Used when appending the date to the key (in cases where couch_date_range > 0)"""
 
     @property
     def table_name(self):

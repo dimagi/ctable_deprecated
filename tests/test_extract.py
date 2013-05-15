@@ -1,22 +1,28 @@
+TEST_DB_URL = 'postgresql://postgres:@localhost/ctable_test'
+
+from couchdbkit.schema import DocumentBase, DocumentSchema
+from fakecouch import FakeCouchDb
+
+DocumentBase._db = FakeCouchDb()
+DocumentSchema._db = FakeCouchDb()
+
 from django.conf import settings
 if not settings.configured:
-    settings.configure(DEBUG=True)
+    settings.configure(DEBUG=True, SQL_REPORTING_DATABASE_URL=TEST_DB_URL)
 
 from unittest2 import TestCase
 import sqlalchemy
 
-from datetime import date
+from datetime import date, datetime, timedelta
 from ctable.models import KeyMatcher
 from ctable import CtableExtractor, SqlExtractMapping, ColumnDef
 from ctable.base import fluff_view
-from fakecouch import FakeCouchDb
 from couchdbkit.ext.django.loading import couchdbkit_handler
 
 import logging
 
 logging.basicConfig()
 
-TEST_DB_URL = 'postgresql://postgres:@localhost/ctable_test'
 engine = sqlalchemy.create_engine(TEST_DB_URL)
 
 DOMAIN = "test"
@@ -217,6 +223,24 @@ class TestCTable(TestCase):
         self.assertEqual(result['123_None']['visits_week_null_emitter'], 3)
         self.assertEqual(result['123_2012-02-24']['visits_week_all_visits'], 2)
         self.assertEqual(result['123_2012-02-25']['visits_week_all_visits'], 7)
+
+    def test_get_couch_keys(self):
+        mapping = SqlExtractMapping(couch_key_prefix=['a'])
+        startkey, endkey = self.ctable.get_couch_keys(mapping)
+
+        self.assertEqual(startkey, ['a'])
+        self.assertEqual(endkey, ['a', {}])
+
+    def test_get_couch_keys_with_dates(self):
+        format = '%Y-%m-%d'
+        range = 10
+        mapping = SqlExtractMapping(couch_key_prefix=['a'], couch_date_range=range, couch_date_format=format)
+        startkey, endkey = self.ctable.get_couch_keys(mapping)
+
+        end = datetime.utcnow()
+        start = end - timedelta(days=range)
+        self.assertEqual(startkey, ['a', start.strftime(format)])
+        self.assertEqual(endkey, ['a', end.strftime(format), {}])
 
     def _get_fluff_diff(self, emitters=['all_visits', 'null_emitter'],
                         group_values=['123'],

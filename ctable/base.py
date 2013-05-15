@@ -1,6 +1,7 @@
 from .models import SqlExtractMapping, ColumnDef, KeyMatcher
 from .writer import SqlTableWriter
 from couchdbkit.ext.django.loading import get_db
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger("ctable")
@@ -18,9 +19,9 @@ class CtableExtractor(object):
         """
         Extract data from a CouchDb view into SQL
         """
-        result = self.get_couch_rows(extract_mapping.couch_view,
-                                     extract_mapping.couch_startkey,
-                                     extract_mapping.couch_endkey)
+        startkey, endkey = self.get_couch_keys(extract_mapping)
+
+        result = self.get_couch_rows(extract_mapping.couch_view, startkey, endkey)
 
         total_rows = result.total_rows
         if total_rows > 0:
@@ -38,6 +39,20 @@ class CtableExtractor(object):
         couch_rows = self.recalculate_grains(grains, diff['database'])
         sql_rows = self.couch_rows_to_sql_rows(couch_rows, mapping)
         self.write_rows_to_sql(sql_rows, mapping)
+
+    def get_couch_keys(self, extract_mapping):
+        startkey = extract_mapping.couch_key_prefix
+        endkey = extract_mapping.couch_key_prefix
+        date_format = extract_mapping.couch_date_format
+        date_range = extract_mapping.couch_date_range
+        if date_range > 0 and date_format:
+            end = datetime.utcnow()
+            endkey += [end.strftime(date_format)]
+            start = end - timedelta(days=date_range)
+            startkey += [start.strftime(date_format)]
+        endkey += [{}]
+        return startkey, endkey
+
 
     def get_couch_rows(self, couch_view, startkey, endkey, db=None, **kwargs):
         db = db or self.db
