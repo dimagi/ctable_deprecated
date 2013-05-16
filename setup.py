@@ -22,13 +22,13 @@ setup(
         'alembic>=0.5.0',
         'celery>=3.0.15',
         'psycopg2>=2.4.1',
-        'pillowfluff',
+        'pillowfluff>=0.0.1',
     ],
     tests_require=[
         'unittest2',
         'fakecouch',
     ],
     dependency_links=[
-        'http://github.com/dimagi/fluff/tarball/master#egg=pillowfluff',
+        'http://github.com/dimagi/fluff/tarball/master#egg=pillowfluff-0.0.1',
     ],
 )
