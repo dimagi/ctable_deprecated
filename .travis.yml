@@ -4,10 +4,10 @@ python:
  - "2.7"
 install:
  - "sudo apt-get install libevent-dev"
- - "pip install -e ."
+ - "pip install -e . --use-mirrors"
  - "pip install coverage coveralls"
  - "psql -c 'create database ctable_test' -U postgres"
 script:
- - "coverage run setup.py test"
+ - "coverage run setup.py nosetests"
 after_success:
  - coveralls

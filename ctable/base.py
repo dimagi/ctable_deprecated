@@ -53,7 +53,6 @@ class CtableExtractor(object):
         endkey += [{}]
         return startkey, endkey
 
-
     def get_couch_rows(self, couch_view, startkey, endkey, db=None, **kwargs):
         db = db or self.db
         result = db.view(

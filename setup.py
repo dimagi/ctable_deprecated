@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'SQLAlchemy>=0.8.1',
         'django>=1.3.1',
-        'couchdbkit>=0.5.7',
+        'couchdbkit==0.5.7',
         'six>=1.2.0',
         'alembic>=0.5.0',
         'celery>=3.0.15',
@@ -26,7 +26,11 @@ setup(
     ],
     tests_require=[
         'unittest2',
-        'fakecouch',
+        'fakecouch>=0.0.1',
+        'mock>=0.0.8'
+    ],
+    setup_requires=[
+        'nose>=1.3.0'
     ],
     dependency_links=[
         'http://github.com/dimagi/fluff/tarball/master#egg=pillowfluff-0.0.1',

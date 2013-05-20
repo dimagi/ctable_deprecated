@@ -1,24 +1,10 @@
-from django.conf import settings
-if not settings.configured:
-    settings.configure(DEBUG=True)
-
-from unittest2 import TestCase
-import sqlalchemy
-
-from ctable import ColumnDef
 from ctable.writer import SqlTableWriter, ColumnTypeException
-
-import logging
-
-logging.basicConfig()
-
-TEST_DB_URL = 'postgresql://postgres:@localhost/ctable_test'
-engine = sqlalchemy.create_engine(TEST_DB_URL)
+from . import TestBase, engine
 
 TABLE = "test_table"
 
 
-class TestWriter(TestCase):
+class TestWriter(TestBase):
     def setUp(self):
         self.connection = engine.connect()
         self.trans = self.connection.begin()
@@ -34,10 +20,10 @@ class TestWriter(TestCase):
 
     def test_init_table(self):
         columns = [
-            ColumnDef(name="col_a", data_type="string", value_source='key'),
-            ColumnDef(name="col_b", data_type="date", value_source='key'),
-            ColumnDef(name="col_c", data_type="integer", value_source='value'),
-            ColumnDef(name="col_d", data_type="datetime", value_source='value'),
+            self.ColumnDef(name="col_a", data_type="string", value_source='key'),
+            self.ColumnDef(name="col_b", data_type="date", value_source='key'),
+            self.ColumnDef(name="col_c", data_type="integer", value_source='value'),
+            self.ColumnDef(name="col_d", data_type="datetime", value_source='value'),
         ]
         with self.writer:
             self.writer.init_table(TABLE, columns)
@@ -57,7 +43,7 @@ class TestWriter(TestCase):
         self.test_init_table()
 
         columns = [
-            ColumnDef(name="col_b", data_type="datetime", value_source='key'),
+            self.ColumnDef(name="col_b", data_type="datetime", value_source='key'),
         ]
 
         with self.assertRaises(ColumnTypeException):
