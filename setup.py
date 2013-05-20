@@ -29,9 +29,6 @@ setup(
         'fakecouch>=0.0.1',
         'mock>=0.0.8'
     ],
-    setup_requires=[
-        'nose>=1.3.0'
-    ],
     dependency_links=[
         'http://github.com/dimagi/fluff/tarball/master#egg=pillowfluff-0.0.1',
     ],
