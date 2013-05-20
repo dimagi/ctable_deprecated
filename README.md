@@ -1,4 +1,7 @@
-# ctable [![Build Status](https://travis-ci.org/dimagi/ctable.png)](https://travis-ci.org/dimagi/ctable)
+# ctable
+
+[![Build Status](https://travis-ci.org/dimagi/ctable.png)](https://travis-ci.org/dimagi/ctable)
+[![Test coverage](https://coveralls.io/repos/dimagi/ctable/badge.png?branch=master)](https://coveralls.io/r/dimagi/ctable)
 
 Basic ETL tool for extracting data from a CouchDB view to an SQL table.
 
