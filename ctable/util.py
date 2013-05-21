@@ -4,11 +4,11 @@ from dimagi.utils.couch.database import get_db
 
 
 def get_enabled_fluff_pillows():
-    hardcoded = getattr(settings, 'FLUFF_PILLOWS_TO_SQL', {})
+    hardcoded = getattr(settings, 'FLUFF_PILLOWS_TO_SQL', [])
     try:
         dynamic = get_db().get('FLUFF_PILLOWS_TO_SQL').get('enabled_pillows', [])
     except ResourceNotFound:
-        dynamic = {}
+        dynamic = []
 
     hardcoded.extend(dynamic)
     return hardcoded
