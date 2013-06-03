@@ -12,31 +12,31 @@ class TestViews(TestBase):
         from ctable.models import SCHEDULE_VIEW
         self.db.add_view(SCHEDULE_VIEW, [
             (
-                {'key': ['active', 'daily', -1, 8]}, ['daily']
+                {'key': ['active', 'daily', -1, 8]}, [{'value': 'daily'}]
             ),
             (
-                {'key': ['active', 'weekly', 3, 8]}, ['weekly']
+                {'key': ['active', 'weekly', 3, 8]}, [{'value': 'weekly'}]
             ),
             (
-                {'key': ['active', 'monthly', 12, 8]}, ['monthly']
+                {'key': ['active', 'monthly', 12, 8]}, [{'value': 'monthly'}]
             ),
             (
-                {'key': ['inactive', 'monthly', 12, 8]}, ['inactive_monthly']
+                {'key': ['inactive', 'monthly', 12, 8]}, [{'value': 'inactive_monthly'}]
             ),
         ])
 
         ed = datetime(2012, 1, 12, 8, 0, 0)
         exts = self.SqlExtractMapping.daily_schedule(ed)
-        self.assertEquals(exts, ['daily'])
+        self.assertEquals(exts[0], {'value': 'daily'})
 
         exts = self.SqlExtractMapping.weekly_schedule(ed)
-        self.assertEquals(exts, ['weekly'])
+        self.assertEquals(exts[0], {'value': 'weekly'})
 
         exts = self.SqlExtractMapping.monthly_schedule(ed)
-        self.assertEquals(exts, ['monthly'])
+        self.assertEquals(exts[0], {'value': 'monthly'})
 
         exts = self.SqlExtractMapping.schedule(ed)
-        self.assertEquals(exts, ['daily', 'weekly', 'monthly'])
+        self.assertEquals(exts, [{'value': 'daily'}, {'value': 'weekly'}, {'value': 'monthly'}])
 
         exts = self.SqlExtractMapping.schedule(ed, active=False)
-        self.assertEquals(exts, ['inactive_monthly'])
+        self.assertEquals(exts[0], {'value': 'inactive_monthly'})
