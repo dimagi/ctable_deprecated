@@ -1,5 +1,5 @@
 from couchdbkit import BadValueError
-from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty,
+from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty, StringListProperty,
                                           DocumentSchema, SchemaListProperty, ListProperty, BooleanProperty)
 from django.conf import settings
 from datetime import datetime
@@ -104,7 +104,7 @@ SCHEDULE_VIEW = "ctable/schedule"
 
 
 class SqlExtractMapping(Document):
-    domain = StringProperty()
+    domains = StringListProperty(required=True)
     name = StringProperty(required=True, validators=validate_name)
     columns = SchemaListProperty(ColumnDef, required=True)
     active = BooleanProperty(default=False)
@@ -124,7 +124,11 @@ class SqlExtractMapping(Document):
 
     @property
     def table_name(self):
-        return "{0}_{1}".format(self.domain, self.name) if self.domain else self.name
+        return "{0}_{1}".format('_'.join(self.domains), self.name)
+
+    @property
+    def is_fluff(self):
+        return self.get_id == self.name
 
     @property
     def key_columns(self):
@@ -132,13 +136,19 @@ class SqlExtractMapping(Document):
 
     @classmethod
     def by_domain(cls, domain):
-        key = [domain, cls.__name__]
-        return cls.view('domain/docs',
+        return cls.by_name(domain, None)
+
+    @classmethod
+    def by_name(cls, domain, name):
+        key = [domain, name] if name else [domain]
+        return cls.view('ctable/by_name',
                         startkey=key,
                         endkey=key + [{}],
                         reduce=False,
                         include_docs=True,
                         stale=settings.COUCH_STALE_QUERY).all()
+
+
 
     @classmethod
     def daily_schedule(cls, extract_date, active=True):

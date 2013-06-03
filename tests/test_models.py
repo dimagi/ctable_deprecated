@@ -14,7 +14,7 @@ class TestModels(TestBase):
             self.SqlExtractMapping(name="name_with_bang!")
 
     def test_sql_extract_table_name(self):
-        e = self.SqlExtractMapping(name="demo_name", domain="test")
+        e = self.SqlExtractMapping(name="demo_name", domains=["test"])
         self.assertEqual("test_demo_name", e.table_name)
 
     def test_column_match_all(self):

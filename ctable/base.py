@@ -1,3 +1,4 @@
+from couchdbkit import ResourceNotFound
 from .models import SqlExtractMapping, ColumnDef, KeyMatcher
 from .writer import SqlTableWriter
 from couchdbkit.ext.django.loading import get_db
@@ -105,7 +106,11 @@ class CtableExtractor(object):
 
             [doc_type, group1... groupN, calc_name, emitter_name, emitter_value] = 1
         """
-        mapping = SqlExtractMapping(name=diff['doc_type'], couch_view=fluff_view)
+        mapping = SqlExtractMapping(_id=diff['doc_type'],
+                                    domains=diff['domains'],
+                                    name=diff['doc_type'],
+                                    couch_view=fluff_view,
+                                    active=False)
         columns = []
         for i, group in enumerate(diff['group_names']):
             columns.append(ColumnDef(name=group,
@@ -130,6 +135,20 @@ class CtableExtractor(object):
                                          KeyMatcher(index=2 + num_groups, value=emitter_name)
                                      ]))
         mapping.columns = columns
+
+        try:
+            existing_mapping = SqlExtractMapping.get(mapping.get_id)
+            existing_mapping.domains = mapping.domains
+            existing_columns = existing_mapping.columns
+            for c in mapping.columns:
+                if not any(x for x in existing_columns if x.name == c.name):
+                    existing_columns.append(c)
+
+            existing_mapping.active = False
+            existing_mapping.save()
+        except ResourceNotFound:
+            mapping.save()
+
         return mapping
 
     def recalculate_grains(self, grains, database):

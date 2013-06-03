@@ -16,9 +16,10 @@ class TestBase(TestCase):
     def setUpClass(cls):
         from django.conf import settings
         if not settings.configured:
-            settings.configure(DEBUG=True, SQL_REPORTING_DATABASE_URL=TEST_DB_URL)
+            settings.configure(DEBUG=True, SQL_REPORTING_DATABASE_URL=TEST_DB_URL, COUCH_STALE_QUERY=False)
 
-        cls.p1 = patch('couchdbkit.ext.django.schema.get_db', return_value=FakeCouchDb())
+        cls.db = FakeCouchDb()
+        cls.p1 = patch('couchdbkit.ext.django.schema.get_db', return_value=cls.db)
         cls.p1.start()
         from ctable.models import KeyMatcher
         from ctable.base import CtableExtractor, SqlExtractMapping, ColumnDef, fluff_view
