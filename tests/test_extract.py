@@ -7,7 +7,7 @@ from . import TestBase, engine
 
 DOMAIN = "test"
 MAPPING_NAME = "demo_extract"
-TABLE = "%s_%s" %(DOMAIN, MAPPING_NAME)
+TABLE = "%s_%s" % (DOMAIN, MAPPING_NAME)
 
 
 class TestCTable(TestBase):
@@ -26,7 +26,7 @@ class TestCTable(TestBase):
         self.trans.rollback()
         self.trans = self.connection.begin()
         self.connection.execute('DROP TABLE IF EXISTS "%s"' % TABLE)
-        self.connection.execute('DROP TABLE IF EXISTS "%s"' % self._get_fluff_diff()['doc_type'])
+        self.connection.execute('DROP TABLE IF EXISTS "%s_%s"' % (DOMAIN, self._get_fluff_diff()['doc_type']))
         self.trans.commit()
         self.connection.close()
         self.p2.stop()

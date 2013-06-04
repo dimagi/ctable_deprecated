@@ -17,6 +17,24 @@ class TestModels(TestBase):
         e = self.SqlExtractMapping(name="demo_name", domains=["test"])
         self.assertEqual("test_demo_name", e.table_name)
 
+    def test_column_validate_nullable_value(self):
+        col = self.ColumnDef(name="a", data_type="string", value_source="value", nullable=True,
+                             match_keys=[self.KeyMatcher(index=1, value="a")])
+        col.validate()
+
+        col = self.ColumnDef(name="a", data_type="string", value_source="value", nullable=False,
+                             match_keys=[self.KeyMatcher(index=1, value="a")])
+        with self.assertRaises(BadValueError):
+            col.validate()
+
+    def test_column_validate_key_index(self):
+        col = self.ColumnDef(name="a", data_type="string", value_source="key", value_index=1)
+        col.validate()
+
+        col = self.ColumnDef(name="a", data_type="string", value_source="key")
+        with self.assertRaises(BadValueError):
+            col.validate()
+
     def test_column_match_all(self):
         col = self.ColumnDef(name="user", data_type="string", max_length=50, value_source="key", value_index=0)
         val = self._get_column_values(col)

@@ -28,14 +28,21 @@ data for that table comes from.
 ## Columns
 Fields:
 * name
-* data_type (string, integer, date, datetime)
-* value_source (key, value)
+* data_type
+  * options = string, integer, date, datetime
+* nullable
+  * boolean value. Can only be False for columns that have no `match_keys`
+* value_source
+  * options = key, value
 * value_index
   * numeric index used to extract the value from the value_source e.g. key[1]
+  * compulsory for columns where `value_source = 'key'`
 * value_attribute
   * attribute key used to extract the value from the value_source e.g. value["sum"]
-* max_length (only for string columns)
-* date_format (only for date / datetime columns)
+* max_length
+  * only for string columns
+* date_format
+  * only for date / datetime columns
 * match_keys
   * List of KeyMatcher objects
   * used to determine when this column is relevant e.g. rows where key[1] = 'indicator_a'

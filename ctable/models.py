@@ -32,6 +32,7 @@ class KeyMatcher(DocumentSchema, RowMatcher):
 class ColumnDef(DocumentSchema):
     name = StringProperty(required=True)
     data_type = StringProperty(required=True, choices=["string", "integer", "date", "datetime"])
+    nullable = BooleanProperty(default=True)
     date_format = StringProperty()
     """Format string for date columns"""
     max_length = IntegerProperty()
@@ -93,11 +94,19 @@ class ColumnDef(DocumentSchema):
 
     @property
     def sql_column(self):
-        return sqlalchemy.Column(self.name, self.sql_type, nullable=True)
+        return sqlalchemy.Column(self.name, self.sql_type, nullable=self.nullable)
 
     @property
     def is_key_column(self):
         return not self.match_keys
+
+    def validate(self, required=True):
+        super(ColumnDef, self).validate(required)
+
+        if not self.nullable and not self.is_key_column:
+            raise BadValueError('Value columns must be nullable')
+        if self.value_source == 'key' and self.value_index is None:
+            raise BadValueError('Key columns must specify a value_index')
 
 
 SCHEDULE_VIEW = "ctable/schedule"
