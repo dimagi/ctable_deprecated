@@ -21,9 +21,13 @@ class TestWriter(TestBase):
     def test_init_table(self):
         columns = [
             self.ColumnDef(name="col_a", data_type="string", value_source='key'),
+            self.ColumnDef(name="col_e", data_type="string", value_source='key'),
+            self.ColumnDef(name="col_f", data_type="string", value_source='key'),
             self.ColumnDef(name="col_b", data_type="date", value_source='key'),
-            self.ColumnDef(name="col_c", data_type="integer", value_source='value'),
-            self.ColumnDef(name="col_d", data_type="datetime", value_source='value'),
+            self.ColumnDef(name="col_c", data_type="integer", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="c")]),
+            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="d")]),
         ]
         with self.writer:
             self.writer.init_table(TABLE, columns)

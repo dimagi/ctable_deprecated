@@ -28,14 +28,27 @@ data for that table comes from.
 ## Columns
 Fields:
 * name
-* data_type (string, integer, date, datetime)
-* value_source (key, value)
+* data_type
+  * options = string, integer, date, datetime
+* null_value_placeholder
+  * Value to use when column value is null.
+  * Only applicable to columns with no match_keys.
+  * Defaults:
+    * `'__none__'` for string columns
+    * [`161803398875`](http://en.wikipedia.org/wiki/Golden_ratio) for integer columns
+    * `date.min` for date columns
+    * `datetime.min` for datetime columns
+* value_source
+  * options = key, value
 * value_index
   * numeric index used to extract the value from the value_source e.g. key[1]
+  * compulsory for columns where `value_source = 'key'`
 * value_attribute
   * attribute key used to extract the value from the value_source e.g. value["sum"]
-* max_length (only for string columns)
-* date_format (only for date / datetime columns)
+* max_length
+  * only for string columns
+* date_format
+  * only for date / datetime columns
 * match_keys
   * List of KeyMatcher objects
   * used to determine when this column is relevant e.g. rows where key[1] = 'indicator_a'

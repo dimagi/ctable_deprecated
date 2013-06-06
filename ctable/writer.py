@@ -50,9 +50,6 @@ class SqlTableWriter(object):
 
         if not table_name in self.metadata.tables:
             columns = [c.sql_column for c in column_defs]
-            unique_columns = [c.name for c in column_defs if c.is_key_column]
-            if unique_columns:
-                columns.append(sqlalchemy.UniqueConstraint(*unique_columns))
             op.create_table(table_name, *columns)
             self.metadata.reflect()
         else:
@@ -101,5 +98,4 @@ class SqlTableWriter(object):
 
         for row_dict in rows:
             logger.debug(".")
-
             self.upsert(self.table(table_name), row_dict, key_columns)
