@@ -61,7 +61,7 @@ class TestCTable(TestBase):
         self.ctable.extract(extract)
 
         result = dict(
-            [(row.username + "_" + row.date.strftime("%Y-%m-%d"), row) for row in
+            [(row.username + "_" + self.format_date(row.date), row) for row in
              self.connection.execute('SELECT * FROM %s' % extract.table_name)])
         self.assertEqual(result['1_2013-03-01']['rename_indicator_a'], 1)
         self.assertEqual(result['1_2013-03-01']['indicator_b'], 2)
@@ -90,7 +90,7 @@ class TestCTable(TestBase):
 
         result = self.connection.execute('SELECT * FROM %s' % extract.table_name).first()
         self.assertEqual(result['username'], "1")
-        self.assertEqual(result['date'], None)
+        self.assertEqual(result['date'], date.min)
         self.assertEqual(result['indicator'], 1)
 
     def test_empty_view_result(self):
@@ -106,21 +106,27 @@ class TestCTable(TestBase):
 
     def test_couch_rows_to_sql(self):
         extract = self.SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
-            self.ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
+            self.ColumnDef(name="username", data_type="string", max_length=50, value_source="key",
+                           value_index=0, null_value_placeholder='123abc'),
             self.ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
-                      value_source="key", value_index=2),
-            self.ColumnDef(name="indicator", data_type="integer", value_source="value",
-                      match_keys=[self.KeyMatcher(index=1, value="indicator_a")])
+                           value_source="key", value_index=2),
+            self.ColumnDef(name="indicator1", data_type="integer", value_source="value",
+                           match_keys=[self.KeyMatcher(index=1, value="indicator_a")]),
+            self.ColumnDef(name="indicator2", data_type="integer", value_source="value",
+                           match_keys=[self.KeyMatcher(index=1, value="indicator_b")])
         ])
         rows = [
             dict(key=['user1', 'indicator_a', '2012-02-15T00:00:00.000Z'], value=1),
-            dict(key=['user2', 'indicator_a', '2012-02-15T00:00:00.000Z'], value=2),
-            dict(key=['user1', 'indicator_b', '2012-02-15T00:00:00.000Z'], value=1),
+            dict(key=['user2', 'indicator_a', None], value=2),
+            dict(key=['user1', 'indicator_b', '2012-02-15T00:00:00.000Z'], value=3),
+            dict(key=[None, 'indicator_b', '2012-02-15T00:00:00.000Z'], value=4),
         ]
         sql_rows = list(self.ctable.couch_rows_to_sql_rows(rows, extract))
-        self.assertEqual(len(sql_rows), 2)
-        self.assertEqual(sql_rows[0], dict(username='user1', date=date(2012, 02, 15), indicator=1))
-        self.assertEqual(sql_rows[1], dict(username='user2', date=date(2012, 02, 15), indicator=2))
+        self.assertEqual(len(sql_rows), 4)
+        self.assertEqual(sql_rows[0], dict(username='user1', date=date(2012, 02, 15), indicator1=1))
+        self.assertEqual(sql_rows[1], dict(username='user2', date=date.min, indicator1=2))
+        self.assertEqual(sql_rows[2], dict(username='user1', date=date(2012, 02, 15), indicator2=3))
+        self.assertEqual(sql_rows[3], dict(username='123abc', date=date(2012, 02, 15), indicator2=4))
 
     def test_convert_indicator_diff_to_grains_date(self):
         diff = self._get_fluff_diff(['all_visits'],
@@ -258,7 +264,7 @@ class TestCTable(TestBase):
              self.connection.execute('SELECT * FROM "%s_%s"' % ('_'.join(diff['domains']), diff['doc_type']))])
 
         self.assertEqual(len(result), 3)
-        self.assertEqual(result['123_None']['visits_week_null_emitter'], 3)
+        self.assertEqual(result['123_0001-01-01']['visits_week_null_emitter'], 3)
         self.assertEqual(result['123_2012-02-24']['visits_week_all_visits'], 2)
         self.assertEqual(result['123_2012-02-25']['visits_week_all_visits'], 7)
 
@@ -318,3 +324,6 @@ class TestCTable(TestBase):
         for i in range(len(left_matches)):
             self.assertEqual(left_matches[i].index, right_matches[i].index)
             self.assertEqual(left_matches[i].value, right_matches[i].value)
+
+    def format_date(self, d):
+        return "%02d-%02d-%02d" % (d.year,d.month,d.day)

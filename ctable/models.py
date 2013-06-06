@@ -1,8 +1,8 @@
 from couchdbkit import BadValueError
-from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty, StringListProperty,
+from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty, StringListProperty, Property,
                                           DocumentSchema, SchemaListProperty, ListProperty, BooleanProperty)
 from django.conf import settings
-from datetime import datetime
+from datetime import datetime, date
 import sqlalchemy
 import re
 
@@ -32,7 +32,7 @@ class KeyMatcher(DocumentSchema, RowMatcher):
 class ColumnDef(DocumentSchema):
     name = StringProperty(required=True)
     data_type = StringProperty(required=True, choices=["string", "integer", "date", "datetime"])
-    nullable = BooleanProperty(default=True)
+    null_value_placeholder = StringProperty()
     date_format = StringProperty()
     """Format string for date columns"""
     max_length = IntegerProperty()
@@ -69,7 +69,12 @@ class ColumnDef(DocumentSchema):
 
     def convert_type(self, value):
         if value is None:
-            return value
+            if not self.is_key_column:
+                return value
+            elif self.null_value_placeholder:
+                value = self.null_value_placeholder
+            else:
+                return self.default_null_value_placeholder
 
         if self.data_type == "date" or self.data_type == "datetime":
             converted = datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%SZ")
@@ -93,8 +98,23 @@ class ColumnDef(DocumentSchema):
             raise Exception("Unexpected type", self.data_type)
 
     @property
+    def default_null_value_placeholder(self):
+        if self.data_type == "string":
+            return 'None'
+        elif self.data_type == "integer":
+            return -1
+        elif self.data_type == "date":
+            return date.min
+        elif self.data_type == 'datetime':
+            return datetime.min
+        else:
+            raise Exception("Unexpected type", self.data_type)
+
+    @property
     def sql_column(self):
-        return sqlalchemy.Column(self.name, self.sql_type, nullable=self.nullable)
+        return sqlalchemy.Column(self.name, self.sql_type,
+                                 nullable=(not self.is_key_column),
+                                 primary_key=self.is_key_column)
 
     @property
     def is_key_column(self):
@@ -103,8 +123,6 @@ class ColumnDef(DocumentSchema):
     def validate(self, required=True):
         super(ColumnDef, self).validate(required)
 
-        if not self.nullable and not self.is_key_column:
-            raise BadValueError('Value columns must be nullable')
         if self.value_source == 'key' and self.value_index is None:
             raise BadValueError('Key columns must specify a value_index')
 
