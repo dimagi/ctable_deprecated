@@ -30,8 +30,14 @@ Fields:
 * name
 * data_type
   * options = string, integer, date, datetime
-* nullable
-  * boolean value. Can only be False for columns that have no `match_keys`
+* null_value_placeholder
+  * Value to use when column value is null.
+  * Only applicable to columns with no match_keys.
+  * Defaults:
+    * `'None'` for string columns
+    * `-1` for integer columns
+    * `date.min` for date columns
+    * `datetime.min` for datetime columns
 * value_source
   * options = key, value
 * value_index
