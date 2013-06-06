@@ -100,9 +100,9 @@ class ColumnDef(DocumentSchema):
     @property
     def default_null_value_placeholder(self):
         if self.data_type == "string":
-            return 'None'
+            return '__none__'
         elif self.data_type == "integer":
-            return -1
+            return 161803398875  # see http://en.wikipedia.org/wiki/Golden_ratio
         elif self.data_type == "date":
             return date.min
         elif self.data_type == 'datetime':

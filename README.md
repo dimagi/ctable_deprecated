@@ -34,8 +34,8 @@ Fields:
   * Value to use when column value is null.
   * Only applicable to columns with no match_keys.
   * Defaults:
-    * `'None'` for string columns
-    * `-1` for integer columns
+    * `'__none__'` for string columns
+    * [`161803398875`](http://en.wikipedia.org/wiki/Golden_ratio) for integer columns
     * `date.min` for date columns
     * `datetime.min` for datetime columns
 * value_source
