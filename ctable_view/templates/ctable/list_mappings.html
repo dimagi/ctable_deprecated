@@ -1,0 +1,88 @@
+{% extends 'hqwebapp/centered.html' %}
+{% load i18n %}
+{% load hq_shared_tags %}
+{% load hqstyle_tags %}
+
+{% block js-inline %}{{ block.super }}
+    <script type="text/javascript">
+        $(function() {
+            $('.disabled').click(function (e) {
+                e.preventDefault();
+                return false;
+            });
+        });
+
+    </script>
+{% endblock %}
+
+{% block centered-content %}
+    <h3>SQL Extract Mappings
+    <a class="btn pull-right" href="{% url sql_mappings_edit domain '' %}">
+        <i class="icon-edit"></i>
+        {% trans "New Mapping" %}
+    </a>
+    </h3>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th rowspan="2">Name</th>
+                <th rowspan="2">Schedule</th>
+                <th colspan="3">Couch View</th>
+                <th rowspan="2"></th>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <th>Key Prefix</th>
+                <th>Date Range</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mapping in mappings %}
+            <tr class="{% if mapping.active %}success{% else %}warning{% endif %}">
+                <td>{{ mapping.name }}</td>
+                <td>
+                    {{ mapping.schedule_type }}
+                    {% if mapping.schedule_type != 'daily' %} on day {{ mapping.schedule_day }}{% endif %}
+                    at {{ mapping.schedule_hour }}:00
+                </td>
+                <td>{{ mapping.couch_view }}</td>
+                <td>{{ mapping.couch_key_prefix }}</td>
+                <td>{{ mapping.couch_date_range }}</td>
+                <td>
+                    <a class="btn btn-small {% if mapping.auto_generated %}disabled{% endif  %}" href="{% url sql_mappings_toggle_state domain mapping.get_id %}">
+                        {% if mapping.active %}
+                            <i class="icon-stop"></i>
+                            {% trans "De-activate" %}
+                        {% else %}
+                            <i class="icon-play"></i>
+                            {% trans "Activate" %}
+                        {% endif %}
+                    </a>
+                    <a class="btn btn-small" href="{% url sql_mappings_edit domain mapping.get_id %}">
+                        {% if mapping.auto_generated %}
+                            <i class="icon-file-alt"></i>
+                            {% trans "View" %}
+                        {% else %}
+                            <i class="icon-edit"></i>
+                            {% trans "Edit" %}
+                        {% endif  %}
+                    </a>
+                    <a class="btn btn-small btn-info" href="#">
+                        <i class="icon-beaker icon-white"></i>
+                        {% trans "Test" %}
+                    </a>
+                    <a class="btn btn-small btn-danger" data-toggle="modal" href="#delete-sql-mapping-{{ mapping.get_id }}">
+                        <i class="icon-remove icon-white"></i>
+                        {% trans "Delete" %}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block modals %}{{ block.super }}
+    {% include "ctable/delete_sql_mapping_dialog.html" %}
+{% endblock %}
