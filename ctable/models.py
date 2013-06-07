@@ -135,6 +135,7 @@ class SqlExtractMapping(Document):
     name = StringProperty(required=True, validators=validate_name)
     columns = SchemaListProperty(ColumnDef, required=True)
     active = BooleanProperty(default=False)
+    auto_generated = BooleanProperty(default=False)
 
     schedule_type = StringProperty(choices=['daily', 'weekly', 'monthly'], default='daily')
     schedule_hour = IntegerProperty(default=8)
@@ -152,10 +153,6 @@ class SqlExtractMapping(Document):
     @property
     def table_name(self):
         return "{0}_{1}".format('_'.join(self.domains), self.name)
-
-    @property
-    def is_fluff(self):
-        return self.get_id == self.name
 
     @property
     def key_columns(self):

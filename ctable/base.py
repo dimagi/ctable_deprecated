@@ -110,7 +110,8 @@ class CtableExtractor(object):
                                     domains=diff['domains'],
                                     name=diff['doc_type'],
                                     couch_view=fluff_view,
-                                    active=False)
+                                    active=False,
+                                    auto_generated=True)
         columns = []
         for i, group in enumerate(diff['group_names']):
             columns.append(ColumnDef(name=group,
