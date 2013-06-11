@@ -1,6 +1,5 @@
 function SqlExtractMapping(data) {
     var self = this;
-    self.list_url = data.list_url;
 
     var config = {
         'columns': {
@@ -57,11 +56,6 @@ function SqlExtractMapping(data) {
                 }, 'json').fail(function() { alert("Saving failed."); })
         }
     }
-
-    self.cancel = function() {
-        window.location.href = self.list_url;
-    }
-
 }
 
 function ColumnDef(json) {

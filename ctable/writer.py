@@ -15,7 +15,18 @@ class ColumnTypeException(Exception):
     pass
 
 
-class SqlTableWriter(object):
+class CtableWriter(object):
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+    def write_table(self, rows, extract_mapping):
+        raise NotImplementedError()
+
+
+class SqlTableWriter(CtableWriter):
     """
     Write rows to a database specified by URL
     """
@@ -99,3 +110,27 @@ class SqlTableWriter(object):
         for row_dict in rows:
             logger.debug(".")
             self.upsert(self.table(table_name), row_dict, key_columns)
+
+
+class TestWriter(CtableWriter):
+    data = {}
+    
+    def write_table(self, rows, extract_mapping):
+        table_name = extract_mapping.table_name
+        columns = [c.name for c in extract_mapping.columns]
+
+        if not self.data:
+            self.data = {'table_name': table_name, 'columns': columns, 'rows': []}
+
+        key_columns = extract_mapping.key_columns
+
+        rows_tmp = {}
+        for row_dict in rows:
+            row_key = tuple([row_dict[k] for k in key_columns])
+            row_data = rows_tmp.setdefault(row_key, {})
+            row_data.update(row_dict)
+
+        for row in rows_tmp.values():
+            row_arr = [row[c] if c in row else '' for c in columns]
+            self.data['rows'].append(row_arr)
+

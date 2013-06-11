@@ -1,0 +1,59 @@
+{% extends 'hqwebapp/centered.html' %}
+{% load i18n %}
+{% load hq_shared_tags %}
+{% load hqstyle_tags %}
+
+{% block js-inline %}{{ block.super }}
+{% endblock %}
+
+{% block centered-content %}
+    <h3>Results from running '{{ mapping.name  }}' mapping
+        <div class="btn-toolbar pull-right">
+            <div class="btn-group">
+                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                {% trans "Run again" %}
+                <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=100">100 rows</a></li>
+                    <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=250">250 rows</a></li>
+                    <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=500">500 rows</a></li>
+                    <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=1000">1000 rows</a></li>
+                </ul>
+            </div>
+            <a class="btn" href="{% url sql_mappings_edit domain mapping.get_id %}">
+                {% if mapping.auto_generated %}
+                    <i class="icon-file-alt"></i>
+                    {% trans "View" %}
+                {% else %}
+                    <i class="icon-edit"></i>
+                    {% trans "Edit" %}
+                {% endif  %}
+            </a>
+            <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Back" %}</a>
+        </div>
+    </h3>
+    <ul>
+        <li>Rows processed: {{ rows_processed }}</li>
+        <li>Table name: {{ data.table_name }}</li>
+    </ul>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                {% for c in data.columns %}
+                <th>{{ c }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data.rows %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

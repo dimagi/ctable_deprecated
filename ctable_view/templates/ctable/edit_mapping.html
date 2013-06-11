@@ -13,7 +13,6 @@
     <script type="text/javascript">
         $(function() {
             var view_model = new SqlExtractMapping({
-                list_url: '{% url sql_mappings_list domain=domain %}',
                 sql_mapping: {{ mapping.to_json|JSON }}
             });
             ko.applyBindings(view_model);
@@ -155,10 +154,10 @@
         </fieldset>
         <div class="form-actions">
             {% if mapping.auto_generated %}
-                <button type="button" class="btn" data-bind="click: cancel">{% trans "Back" %}</button>
+                <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Back" %}</a>
             {% else %}
                 <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
-                <button type="button" class="btn" data-bind="click: cancel">{% trans "Cancel" %}</button>
+                <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Cancel" %}</a>
             {% endif  %}
         </div>
     </form>
@@ -235,7 +234,7 @@
                                 <input id="id_date_format" type="text" name="date_format" maxlength="50"  data-bind="value: date_format">
                                 <span class="help-inline"><small class="label">REQUIRED</small></span>
 
-                                <p class="help-block">{% trans "Format string for date columns" %}</p>
+                                <p class="help-block">{% trans "Format string for date columns. Default: %Y-%m-%dT%H:%M:%SZ" %}</p>
                             </div>
                         </div>
                         <div class="control-group" data-bind="visible: data_type.show_max_length">

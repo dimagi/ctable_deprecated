@@ -11,12 +11,12 @@ fluff_view = 'fluff/generic'
 
 
 class CtableExtractor(object):
-    def __init__(self, sql_connection_or_url, couch_db):
+    def __init__(self, sql_connection_or_url, couch_db, writer=None):
         self.db = couch_db
         self.sql_connection_or_url = sql_connection_or_url
-        self.writer = SqlTableWriter(self.sql_connection_or_url)
+        self.writer = writer or SqlTableWriter(self.sql_connection_or_url)
 
-    def extract(self, extract_mapping):
+    def extract(self, extract_mapping, limit=None):
         """
         Extract data from a CouchDb view into SQL
         """
@@ -28,7 +28,17 @@ class CtableExtractor(object):
         if total_rows > 0:
             logger.info("Total rows: %d", total_rows)
             rows = self.couch_rows_to_sql_rows(result, extract_mapping)
+            if limit:
+                rows_tmp = []
+                for i, row in enumerate(rows):
+                    if i >= limit:
+                        break
+                    rows_tmp.append(row)
+                rows = rows_tmp
+                total_rows = len(rows)
             self.write_rows_to_sql(rows, extract_mapping)
+
+        return total_rows
 
     def process_fluff_diff(self, diff):
         """

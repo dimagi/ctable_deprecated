@@ -1,5 +1,7 @@
 import json
 from couchdbkit import ResourceNotFound
+from ctable.base import CtableExtractor
+from ctable.writer import TestWriter
 from dimagi.utils.couch.bulk import CouchTransaction
 from dimagi.utils.web import json_response
 
@@ -57,13 +59,35 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
         'mapping': mapping,
     })
 
+
+def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
+    if mapping_id:
+        try:
+            limit = int(request.GET.get('limit', 100))
+            limit = min(limit, 1000)
+            mapping = SqlExtractMapping.get(mapping_id)
+            test_writer = TestWriter()
+            extractor = CtableExtractor('', SqlExtractMapping.get_db(), writer=test_writer)
+            rows_processed = extractor.extract(mapping, limit=limit)
+            return render(request, template, {
+                'domain': domain,
+                'mapping': mapping,
+                'rows_processed': rows_processed,
+                'data': test_writer.data
+            })
+        except ResourceNotFound:
+            raise Http404()
+
+    return redirect('sql_mappings_list', domain=domain)
+
+
 @require_can_edit_sql_mappings
 def toggle(request, domain, mapping_id):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
             # don't activate 'fluff' mappings
-            if mapping.name != mapping_id:
+            if not mapping.auto_generated:
                 mapping.active = not mapping.active
                 mapping.save()
         except ResourceNotFound:
