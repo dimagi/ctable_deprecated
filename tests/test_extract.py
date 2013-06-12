@@ -298,16 +298,14 @@ class TestCTable(TestBase):
                                           emitter='null_emitter',
                                           emitter_type='null',
                                           reduce_type='count',
-                                          has_value=False,
-                                          values=[None, None]))
+                                          values=[[None, 1], [None, 1]]))
 
         if 'all_visits' in emitters:
             indicator_changes.append(dict(calculator='visits_week',
                                           emitter='all_visits',
                                           emitter_type='date',
                                           reduce_type='count',
-                                          has_value=False,
-                                          values=[date(2012, 2, 24), date(2012, 2, 25)]))
+                                          values=[[date(2012, 2, 24), 1], [date(2012, 2, 25), 1]]))
 
         diff['indicator_changes'] = indicator_changes
         return diff
