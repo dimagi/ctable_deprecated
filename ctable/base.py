@@ -16,11 +16,11 @@ class CtableExtractor(object):
         self.sql_connection_or_url = sql_connection_or_url
         self.writer = writer or SqlTableWriter(self.sql_connection_or_url)
 
-    def extract(self, extract_mapping, limit=None):
+    def extract(self, extract_mapping, limit=None, date_range=None, status_callback=None):
         """
         Extract data from a CouchDb view into SQL
         """
-        startkey, endkey = self.get_couch_keys(extract_mapping)
+        startkey, endkey = self.get_couch_keys(extract_mapping, date_range=date_range)
 
         result = self.get_couch_rows(extract_mapping.couch_view, startkey, endkey)
 
@@ -36,7 +36,11 @@ class CtableExtractor(object):
                     rows_tmp.append(row)
                 rows = rows_tmp
                 total_rows = len(rows)
-            self.write_rows_to_sql(rows, extract_mapping)
+
+            if status_callback:
+                status_callback = status_callback(total_rows)
+
+            self.write_rows_to_sql(rows, extract_mapping, status_callback=status_callback)
 
         return total_rows
 
@@ -51,11 +55,13 @@ class CtableExtractor(object):
         sql_rows = self.couch_rows_to_sql_rows(couch_rows, mapping)
         self.write_rows_to_sql(sql_rows, mapping)
 
-    def get_couch_keys(self, extract_mapping):
+    def get_couch_keys(self, extract_mapping, date_range=None):
         startkey = extract_mapping.couch_key_prefix
         endkey = extract_mapping.couch_key_prefix
         date_format = extract_mapping.couch_date_format
-        date_range = extract_mapping.couch_date_range
+        if not date_range:
+            date_range = extract_mapping.couch_date_range
+
         if date_range > 0 and date_format:
             end = datetime.utcnow()
             endkey += [end.strftime(date_format)]
@@ -75,9 +81,9 @@ class CtableExtractor(object):
             **kwargs)
         return result
 
-    def write_rows_to_sql(self, rows, extract_mapping):
+    def write_rows_to_sql(self, rows, extract_mapping, status_callback=None):
         with self.writer:
-            self.writer.write_table(rows, extract_mapping)
+            self.writer.write_table(rows, extract_mapping, status_callback=status_callback)
 
     def couch_rows_to_sql_rows(self, couch_rows, extract_mapping):
         """

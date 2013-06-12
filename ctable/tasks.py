@@ -1,5 +1,6 @@
 from celery.schedules import crontab
 from celery.task import periodic_task, task
+from celery import current_task
 from .base import CtableExtractor
 from .models import SqlExtractMapping, UnsupportedScheduledExtractError
 from django.conf import settings
@@ -8,10 +9,16 @@ ctable = CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.
 
 
 @task
-def process_extract(extract_id):
+def process_extract(extract_id, limit=None, date_range=None):
+    def update_status(total):
+        def update_current(current):
+            meta = {'current': current, 'total': total}
+            current_task.update_state(state='PROGRESS', meta=meta)
+        return update_current
+
     extract = SqlExtractMapping.get(extract_id)
     try:
-        ctable.extract(extract)
+        ctable.extract(extract, limit=limit, date_range=date_range, status_callback=update_status)
     except UnsupportedScheduledExtractError:
         pass
 

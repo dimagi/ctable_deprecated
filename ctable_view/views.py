@@ -1,4 +1,5 @@
 import json
+from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
 from ctable.base import CtableExtractor
 from ctable.writer import TestWriter
@@ -16,6 +17,7 @@ from corehq.apps.users.decorators import require_permission
 from ctable.models import SqlExtractMapping, KeyMatcher, ColumnDef
 from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
+from ctable.tasks import process_extract
 
 
 require_can_edit_sql_mappings = require_permission(Permissions.edit_data)
@@ -79,6 +81,31 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
             raise Http404()
 
     return redirect('sql_mappings_list', domain=domain)
+
+
+def poll_state(request, domain, job_id=None):
+    if not job_id:
+        return redirect('sql_mappings_list', domain=domain)
+
+    job = AsyncResult(job_id)
+    data = job.result or job.state
+    return json_response(data)
+
+
+def run(request, domain, mapping_id):
+    limit = request.GET.get('limit', None)
+    date_range = request.GET.get('date_range', None)
+    if not limit or limit == 'undefined':
+        limit = None
+    elif limit:
+        limit = int(limit)
+
+    if not date_range or date_range == 'undefined':
+        date_range = None
+    elif date_range:
+        date_range = int(date_range)
+    job = process_extract.delay(mapping_id, limit=limit, date_range=date_range)
+    return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain':domain, 'job_id':job.id})})
 
 
 @require_can_edit_sql_mappings

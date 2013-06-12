@@ -22,7 +22,7 @@ class CtableWriter(object):
     def __exit__(self, type, value, traceback):
         pass
 
-    def write_table(self, rows, extract_mapping):
+    def write_table(self, rows, extract_mapping, status_callback=None):
         raise NotImplementedError()
 
 
@@ -100,22 +100,23 @@ class SqlTableWriter(CtableWriter):
             update = update.values(**row_dict)
             self.connection.execute(update)
 
-    def write_table(self, rows, extract_mapping):
+    def write_table(self, rows, extract_mapping, status_callback=None):
         table_name = extract_mapping.table_name
         columns = extract_mapping.columns
         key_columns = extract_mapping.key_columns
 
         self.init_table(table_name, columns)
-
-        for row_dict in rows:
+        for i, row_dict in enumerate(rows):
             logger.debug(".")
+            if status_callback:
+                status_callback(i)
             self.upsert(self.table(table_name), row_dict, key_columns)
 
 
 class TestWriter(CtableWriter):
     data = {}
     
-    def write_table(self, rows, extract_mapping):
+    def write_table(self, rows, extract_mapping, status_callback=None):
         table_name = extract_mapping.table_name
         columns = [c.name for c in extract_mapping.columns]
 
