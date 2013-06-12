@@ -190,7 +190,7 @@ class SqlExtractMapping(Document):
         return SqlExtractMapping.view(SCHEDULE_VIEW, key=key).all()
 
     @classmethod
-    def schedule(cls, extract_date, active=True):
+    def schedule(cls, extract_date=None, active=True):
         extract_date = extract_date or datetime.utcnow()
         exps = cls.daily_schedule(extract_date, active)
         exps.extend(cls.weekly_schedule(extract_date, active))
