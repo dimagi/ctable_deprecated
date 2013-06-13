@@ -23,8 +23,9 @@ def combine_rows(rows, extract_mapping, chunksize=250):
             rows_tmp = {}
             for row_dict in chunk:
                 row_key = tuple([row_dict[k] for k in key_columns])
-                row_data = rows_tmp.setdefault(row_key, {})
-                row_data.update(row_dict)
+                row_data = rows_tmp.setdefault(row_key, {'count': 0, 'row': {}})
+                row_data['row'].update(row_dict)
+                row_data['count'] += 1
 
             for row in rows_tmp.values():
                 yield row

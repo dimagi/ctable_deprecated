@@ -108,11 +108,13 @@ class SqlTableWriter(CtableWriter):
         key_columns = extract_mapping.key_columns
 
         self.init_table(table_name, columns)
-        for i, row_dict in enumerate(rows):
+        count = 0
+        for row_dict in rows:
             logger.debug(".")
+            count += row_dict['count']
             if status_callback:
-                status_callback(i)
-            self.upsert(self.table(table_name), row_dict, key_columns)
+                status_callback(count)
+            self.upsert(self.table(table_name), row_dict['row'], key_columns)
 
 
 class TestWriter(CtableWriter):
@@ -129,5 +131,5 @@ class TestWriter(CtableWriter):
 
         rows_dict = combine_rows(list(rows), extract_mapping)
         for row in rows_dict:
-            row_arr = [row[c] if c in row else '' for c in columns]
+            row_arr = [row[c] if c in row['row'] else '' for c in columns]
             self.data['rows'].append(row_arr)
