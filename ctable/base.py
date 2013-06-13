@@ -41,6 +41,8 @@ class CtableExtractor(object):
                 total_rows = len(rows)
 
             if status_callback:
+                # note that some rows may get excluded (if they don't match any value columns)
+                # so total_rows is only an upper bound
                 status_callback = status_callback(total_rows)
 
             munged_rows = self.combine_rows(rows, extract_mapping)
