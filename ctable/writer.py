@@ -129,7 +129,7 @@ class TestWriter(CtableWriter):
         if not self.data:
             self.data = {'table_name': table_name, 'columns': columns, 'rows': []}
 
-        rows_dict = combine_rows(list(rows), extract_mapping)
-        for row in rows_dict:
-            row_arr = [row[c] if c in row['row'] else '' for c in columns]
+        # rows_dict = combine_rows(list(rows), extract_mapping)
+        for row_dict in rows:
+            row_arr = [row_dict['row'][c] if c in row_dict['row'] else '' for c in columns]
             self.data['rows'].append(row_arr)
