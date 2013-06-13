@@ -158,7 +158,7 @@ class TestCTable(TestBase):
                                                          data_type='string',
                                                          value_source='key',
                                                          value_index=1))
-        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='emitter_value',
+        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
                                                          data_type='date',
                                                          value_source='key',
                                                          value_index=4))
@@ -204,7 +204,7 @@ class TestCTable(TestBase):
                                                          data_type='string',
                                                          value_source='key',
                                                          value_index=1))
-        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='emitter_value',
+        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
                                                          data_type='date',
                                                          value_source='key',
                                                          value_index=4))
@@ -226,7 +226,7 @@ class TestCTable(TestBase):
         columns = self.db.mock_docs['MockIndicators']['columns']
         self.assertEquals(len(columns), 4)
         self.assertTrue(any(x for x in columns if x['name'] == 'owner_id'))
-        self.assertTrue(any(x for x in columns if x['name'] == 'emitter_value'))
+        self.assertTrue(any(x for x in columns if x['name'] == 'date'))
         self.assertTrue(any(x for x in columns if x['name'] == 'visits_week_null_emitter'))
         self.assertTrue(any(x for x in columns if x['name'] == 'visits_week_all_visits'))
 
@@ -264,7 +264,7 @@ class TestCTable(TestBase):
         diff = self._get_fluff_diff()
         self.ctable.process_fluff_diff(diff)
         result = dict(
-            [('%s_%s' % (row.owner_id, row.emitter_value), row) for row in
+            [('%s_%s' % (row.owner_id, row.date), row) for row in
              self.connection.execute('SELECT * FROM "%s_%s"' % ('_'.join(diff['domains']), diff['doc_type']))])
 
         self.assertEqual(len(result), 3)
