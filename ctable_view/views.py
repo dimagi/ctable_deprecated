@@ -37,7 +37,6 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
             d = _to_kwargs(request)
             if domain not in d['domains']:
                 d['domains'].append(domain)
-            d['database'] = 'ctable'
             mapping = SqlExtractMapping.from_json(d)
             mapping.save()
             return json_response({'redirect': reverse('sql_mappings_list', kwargs={'domain': domain})})

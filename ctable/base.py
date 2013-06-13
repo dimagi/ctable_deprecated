@@ -22,8 +22,8 @@ class CtableExtractor(object):
         """
         startkey, endkey = self.get_couch_keys(extract_mapping)
 
-        result = self.get_couch_rows(extract_mapping.couch_view, startkey, endkey,
-                                     db=get_db(extract_mapping.database))
+        db = get_db(extract_mapping.database) if extract_mapping.database else self.db
+        result = self.get_couch_rows(extract_mapping.couch_view, startkey, endkey, db=db)
 
         total_rows = result.total_rows
         if total_rows > 0:
