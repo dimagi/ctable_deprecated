@@ -16,6 +16,9 @@ class CtableExtractor(object):
         self.sql_connection_or_url = sql_connection_or_url
         self.writer = writer or SqlTableWriter(self.sql_connection_or_url)
 
+        from ctable.util import combine_rows
+        self.combine_rows = combine_rows
+
     def extract(self, extract_mapping, limit=None):
         """
         Extract data from a CouchDb view into SQL
@@ -36,7 +39,8 @@ class CtableExtractor(object):
                     rows_tmp.append(row)
                 rows = rows_tmp
                 total_rows = len(rows)
-            self.write_rows_to_sql(rows, extract_mapping)
+            munged_rows = self.combine_rows(rows, extract_mapping)
+            self.write_rows_to_sql(munged_rows, extract_mapping)
 
         return total_rows
 
@@ -49,7 +53,8 @@ class CtableExtractor(object):
         grains = self.get_fluff_grains(diff)
         couch_rows = self.recalculate_grains(grains, diff['database'])
         sql_rows = self.couch_rows_to_sql_rows(couch_rows, mapping)
-        self.write_rows_to_sql(sql_rows, mapping)
+        munged_rows = self.combine_rows(sql_rows, mapping)
+        self.write_rows_to_sql(munged_rows, mapping)
 
     def get_couch_keys(self, extract_mapping):
         startkey = extract_mapping.couch_key_prefix
