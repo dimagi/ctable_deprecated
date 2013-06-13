@@ -1,22 +1,18 @@
 import json
 from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
+from django.contrib.auth.decorators import user_passes_test, login_required
 from ctable.base import CtableExtractor
 from ctable.writer import TestWriter
-from dimagi.utils.couch.bulk import CouchTransaction
 from dimagi.utils.web import json_response
 
-from django.contrib import messages
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponseBadRequest, HttpResponse
-from django.views.decorators.http import require_POST
-from django.utils.translation import ugettext as _
+from django.http import Http404
 
 from corehq.apps.users.models import Permissions
 from corehq.apps.users.decorators import require_permission
-from ctable.models import SqlExtractMapping, KeyMatcher, ColumnDef
+from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
-from django.core.urlresolvers import reverse
 from ctable.tasks import process_extract
 
 
@@ -37,6 +33,7 @@ def view(request, domain, template='ctable/list_mappings.html'):
         'domain': domain,
         'mappings': mappings
     })
+
 
 @require_can_edit_sql_mappings
 def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
@@ -62,6 +59,7 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
     })
 
 
+@require_can_edit_sql_mappings
 def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
     if mapping_id:
         try:
@@ -83,6 +81,7 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
     return redirect('sql_mappings_list', domain=domain)
 
 
+@require_can_edit_sql_mappings
 def poll_state(request, domain, job_id=None):
     if not job_id:
         return redirect('sql_mappings_list', domain=domain)
@@ -92,6 +91,8 @@ def poll_state(request, domain, job_id=None):
     return json_response(data)
 
 
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def run(request, domain, mapping_id):
     limit = request.GET.get('limit', None)
     date_range = request.GET.get('date_range', None)
@@ -108,7 +109,8 @@ def run(request, domain, mapping_id):
     return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain':domain, 'job_id':job.id})})
 
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def toggle(request, domain, mapping_id):
     if mapping_id:
         try:

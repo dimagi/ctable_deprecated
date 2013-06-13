@@ -2,7 +2,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task, task
 from celery import current_task
 from ctable.util import get_extractor
-from .models import SqlExtractMapping, UnsupportedScheduledExtractError
+from .models import SqlExtractMapping
 
 
 @task
@@ -14,10 +14,7 @@ def process_extract(extract_id, limit=None, date_range=None):
         return update_current
 
     extract = SqlExtractMapping.get(extract_id)
-    try:
-        get_extractor().extract(extract, limit=limit, date_range=date_range, status_callback=update_status)
-    except UnsupportedScheduledExtractError:
-        pass
+    get_extractor().extract(extract, limit=limit, date_range=date_range, status_callback=update_status)
 
 
 @periodic_task(run_every=crontab(hour="*", minute="1", day_of_week="*"))

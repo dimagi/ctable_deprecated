@@ -12,10 +12,6 @@ def validate_name(value, search=re.compile(r'[^a-zA-Z0-9_]').search):
         raise BadValueError("Only a-z, 0-9 and '_' characters allowed")
 
 
-class UnsupportedScheduledExtractError(Exception):
-    pass
-
-
 class RowMatcher(object):
     def matches(self, row_key, row_value):
         raise NotImplementedError()
