@@ -165,11 +165,13 @@ class TestCTable(TestBase):
         self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
                                                          data_type='integer',
                                                          value_source='value',
+                                                         value_attribute='count',
                                                          match_keys=[self.KeyMatcher(index=2, value='visits_week'),
                                                                      self.KeyMatcher(index=3, value='null_emitter')]))
         self.assertColumnsEqual(em.columns[3], self.ColumnDef(name='visits_week_all_visits',
                                                          data_type='integer',
                                                          value_source='value',
+                                                         value_attribute='count',
                                                          match_keys=[self.KeyMatcher(index=2, value='visits_week'),
                                                                      self.KeyMatcher(index=3, value='all_visits')]))
 
@@ -209,11 +211,13 @@ class TestCTable(TestBase):
         self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
                                                          data_type='integer',
                                                          value_source='value',
+                                                         value_attribute='count',
                                                          match_keys=[self.KeyMatcher(index=2, value='visits_week'),
                                                                      self.KeyMatcher(index=3, value='null_emitter')]))
         self.assertColumnsEqual(em.columns[3], self.ColumnDef(name='visits_week_all_visits',
                                                          data_type='integer',
                                                          value_source='value',
+                                                         value_attribute='count',
                                                          match_keys=[self.KeyMatcher(index=2, value='visits_week'),
                                                                      self.KeyMatcher(index=3, value='all_visits')]))
 
@@ -250,9 +254,9 @@ class TestCTable(TestBase):
         self.assertEqual(rows[1], r2)
 
     def test_extract_fluff_diff(self):
-        rows = [{"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": 3},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00Z'], "value": 2},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00Z'], "value": 7}]
+        rows = [{"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": {'count': 3}},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00Z'], "value": {'count': 2}},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00Z'], "value": {'count': 7}}]
 
         self.db.add_view(self.fluff_view, [({'reduce': True, 'group': True, 'startkey': r['key'], 'endkey': r['key'] + [{}]},
                                        [r]) for r in rows])
@@ -299,13 +303,15 @@ class TestCTable(TestBase):
             indicator_changes.append(dict(calculator='visits_week',
                                           emitter='null_emitter',
                                           emitter_type='null',
-                                          values=[None, None]))
+                                          reduce_type='count',
+                                          values=[[None, 1], [None, 1]]))
 
         if 'all_visits' in emitters:
             indicator_changes.append(dict(calculator='visits_week',
                                           emitter='all_visits',
                                           emitter_type='date',
-                                          values=[date(2012, 2, 24), date(2012, 2, 25)]))
+                                          reduce_type='count',
+                                          values=[[date(2012, 2, 24), 1], [date(2012, 2, 25), 1]]))
 
         diff['indicator_changes'] = indicator_changes
         return diff

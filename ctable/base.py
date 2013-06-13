@@ -104,10 +104,7 @@ class CtableExtractor(object):
                 yield key_prefix + [None]
             elif ind['emitter_type'] == 'date':
                 for value in ind['values']:
-                    yield key_prefix + [value.strftime("%Y-%m-%dT%H:%M:%SZ")]
-            else:
-                for value in ind['values']:
-                    yield key_prefix + [value]
+                    yield key_prefix + [value[0].strftime("%Y-%m-%dT%H:%M:%SZ")]
 
     def get_extract_mapping(self, diff):
         """
@@ -141,6 +138,7 @@ class CtableExtractor(object):
             columns.append(ColumnDef(name='{0}_{1}'.format(calc_name, emitter_name),
                                      data_type='integer',
                                      value_source='value',
+                                     value_attribute=indicator['reduce_type'],
                                      match_keys=[
                                          KeyMatcher(index=1 + num_groups, value=calc_name),
                                          KeyMatcher(index=2 + num_groups, value=emitter_name)
