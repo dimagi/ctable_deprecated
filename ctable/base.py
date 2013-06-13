@@ -127,7 +127,7 @@ class CtableExtractor(object):
                                      value_index=1 + i))
 
         num_groups = len(diff['group_names'])
-        columns.append(ColumnDef(name='emitter_value',
+        columns.append(ColumnDef(name='date',
                                  data_type='date',
                                  value_source='key',
                                  value_index=3 + num_groups))
