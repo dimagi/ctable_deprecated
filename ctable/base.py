@@ -19,36 +19,32 @@ class CtableExtractor(object):
         from ctable.util import combine_rows
         self.combine_rows = combine_rows
 
-    def extract(self, extract_mapping, limit=None, date_range=None, status_callback=None):
+    def extract(self, mapping, limit=None, date_range=None, status_callback=None):
         """
         Extract data from a CouchDb view into SQL
         """
-        startkey, endkey = self.get_couch_keys(extract_mapping, date_range=date_range)
+        startkey, endkey = self.get_couch_keys(mapping, date_range=date_range)
 
-        result = self.get_couch_rows(extract_mapping.couch_view, startkey, endkey)
+        result = self.get_couch_rows(mapping.couch_view, startkey, endkey, limit=limit)
 
         total_rows = result.total_rows
+        rows_with_value = 0
         if total_rows > 0:
             logger.info("Total rows: %d", total_rows)
-            rows = self.couch_rows_to_sql_rows(result, extract_mapping)
+            rows = self.couch_rows_to_sql_rows(result, mapping)
             if limit:
-                rows_tmp = []
-                for i, row in enumerate(rows):
-                    if i >= limit:
-                        break
-                    rows_tmp.append(row)
-                rows = rows_tmp
-                total_rows = len(rows)
+                rows = list(rows)
+                rows_with_value = len(rows)
 
             if status_callback:
                 # note that some rows may get excluded (if they don't match any value columns)
                 # so total_rows is only an upper bound
                 status_callback = status_callback(total_rows)
 
-            munged_rows = self.combine_rows(rows, extract_mapping)
-            self.write_rows_to_sql(munged_rows, extract_mapping, status_callback=status_callback)
+            munged_rows = self.combine_rows(rows, mapping, chunksize=(limit or 250))
+            self.write_rows_to_sql(munged_rows, mapping)
 
-        return total_rows
+        return total_rows, rows_with_value
 
     def process_fluff_diff(self, diff):
         """

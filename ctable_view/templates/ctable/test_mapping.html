@@ -89,7 +89,7 @@
     </h3>
     <ul>
         <li data-bind="visible: date_range() > 0">Date range: {{ mapping.couch_date_range }} days</li>
-        <li>Rows processed: {{ rows_processed }}</li>
+        <li>Rows processed: {{ rows_processed }} ({{ rows_with_value }} matched a value column)</li>
         <li>Table name: {{ data.table_name }}</li>
     </ul>
 
@@ -117,7 +117,7 @@
             <a class="close" data-dismiss="modal">×</a>
             <h3>{% trans "Run mapping:" %} "{{ mapping.name }}"?</h3>
         </div>
-        <form name="execute_mapping" data-bind=show"submit: execute">
+        <form name="execute_mapping" data-bind="submit: execute">
             <div class="modal-body">
                 <div class="control-group">
                     <label class="control-label" for="id_limit">
