@@ -2,20 +2,15 @@ import json
 from couchdbkit import ResourceNotFound
 from ctable.base import CtableExtractor
 from ctable.writer import TestWriter
-from dimagi.utils.couch.bulk import CouchTransaction
 from dimagi.utils.web import json_response
 
-from django.contrib import messages
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponseBadRequest, HttpResponse
-from django.views.decorators.http import require_POST
-from django.utils.translation import ugettext as _
+from django.http import Http404
 
 from corehq.apps.users.models import Permissions
 from corehq.apps.users.decorators import require_permission
-from ctable.models import SqlExtractMapping, KeyMatcher, ColumnDef
+from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
-from django.core.urlresolvers import reverse
 
 
 require_can_edit_sql_mappings = require_permission(Permissions.edit_data)
@@ -42,9 +37,10 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
             d = _to_kwargs(request)
             if domain not in d['domains']:
                 d['domains'].append(domain)
+            d['database'] = 'ctable'
             mapping = SqlExtractMapping.from_json(d)
             mapping.save()
-            return json_response({'redirect': reverse('sql_mappings_list', kwargs={'domain':domain})})
+            return json_response({'redirect': reverse('sql_mappings_list', kwargs={'domain': domain})})
 
     if mapping_id:
         try:

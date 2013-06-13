@@ -136,9 +136,9 @@ class TestCTable(TestBase):
         grains = list(self.ctable.get_fluff_grains(diff))
         self.assertEqual(2, len(grains))
         key_prefix = ['MockIndicators', 'mock', '123', 'visits_week', 'all_visits']
-        self.assertEqual(grains[0], key_prefix + ["2012-02-24T00:00:00Z"])
-        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00Z"])
-        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00Z"])
+        self.assertEqual(grains[0], key_prefix + ["2012-02-24"])
+        self.assertEqual(grains[1], key_prefix + ["2012-02-25"])
+        self.assertEqual(grains[1], key_prefix + ["2012-02-25"])
 
     def test_convert_indicator_diff_to_grains_null(self):
         diff = self._get_fluff_diff(['null_emitter'])
@@ -158,8 +158,9 @@ class TestCTable(TestBase):
                                                          data_type='string',
                                                          value_source='key',
                                                          value_index=1))
-        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='emitter_value',
+        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
                                                          data_type='date',
+                                                         date_format='%Y-%m-%d',
                                                          value_source='key',
                                                          value_index=4))
         self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
@@ -204,8 +205,9 @@ class TestCTable(TestBase):
                                                          data_type='string',
                                                          value_source='key',
                                                          value_index=1))
-        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='emitter_value',
+        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
                                                          data_type='date',
+                                                         date_format='%Y-%m-%d',
                                                          value_source='key',
                                                          value_index=4))
         self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
@@ -226,7 +228,7 @@ class TestCTable(TestBase):
         columns = self.db.mock_docs['MockIndicators']['columns']
         self.assertEquals(len(columns), 4)
         self.assertTrue(any(x for x in columns if x['name'] == 'owner_id'))
-        self.assertTrue(any(x for x in columns if x['name'] == 'emitter_value'))
+        self.assertTrue(any(x for x in columns if x['name'] == 'date'))
         self.assertTrue(any(x for x in columns if x['name'] == 'visits_week_null_emitter'))
         self.assertTrue(any(x for x in columns if x['name'] == 'visits_week_all_visits'))
 
@@ -255,8 +257,8 @@ class TestCTable(TestBase):
 
     def test_extract_fluff_diff(self):
         rows = [{"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": {'count': 3}},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00Z'], "value": {'count': 2}},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00Z'], "value": {'count': 7}}]
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24'], "value": {'count': 2}},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25'], "value": {'count': 7}}]
 
         self.db.add_view(self.fluff_view, [({'reduce': True, 'group': True, 'startkey': r['key'], 'endkey': r['key'] + [{}]},
                                        [r]) for r in rows])
@@ -264,7 +266,7 @@ class TestCTable(TestBase):
         diff = self._get_fluff_diff()
         self.ctable.process_fluff_diff(diff)
         result = dict(
-            [('%s_%s' % (row.owner_id, row.emitter_value), row) for row in
+            [('%s_%s' % (row.owner_id, row.date), row) for row in
              self.connection.execute('SELECT * FROM "%s_%s"' % ('_'.join(diff['domains']), diff['doc_type']))])
 
         self.assertEqual(len(result), 3)
