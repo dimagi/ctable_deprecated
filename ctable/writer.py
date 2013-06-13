@@ -102,34 +102,27 @@ class SqlTableWriter(CtableWriter):
             update = update.values(**row_dict)
             self.connection.execute(update)
 
-    def write_table(self, rows, extract_mapping, status_callback=None):
+    def write_table(self, rows, extract_mapping):
         table_name = extract_mapping.table_name
         columns = extract_mapping.columns
         key_columns = extract_mapping.key_columns
 
         self.init_table(table_name, columns)
-        count = 0
         for row_dict in rows:
             logger.debug(".")
-            count += row_dict['count']
-            if status_callback:
-                status_callback(count)
-            self.upsert(self.table(table_name), row_dict['row'], key_columns)
+            self.upsert(self.table(table_name), row_dict, key_columns)
 
 
 class TestWriter(CtableWriter):
     data = {}
     
-    def write_table(self, rows, extract_mapping, status_callback=None):
-        from .util import combine_rows
-
+    def write_table(self, rows, extract_mapping):
         table_name = extract_mapping.table_name
         columns = [c.name for c in extract_mapping.columns]
 
         if not self.data:
             self.data = {'table_name': table_name, 'columns': columns, 'rows': []}
 
-        # rows_dict = combine_rows(list(rows), extract_mapping)
         for row_dict in rows:
-            row_arr = [row_dict['row'][c] if c in row_dict['row'] else '' for c in columns]
+            row_arr = [row_dict[c] if c in row_dict else '' for c in columns]
             self.data['rows'].append(row_arr)

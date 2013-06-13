@@ -31,15 +31,16 @@ class CtableExtractor(object):
         rows_with_value = 0
         if total_rows > 0:
             logger.info("Total rows: %d", total_rows)
-            rows = self.couch_rows_to_sql_rows(result, mapping)
-            if limit:
-                rows = list(rows)
-                rows_with_value = len(rows)
 
             if status_callback:
                 # note that some rows may get excluded (if they don't match any value columns)
                 # so total_rows is only an upper bound
                 status_callback = status_callback(total_rows)
+
+            rows = self.couch_rows_to_sql_rows(result, mapping, status_callback=status_callback)
+            if limit:
+                rows = list(rows)
+                rows_with_value = len(rows)
 
             munged_rows = self.combine_rows(rows, mapping, chunksize=(limit or 250))
             self.write_rows_to_sql(munged_rows, mapping)
@@ -84,21 +85,27 @@ class CtableExtractor(object):
             **kwargs)
         return result
 
-    def write_rows_to_sql(self, rows, extract_mapping, status_callback=None):
+    def write_rows_to_sql(self, rows, extract_mapping):
         with self.writer:
-            self.writer.write_table(rows, extract_mapping, status_callback=status_callback)
+            self.writer.write_table(rows, extract_mapping)
 
-    def couch_rows_to_sql_rows(self, couch_rows, extract_mapping):
+    def couch_rows_to_sql_rows(self, couch_rows, mapping, status_callback=None):
         """
         Convert the list of rows from CouchDB into rows for insertion into SQL.
         """
+        count = 0
         for crow in couch_rows:
             sql_row = {}
             row_has_value = False
-            for mc in extract_mapping.columns:
+            for mc in mapping.columns:
                 if mc.matches(crow['key'], crow['value']):
                     sql_row[mc.name] = mc.get_value(crow['key'], crow['value'])
                     row_has_value = row_has_value or not mc.is_key_column
+
+            count += 1
+            if status_callback and (count % 100) == 0:
+                status_callback(count)
+
             if row_has_value:
                 yield sql_row
 
