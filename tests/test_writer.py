@@ -21,8 +21,6 @@ class TestWriter(TestBase):
     def test_init_table(self):
         columns = [
             self.ColumnDef(name="col_a", data_type="string", value_source='key'),
-            self.ColumnDef(name="col_e", data_type="string", value_source='key'),
-            self.ColumnDef(name="col_f", data_type="string", value_source='key'),
             self.ColumnDef(name="col_b", data_type="date", value_source='key'),
             self.ColumnDef(name="col_c", data_type="integer", value_source='value',
                            match_keys=[self.KeyMatcher(index=1, value="c")]),
@@ -42,6 +40,25 @@ class TestWriter(TestBase):
     def test_update_table(self):
         self.test_init_table()
         self.test_init_table()
+
+    def test_update_table(self):
+        self.test_init_table()
+        columns = [
+            self.ColumnDef(name="col_a", data_type="string", value_source='key'),
+            self.ColumnDef(name="col_b", data_type="date", value_source='key'),
+            self.ColumnDef(name="col_e", data_type="integer", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="e")]),
+        ]
+        with self.writer:
+            self.writer.init_table(TABLE, columns)
+
+        self.assertIn(TABLE, self.writer.metadata.tables)
+        table_columns = self.writer.table(TABLE).columns
+        self.assertIn('col_a', table_columns)
+        self.assertIn('col_b', table_columns)
+        self.assertIn('col_c', table_columns)
+        self.assertIn('col_d', table_columns)
+        self.assertIn('col_e', table_columns)
 
     def test_update_table_fail(self):
         self.test_init_table()

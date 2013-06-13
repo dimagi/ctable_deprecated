@@ -39,6 +39,7 @@ class SqlTableWriter(CtableWriter):
 
     def __enter__(self):
         self.connection = self.base_connection.connect()  # "forks" the SqlAlchemy connection
+        self._metadata = None
         return self  # TODO: A safe context manager so this can be called many times
 
     def __exit__(self, type, value, traceback):
@@ -46,7 +47,7 @@ class SqlTableWriter(CtableWriter):
 
     @property
     def metadata(self):
-        if not hasattr(self, '_metadata'):
+        if not hasattr(self, '_metadata') or self._metadata is None:
             self._metadata = sqlalchemy.MetaData()
             self._metadata.bind = self.connection
             self._metadata.reflect()
