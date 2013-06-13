@@ -35,11 +35,15 @@
                             console.log(response);
                             if (response === 'SUCCESS'){
                                 $('#run_progress').modal('hide');
+                                $('#loading').show();
+                                $('.bar').parent().hide();
                                 return;
                             } else if (response === 'PENDING') {
                                 window.setTimeout( self.update_progress, 1000 );
                                 return;
                             }
+                            $('#loading').hide();
+                            $('.bar').parent().show();
                             var width = Math.round(response.current * 100 / response.total) + '%';
                             $(".bar").width(width);
                             window.setTimeout( self.update_progress, 1000 );
@@ -113,7 +117,7 @@
             <a class="close" data-dismiss="modal">×</a>
             <h3>{% trans "Run mapping:" %} "{{ mapping.name }}"?</h3>
         </div>
-        <form name="execute_mapping" data-bind="submit: execute">
+        <form name="execute_mapping" data-bind=show"submit: execute">
             <div class="modal-body">
                 <div class="control-group">
                     <label class="control-label" for="id_limit">
@@ -145,10 +149,11 @@
     <div id="run_progress" class="modal hide fade">
         <div class="modal-header">
             <a class="close" data-dismiss="modal">×</a>
-            <h3>{% trans "Running mapping:" %} "{{ mapping.name }}"</h3>
+            <h3>{% trans "Running " %} "{{ mapping.name }}" {% trans "extract" %}</h3>
         </div>
         <div class="modal-body">
-            <div class="progress progress-striped">
+            <img id="loading" src="/static/hqwebapp/img/ajax-loader.gif" alt="loading indicator">
+            <div class="progress progress-striped" style="display: none">
                 <div class="bar" style="width: 0%;"></div>
             </div>
         </div>
