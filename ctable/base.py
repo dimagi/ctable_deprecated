@@ -16,6 +16,9 @@ class CtableExtractor(object):
         self.sql_connection_or_url = sql_connection_or_url
         self.writer = writer or SqlTableWriter(self.sql_connection_or_url)
 
+        from ctable.util import combine_rows
+        self.combine_rows = combine_rows
+
     def extract(self, extract_mapping, limit=None, date_range=None, status_callback=None):
         """
         Extract data from a CouchDb view into SQL
@@ -40,7 +43,8 @@ class CtableExtractor(object):
             if status_callback:
                 status_callback = status_callback(total_rows)
 
-            self.write_rows_to_sql(rows, extract_mapping, status_callback=status_callback)
+            munged_rows = self.combine_rows(rows, extract_mapping)
+            self.write_rows_to_sql(munged_rows, extract_mapping, status_callback=status_callback)
 
         return total_rows
 
@@ -53,7 +57,8 @@ class CtableExtractor(object):
         grains = self.get_fluff_grains(diff)
         couch_rows = self.recalculate_grains(grains, diff['database'])
         sql_rows = self.couch_rows_to_sql_rows(couch_rows, mapping)
-        self.write_rows_to_sql(sql_rows, mapping)
+        munged_rows = self.combine_rows(sql_rows, mapping)
+        self.write_rows_to_sql(munged_rows, mapping)
 
     def get_couch_keys(self, extract_mapping, date_range=None):
         startkey = extract_mapping.couch_key_prefix
@@ -110,10 +115,7 @@ class CtableExtractor(object):
                 yield key_prefix + [None]
             elif ind['emitter_type'] == 'date':
                 for value in ind['values']:
-                    yield key_prefix + [value.strftime("%Y-%m-%dT%H:%M:%SZ")]
-            else:
-                for value in ind['values']:
-                    yield key_prefix + [value]
+                    yield key_prefix + [value[0].strftime("%Y-%m-%dT%H:%M:%SZ")]
 
     def get_extract_mapping(self, diff):
         """
@@ -136,7 +138,7 @@ class CtableExtractor(object):
                                      value_index=1 + i))
 
         num_groups = len(diff['group_names'])
-        columns.append(ColumnDef(name='emitter_value',
+        columns.append(ColumnDef(name='date',
                                  data_type='date',
                                  value_source='key',
                                  value_index=3 + num_groups))
@@ -147,6 +149,7 @@ class CtableExtractor(object):
             columns.append(ColumnDef(name='{0}_{1}'.format(calc_name, emitter_name),
                                      data_type='integer',
                                      value_source='value',
+                                     value_attribute=indicator['reduce_type'],
                                      match_keys=[
                                          KeyMatcher(index=1 + num_groups, value=calc_name),
                                          KeyMatcher(index=2 + num_groups, value=emitter_name)

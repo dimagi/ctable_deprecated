@@ -158,18 +158,20 @@ class TestCTable(TestBase):
                                                          data_type='string',
                                                          value_source='key',
                                                          value_index=1))
-        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='emitter_value',
+        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
                                                          data_type='date',
                                                          value_source='key',
                                                          value_index=4))
         self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
                                                          data_type='integer',
                                                          value_source='value',
+                                                         value_attribute='count',
                                                          match_keys=[self.KeyMatcher(index=2, value='visits_week'),
                                                                      self.KeyMatcher(index=3, value='null_emitter')]))
         self.assertColumnsEqual(em.columns[3], self.ColumnDef(name='visits_week_all_visits',
                                                          data_type='integer',
                                                          value_source='value',
+                                                         value_attribute='count',
                                                          match_keys=[self.KeyMatcher(index=2, value='visits_week'),
                                                                      self.KeyMatcher(index=3, value='all_visits')]))
 
@@ -202,18 +204,20 @@ class TestCTable(TestBase):
                                                          data_type='string',
                                                          value_source='key',
                                                          value_index=1))
-        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='emitter_value',
+        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
                                                          data_type='date',
                                                          value_source='key',
                                                          value_index=4))
         self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
                                                          data_type='integer',
                                                          value_source='value',
+                                                         value_attribute='count',
                                                          match_keys=[self.KeyMatcher(index=2, value='visits_week'),
                                                                      self.KeyMatcher(index=3, value='null_emitter')]))
         self.assertColumnsEqual(em.columns[3], self.ColumnDef(name='visits_week_all_visits',
                                                          data_type='integer',
                                                          value_source='value',
+                                                         value_attribute='count',
                                                          match_keys=[self.KeyMatcher(index=2, value='visits_week'),
                                                                      self.KeyMatcher(index=3, value='all_visits')]))
 
@@ -222,7 +226,7 @@ class TestCTable(TestBase):
         columns = self.db.mock_docs['MockIndicators']['columns']
         self.assertEquals(len(columns), 4)
         self.assertTrue(any(x for x in columns if x['name'] == 'owner_id'))
-        self.assertTrue(any(x for x in columns if x['name'] == 'emitter_value'))
+        self.assertTrue(any(x for x in columns if x['name'] == 'date'))
         self.assertTrue(any(x for x in columns if x['name'] == 'visits_week_null_emitter'))
         self.assertTrue(any(x for x in columns if x['name'] == 'visits_week_all_visits'))
 
@@ -250,9 +254,9 @@ class TestCTable(TestBase):
         self.assertEqual(rows[1], r2)
 
     def test_extract_fluff_diff(self):
-        rows = [{"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": 3},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00Z'], "value": 2},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00Z'], "value": 7}]
+        rows = [{"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": {'count': 3}},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00Z'], "value": {'count': 2}},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00Z'], "value": {'count': 7}}]
 
         self.db.add_view(self.fluff_view, [({'reduce': True, 'group': True, 'startkey': r['key'], 'endkey': r['key'] + [{}]},
                                        [r]) for r in rows])
@@ -260,7 +264,7 @@ class TestCTable(TestBase):
         diff = self._get_fluff_diff()
         self.ctable.process_fluff_diff(diff)
         result = dict(
-            [('%s_%s' % (row.owner_id, row.emitter_value), row) for row in
+            [('%s_%s' % (row.owner_id, row.date), row) for row in
              self.connection.execute('SELECT * FROM "%s_%s"' % ('_'.join(diff['domains']), diff['doc_type']))])
 
         self.assertEqual(len(result), 3)
@@ -299,13 +303,15 @@ class TestCTable(TestBase):
             indicator_changes.append(dict(calculator='visits_week',
                                           emitter='null_emitter',
                                           emitter_type='null',
-                                          values=[None, None]))
+                                          reduce_type='count',
+                                          values=[[None, 1], [None, 1]]))
 
         if 'all_visits' in emitters:
             indicator_changes.append(dict(calculator='visits_week',
                                           emitter='all_visits',
                                           emitter_type='date',
-                                          values=[date(2012, 2, 24), date(2012, 2, 25)]))
+                                          reduce_type='count',
+                                          values=[[date(2012, 2, 24), 1], [date(2012, 2, 25), 1]]))
 
         diff['indicator_changes'] = indicator_changes
         return diff
