@@ -19,11 +19,11 @@ class CtableExtractor(object):
         from ctable.util import combine_rows
         self.combine_rows = combine_rows
 
-    def extract(self, mapping, limit=None):
+    def extract(self, mapping, limit=None, date_range=None, status_callback=None):
         """
         Extract data from a CouchDb view into SQL
         """
-        startkey, endkey = self.get_couch_keys(mapping)
+        startkey, endkey = self.get_couch_keys(mapping, date_range=date_range)
 
         db = get_db(mapping.database) if mapping.database else self.db
         result = self.get_couch_rows(mapping.couch_view, startkey, endkey, db=db, limit=limit)
@@ -32,10 +32,17 @@ class CtableExtractor(object):
         rows_with_value = 0
         if total_rows > 0:
             logger.info("Total rows: %d", total_rows)
-            rows = self.couch_rows_to_sql_rows(result, mapping)
+
+            if status_callback:
+                # note that some rows may get excluded (if they don't match any value columns)
+                # so total_rows is only an upper bound
+                status_callback = status_callback(total_rows)
+
+            rows = self.couch_rows_to_sql_rows(result, mapping, status_callback=status_callback)
             if limit:
                 rows = list(rows)
                 rows_with_value = len(rows)
+
             munged_rows = self.combine_rows(rows, mapping, chunksize=(limit or 250))
             self.write_rows_to_sql(munged_rows, mapping)
 
@@ -53,11 +60,13 @@ class CtableExtractor(object):
         munged_rows = self.combine_rows(sql_rows, mapping)
         self.write_rows_to_sql(munged_rows, mapping)
 
-    def get_couch_keys(self, extract_mapping):
+    def get_couch_keys(self, extract_mapping, date_range=None):
         startkey = extract_mapping.couch_key_prefix
         endkey = extract_mapping.couch_key_prefix
         date_format = extract_mapping.couch_date_format
-        date_range = extract_mapping.couch_date_range
+        if not date_range:
+            date_range = extract_mapping.couch_date_range
+
         if date_range > 0 and date_format:
             end = datetime.utcnow()
             endkey += [end.strftime(date_format)]
@@ -81,17 +90,23 @@ class CtableExtractor(object):
         with self.writer:
             self.writer.write_table(rows, extract_mapping)
 
-    def couch_rows_to_sql_rows(self, couch_rows, extract_mapping):
+    def couch_rows_to_sql_rows(self, couch_rows, mapping, status_callback=None):
         """
         Convert the list of rows from CouchDB into rows for insertion into SQL.
         """
+        count = 0
         for crow in couch_rows:
             sql_row = {}
             row_has_value = False
-            for mc in extract_mapping.columns:
+            for mc in mapping.columns:
                 if mc.matches(crow['key'], crow['value']):
                     sql_row[mc.name] = mc.get_value(crow['key'], crow['value'])
                     row_has_value = row_has_value or not mc.is_key_column
+
+            count += 1
+            if status_callback and (count % 100) == 0:
+                status_callback(count)
+
             if row_has_value:
                 yield sql_row
 

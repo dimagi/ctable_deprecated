@@ -86,7 +86,7 @@ function ColumnDef(json) {
    self.value_source.value_key = ko.computed(function() {
        if (self.value_attribute()) {
            return "['" + self.value_attribute() + "']";
-       } else if (self.value_index()) {
+       } else if (self.value_index() != null && self.value_index() != NaN) {
            return "[" + self.value_index() + "]";
        } else {
            return "";
@@ -129,8 +129,10 @@ ko.bindingHandlers.numericValue = {
         var interceptor = ko.dependentObservable({
             read: underlyingObservable,
             write: function(value) {
-                if (!isNaN(value)) {
+                if ($.isNumeric(value)) {
                     underlyingObservable(parseFloat(value));
+                } else if (value == '') {
+                    underlyingObservable(null);
                 }
             }
         });

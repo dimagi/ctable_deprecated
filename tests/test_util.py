@@ -13,7 +13,7 @@ class TestUtil(TestBase):
         munged = self.util.combine_rows(rows, mapping)
 
         expected = [dict(username="u1", date="d1", indicator_a="2"),
-                        dict(username="u2", date="d1", indicator_a="1", indicator_b="1")]
+                    dict(username="u2", date="d1", indicator_a="1", indicator_b="1")]
         self.assertEqual(list(munged), expected)
 
     def test_combine_rows_chunked(self):
@@ -26,7 +26,20 @@ class TestUtil(TestBase):
         munged = self.util.combine_rows(rows, mapping, chunksize=2)
 
         expected = [dict(username="u1", date="d1", indicator_a="1", indicator_b="1"),
-                        dict(username="u1", date="d1", indicator_a="2", indicator_b="2")]
+                    dict(username="u1", date="d1", indicator_a="2", indicator_b="2")]
+        self.assertEqual(list(munged), expected)
+
+    def test_combine_rows_chunked(self):
+        mapping = self.get_mapping()
+
+        rows = [dict(username="u1", date="d1", indicator_a="1"),
+                dict(username="u1", date="d1", indicator_b="1"),
+                dict(username="u1", date="d1", indicator_a="2"),
+                dict(username="u1", date="d1", indicator_b="2")]
+        munged = self.util.combine_rows(rows, mapping, chunksize=2)
+
+        expected = [dict(username="u1", date="d1", indicator_a="1", indicator_b="1"),
+                    dict(username="u1", date="d1", indicator_a="2", indicator_b="2")]
         self.assertEqual(list(munged), expected)
 
     def get_mapping(self):

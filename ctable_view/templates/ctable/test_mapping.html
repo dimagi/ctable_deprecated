@@ -3,7 +3,61 @@
 {% load hq_shared_tags %}
 {% load hqstyle_tags %}
 
+{% block js %}{{ block.super }}
+    <script type="text/javascript" src="{% static 'hqwebapp/js/lib/knockout.mapping.js' %}"></script>
+    <script type="text/javascript" src="{% static 'hqwebapp/js/knockout-bindings.js' %}"></script>
+{% endblock %}
+
 {% block js-inline %}{{ block.super }}
+    <script type="text/javascript">
+        $(function(){
+            var view_model = function() {
+                var self = this;
+                self.limit = ko.observable();
+                self.date_range = ko.observable({{ mapping.couch_date_range }});
+                self.total = ko.observable();
+                self.current = ko.observable();
+
+                self.execute = function(element) {
+                    var url = '{% url sql_mappings_run domain mapping.get_id %}';
+                    url += '?limit=' + self.limit()
+                    url += '&date_range=' + self.date_range()
+                    $.get(url, function(response) {
+                        self.progress_url = response.redirect;
+                        $('#run_mapping').modal('hide');
+                        $(".bar").width('0%');
+                        $('#run_progress').modal('show');
+                        window.setTimeout( self.update_progress, 1000 );
+                    })
+                }
+
+                self.update_progress = function() {
+                    if (self.progress_url) {
+                        $.get(self.progress_url, function(response) {
+                            console.log(response);
+                            if (response === 'SUCCESS'){
+                                $('#run_progress').modal('hide');
+                                $('#loading').show();
+                                $('#progress').hide();
+                                return;
+                            } else if (response === 'PENDING') {
+                                window.setTimeout( self.update_progress, 1000 );
+                                return;
+                            }
+                            $('#loading').hide();
+                            $('#progress').show();
+                            self.total(response.total);
+                            self.current(response.current);
+                            var width = Math.round(response.current * 100 / response.total) + '%';
+                            $(".bar").width(width);
+                            window.setTimeout( self.update_progress, 1000 );
+                        })
+                    }
+                }
+            };
+            ko.applyBindings(new view_model());
+        });
+    </script>
 {% endblock %}
 
 {% block centered-content %}
@@ -30,10 +84,15 @@
                     {% trans "Edit" %}
                 {% endif  %}
             </a>
+            <a class="btn" href="#run_mapping" role="button" data-toggle="modal">
+                <i class="icon-play"></i>
+                {% trans "Run" %}
+            </a>
             <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Back" %}</a>
         </div>
     </h3>
     <ul>
+        <li data-bind="visible: date_range() > 0">Date range: {{ mapping.couch_date_range }} days</li>
         <li>Rows processed: {{ rows_processed }} ({{ rows_with_value }} matched a value column)</li>
         <li>Table name: {{ data.table_name }}</li>
     </ul>
@@ -56,4 +115,57 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <div id="run_mapping" class="modal hide fade">
+        <div class="modal-header">
+            <a class="close" data-dismiss="modal">×</a>
+            <h3>{% trans "Run mapping:" %} "{{ mapping.name }}"?</h3>
+        </div>
+        <form name="execute_mapping" data-bind="submit: execute">
+            <div class="modal-body">
+                <div class="control-group">
+                    <label class="control-label" for="id_limit">
+                        {% trans "Limit rows processed" %}
+                    </label>
+
+                    <div class="controls">
+                        <input type="text" name="limit" id="id_limit" data-bind="value: limit">
+                    </div>
+                </div>
+                <div class="control-group" data-bind="visible: date_range() > 0">
+                    <label class="control-label" for="id_date_range">
+                        {% trans "Limit date range" %}
+                    </label>
+
+                    <div class="controls">
+                        <input type="text" name="date_range" id="id_date_range" data-bind="value: date_range">
+                    </div>
+                </div>
+                <p>{% trans "Are you sure you want to execute this mapping?" %}</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" type="submit"><i class="icon-play icon-white"></i> {% trans "Run" %}</button>
+                <a href="#" class="btn" data-dismiss="modal">{% trans "Close" %}</a>
+            </div>
+        </form>
+    </div>
+
+    <div id="run_progress" class="modal hide fade">
+        <div class="modal-header">
+            <a class="close" data-dismiss="modal">×</a>
+            <h3>{% trans "Running " %} "{{ mapping.name }}" {% trans "extract" %}</h3>
+        </div>
+        <div class="modal-body">
+            <div id="loading">
+            <img src="/static/hqwebapp/img/ajax-loader.gif" alt="loading indicator">
+                Waiting for job to start
+            </div>
+            <div id="progress" style="display: none">
+                <div class="progress progress-striped">
+                    <div class="bar" style="width: 0%;"></div>
+                </div>
+                <span data-bind="text: current"></span> of <span data-bind="text: total"></span> rows processed
+            </div>
+        </div>
+    </div>
 {% endblock %}

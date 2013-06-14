@@ -22,7 +22,7 @@ class CtableWriter(object):
     def __exit__(self, type, value, traceback):
         pass
 
-    def write_table(self, rows, extract_mapping):
+    def write_table(self, rows, extract_mapping, status_callback=None):
         raise NotImplementedError()
 
 
@@ -108,7 +108,6 @@ class SqlTableWriter(CtableWriter):
         key_columns = extract_mapping.key_columns
 
         self.init_table(table_name, columns)
-
         for row_dict in rows:
             logger.debug(".")
             self.upsert(self.table(table_name), row_dict, key_columns)
@@ -118,15 +117,12 @@ class TestWriter(CtableWriter):
     data = {}
     
     def write_table(self, rows, extract_mapping):
-        from .util import combine_rows
-
         table_name = extract_mapping.table_name
         columns = [c.name for c in extract_mapping.columns]
 
         if not self.data:
             self.data = {'table_name': table_name, 'columns': columns, 'rows': []}
 
-        rows_dict = combine_rows(list(rows), extract_mapping)
-        for row in rows_dict:
-            row_arr = [row[c] if c in row else '' for c in columns]
+        for row_dict in rows:
+            row_arr = [row_dict[c] if c in row_dict else '' for c in columns]
             self.data['rows'].append(row_arr)
