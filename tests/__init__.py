@@ -23,11 +23,13 @@ class TestBase(TestCase):
         cls.p1.start()
         from ctable.models import KeyMatcher
         from ctable.base import CtableExtractor, SqlExtractMapping, ColumnDef, fluff_view
+        from ctable import util
         cls.CtableExtractor = CtableExtractor
         cls.SqlExtractMapping = SqlExtractMapping
         cls.ColumnDef = ColumnDef
         cls.fluff_view = fluff_view
         cls.KeyMatcher = KeyMatcher
+        cls.util = util
 
     @classmethod
     def tearDownClass(cls):

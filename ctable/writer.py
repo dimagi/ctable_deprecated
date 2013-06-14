@@ -98,6 +98,7 @@ class SqlTableWriter(CtableWriter):
             for k in key_columns:
                 k_val = row_dict.pop(k)
                 update = update.where(getattr(table.c, k) == k_val)
+
             update = update.values(**row_dict)
             self.connection.execute(update)
 
@@ -117,21 +118,15 @@ class TestWriter(CtableWriter):
     data = {}
     
     def write_table(self, rows, extract_mapping):
+        from .util import combine_rows
+
         table_name = extract_mapping.table_name
         columns = [c.name for c in extract_mapping.columns]
 
         if not self.data:
             self.data = {'table_name': table_name, 'columns': columns, 'rows': []}
 
-        key_columns = extract_mapping.key_columns
-
-        rows_tmp = {}
-        for row_dict in rows:
-            row_key = tuple([row_dict[k] for k in key_columns])
-            row_data = rows_tmp.setdefault(row_key, {})
-            row_data.update(row_dict)
-
-        for row in rows_tmp.values():
+        rows_dict = combine_rows(list(rows), extract_mapping)
+        for row in rows_dict:
             row_arr = [row[c] if c in row else '' for c in columns]
             self.data['rows'].append(row_arr)
-

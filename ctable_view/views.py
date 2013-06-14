@@ -63,11 +63,12 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
             mapping = SqlExtractMapping.get(mapping_id)
             test_writer = TestWriter()
             extractor = CtableExtractor('', SqlExtractMapping.get_db(), writer=test_writer)
-            rows_processed = extractor.extract(mapping, limit=limit)
+            rows_processed, rows_with_value = extractor.extract(mapping, limit=limit)
             return render(request, template, {
                 'domain': domain,
                 'mapping': mapping,
                 'rows_processed': rows_processed,
+                'rows_with_value': rows_with_value,
                 'data': test_writer.data
             })
         except ResourceNotFound:

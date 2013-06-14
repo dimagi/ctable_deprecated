@@ -1,26 +1,24 @@
 from celery.schedules import crontab
 from celery.task import periodic_task, task
-from .base import CtableExtractor
+from ctable.util import get_extractor
 from .models import SqlExtractMapping, UnsupportedScheduledExtractError
-from django.conf import settings
-
-ctable = CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.get_db())
 
 
 @task
 def process_extract(extract_id):
     extract = SqlExtractMapping.get(extract_id)
     try:
-        ctable.extract(extract)
+        get_extractor().extract(extract)
     except UnsupportedScheduledExtractError:
         pass
 
 
-@periodic_task(run_every=crontab(hour="*", minute="1", day_of_week="*"))
+@periodic_task(run_every=5)
 def ctable_extract_schedule():
     logger = ctable_extract_schedule.get_logger()
     exps = SqlExtractMapping.schedule()
-
+    exps.append({"id": "43bf0b89f0fe423cc4efc4ab2f9c650a"})
+    print exps
     logger.info("ctable_extract_schedule: processing %s extracts" % len(exps))
 
     for exp in exps:
