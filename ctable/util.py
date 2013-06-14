@@ -31,9 +31,9 @@ def combine_rows(rows, extract_mapping, chunksize=250):
 
 
 def get_enabled_fluff_pillows():
-    hardcoded = getattr(settings, 'FLUFF_PILLOWS_TO_SQL', [])
+    hardcoded = getattr(settings, 'FLUFF_PILLOW_TYPES_TO_SQL', [])
     try:
-        dynamic = get_db().get('FLUFF_PILLOWS_TO_SQL').get('enabled_pillows', [])
+        dynamic = get_db().get('FLUFF_PILLOW_TYPES_TO_SQL').get('enabled_pillows', [])
     except ResourceNotFound:
         dynamic = []
 
