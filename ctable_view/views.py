@@ -15,7 +15,6 @@ from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
 
-
 require_can_edit_sql_mappings = require_permission(Permissions.edit_data)
 
 
@@ -43,7 +42,7 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
                 d['domains'].append(domain)
             mapping = SqlExtractMapping.from_json(d)
             mapping.save()
-            return json_response({'redirect': reverse('sql_mappings_list', kwargs={'domain':domain})})
+            return json_response({'redirect': reverse('sql_mappings_list', kwargs={'domain': domain})})
 
     if mapping_id:
         try:

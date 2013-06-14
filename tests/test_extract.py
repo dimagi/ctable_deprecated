@@ -136,9 +136,9 @@ class TestCTable(TestBase):
         grains = list(self.ctable.get_fluff_grains(diff))
         self.assertEqual(2, len(grains))
         key_prefix = ['MockIndicators', 'mock', '123', 'visits_week', 'all_visits']
-        self.assertEqual(grains[0], key_prefix + ["2012-02-24T00:00:00Z"])
-        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00Z"])
-        self.assertEqual(grains[1], key_prefix + ["2012-02-25T00:00:00Z"])
+        self.assertEqual(grains[0], key_prefix + ["2012-02-24"])
+        self.assertEqual(grains[1], key_prefix + ["2012-02-25"])
+        self.assertEqual(grains[1], key_prefix + ["2012-02-25"])
 
     def test_convert_indicator_diff_to_grains_null(self):
         diff = self._get_fluff_diff(['null_emitter'])
@@ -160,6 +160,7 @@ class TestCTable(TestBase):
                                                          value_index=1))
         self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
                                                          data_type='date',
+                                                         date_format='%Y-%m-%d',
                                                          value_source='key',
                                                          value_index=4))
         self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
@@ -206,6 +207,7 @@ class TestCTable(TestBase):
                                                          value_index=1))
         self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
                                                          data_type='date',
+                                                         date_format='%Y-%m-%d',
                                                          value_source='key',
                                                          value_index=4))
         self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
@@ -255,8 +257,8 @@ class TestCTable(TestBase):
 
     def test_extract_fluff_diff(self):
         rows = [{"key": ['MockIndicators', '123', 'visits_week', 'null_emitter', None], "value": {'count': 3}},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24T00:00:00Z'], "value": {'count': 2}},
-                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25T00:00:00Z'], "value": {'count': 7}}]
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24'], "value": {'count': 2}},
+                {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25'], "value": {'count': 7}}]
 
         self.db.add_view(self.fluff_view, [({'reduce': True, 'group': True, 'startkey': r['key'], 'endkey': r['key'] + [{}]},
                                        [r]) for r in rows])

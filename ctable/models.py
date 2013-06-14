@@ -127,6 +127,7 @@ SCHEDULE_VIEW = "ctable/schedule"
 
 
 class SqlExtractMapping(Document):
+    database = StringProperty(required=False)
     domains = StringListProperty(required=True)
     name = StringProperty(required=True, validators=validate_name)
     columns = SchemaListProperty(ColumnDef, required=True)

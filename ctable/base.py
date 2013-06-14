@@ -25,7 +25,8 @@ class CtableExtractor(object):
         """
         startkey, endkey = self.get_couch_keys(mapping, date_range=date_range)
 
-        result = self.get_couch_rows(mapping.couch_view, startkey, endkey, limit=limit)
+        db = get_db(mapping.database) if mapping.database else self.db
+        result = self.get_couch_rows(mapping.couch_view, startkey, endkey, db=db, limit=limit)
 
         total_rows = result.total_rows
         rows_with_value = 0
@@ -120,7 +121,7 @@ class CtableExtractor(object):
                 yield key_prefix + [None]
             elif ind['emitter_type'] == 'date':
                 for value in ind['values']:
-                    yield key_prefix + [value[0].strftime("%Y-%m-%dT%H:%M:%SZ")]
+                    yield key_prefix + [value[0].isoformat()]
 
     def get_extract_mapping(self, diff):
         """
@@ -130,6 +131,7 @@ class CtableExtractor(object):
             [doc_type, group1... groupN, calc_name, emitter_name, emitter_value] = 1
         """
         mapping = SqlExtractMapping(_id=diff['doc_type'],
+                                    database=diff['database'],
                                     domains=diff['domains'],
                                     name=diff['doc_type'],
                                     couch_view=fluff_view,
@@ -145,6 +147,7 @@ class CtableExtractor(object):
         num_groups = len(diff['group_names'])
         columns.append(ColumnDef(name='date',
                                  data_type='date',
+                                 date_format="%Y-%m-%d",
                                  value_source='key',
                                  value_index=3 + num_groups))
 
