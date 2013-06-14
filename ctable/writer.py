@@ -40,6 +40,7 @@ class SqlTableWriter(CtableWriter):
     def __enter__(self):
         self.connection = self.base_connection.connect()  # "forks" the SqlAlchemy connection
         self._metadata = None
+        self._op = None
         return self  # TODO: A safe context manager so this can be called many times
 
     def __exit__(self, type, value, traceback):
@@ -53,30 +54,33 @@ class SqlTableWriter(CtableWriter):
             self._metadata.reflect()
         return self._metadata
 
+    @property
+    def op(self):
+        if not hasattr(self, '_op') or self._op is None:
+            ctx = alembic.migration.MigrationContext.configure(self.connection)
+            self._op = alembic.operations.Operations(ctx)
+        return self._op
+
     def table(self, table_name):
         return sqlalchemy.Table(table_name, self.metadata, autoload=True, autoload_with=self.connection)
 
     def init_table(self, table_name, column_defs):
-        ctx = alembic.migration.MigrationContext.configure(self.connection)
-        op = alembic.operations.Operations(ctx)
-
         if not table_name in self.metadata.tables:
+            logger.info('Creating new reporting table: %s', table_name)
             columns = [c.sql_column for c in column_defs]
-            op.create_table(table_name, *columns)
+            self.op.create_table(table_name, *columns)
             self.metadata.reflect()
         else:
             self.make_table_compatible(table_name, column_defs)
 
     def make_table_compatible(self, table_name, column_defs):
-        ctx = alembic.migration.MigrationContext.configure(self.connection)
-        op = alembic.operations.Operations(ctx)
-
         if not table_name in self.metadata.tables:
             raise Exception("Table does not exist", table_name)
 
         for column in column_defs:
             if not column.name in [c.name for c in self.table(table_name).columns]:
-                op.add_column(table_name, column.sql_column)
+                logger.info('Adding column to reporting table: %s.%s', table_name, column.name)
+                self.op.add_column(table_name, column.sql_column)
                 self.metadata.clear()
                 self.metadata.reflect()
             else:
