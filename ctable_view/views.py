@@ -26,7 +26,8 @@ def _to_kwargs(req):
     return dict((str(k), v) for k, v in json.load(req).items())
 
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def view(request, domain, template='ctable/list_mappings.html'):
     mappings = SqlExtractMapping.by_domain(domain)
     return render(request, template, {
@@ -35,7 +36,8 @@ def view(request, domain, template='ctable/list_mappings.html'):
     })
 
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
     if request.method == 'POST':
             d = _to_kwargs(request)
@@ -59,7 +61,8 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
     })
 
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
     if mapping_id:
         try:
@@ -82,7 +85,8 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
     return redirect('sql_mappings_list', domain=domain)
 
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def clear_data(request, domain, mapping_id):
     if mapping_id:
         try:
@@ -138,7 +142,8 @@ def toggle(request, domain, mapping_id):
 
     return redirect('sql_mappings_list', domain=domain)
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def delete(request, domain, mapping_id):
     if mapping_id:
         try:
