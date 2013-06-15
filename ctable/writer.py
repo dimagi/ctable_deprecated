@@ -2,6 +2,7 @@ import logging
 import six
 import sqlalchemy
 import alembic
+from django.utils.translation import ugettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -16,21 +17,6 @@ class ColumnTypeException(Exception):
 
 
 class CtableWriter(object):
-    def __enter__(self):
-        pass
-
-    def __exit__(self, type, value, traceback):
-        pass
-
-    def write_table(self, rows, extract_mapping, status_callback=None):
-        raise NotImplementedError()
-
-
-class SqlTableWriter(CtableWriter):
-    """
-    Write rows to a database specified by URL
-    """
-
     def __init__(self, url_or_connection):
         if isinstance(url_or_connection, six.string_types):
             self.base_connection = sqlalchemy.create_engine(url_or_connection)
@@ -54,15 +40,23 @@ class SqlTableWriter(CtableWriter):
             self._metadata.reflect()
         return self._metadata
 
+    def table(self, table_name):
+        return sqlalchemy.Table(table_name, self.metadata, autoload=True, autoload_with=self.connection)
+
+    def write_table(self, rows, extract_mapping, status_callback=None):
+        raise NotImplementedError()
+
+
+class SqlTableWriter(CtableWriter):
+    """
+    Write rows to a database specified by URL
+    """
     @property
     def op(self):
         if not hasattr(self, '_op') or self._op is None:
             ctx = alembic.migration.MigrationContext.configure(self.connection)
             self._op = alembic.operations.Operations(ctx)
         return self._op
-
-    def table(self, table_name):
-        return sqlalchemy.Table(table_name, self.metadata, autoload=True, autoload_with=self.connection)
 
     def init_table(self, table_name, column_defs):
         if not table_name in self.metadata.tables:
@@ -117,9 +111,35 @@ class SqlTableWriter(CtableWriter):
             self.upsert(self.table(table_name), row_dict, key_columns)
 
 
-class TestWriter(CtableWriter):
+class InMemoryWriter(CtableWriter):
     data = {}
-    
+
+    def check_mapping(self, mapping):
+        errors = []
+        warnings = []
+        if mapping.table_name in self.metadata.tables:
+            table = self.table(mapping.table_name)
+            table_columns = dict([(c.name, c) for c in table.columns])
+            mapping_columns = dict([(c.name, c) for c in mapping.columns])
+            for name, column in table_columns.items():
+                if name not in mapping_columns:
+                    if column.primary_key:
+                        errors.append(_('Key column exists in table but not in mapping: %s' % name))
+                    else:
+                        warnings.append(_('Column exists in table but not in mapping: %(column)s') % {'column': name})
+
+            for col in mapping.key_columns:
+                if col not in table_columns:
+                    errors.append(_('Key column exists in mapping but not in table: %(column)s') % {'column': col})
+
+            for name, column in mapping_columns.items():
+                if name in table_columns:
+                    current_ty = table_columns[name].type
+                    if not isinstance(current_ty, BASE_TYPE_MAP[column.data_type]):
+                        errors.append(_('Column types do not match: %(column)s') % {'column': name})
+
+        return {'errors': errors, 'warnings': warnings}
+
     def write_table(self, rows, extract_mapping):
         table_name = extract_mapping.table_name
         columns = [c.name for c in extract_mapping.columns]

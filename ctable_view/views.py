@@ -3,7 +3,8 @@ from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
 from django.contrib.auth.decorators import user_passes_test, login_required
 from ctable.base import CtableExtractor
-from ctable.writer import TestWriter
+from ctable.util import get_test_extractor
+from ctable.writer import InMemoryWriter
 from dimagi.utils.web import json_response
 
 from django.core.urlresolvers import reverse
@@ -64,17 +65,23 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
         try:
             limit = int(request.GET.get('limit', 100))
             limit = min(limit, 1000)
+
             mapping = SqlExtractMapping.get(mapping_id)
-            test_writer = TestWriter()
-            extractor = CtableExtractor('', SqlExtractMapping.get_db(), writer=test_writer)
-            rows_processed, rows_with_value = extractor.extract(mapping, limit=limit)
-            return render(request, template, {
+
+            test_extractor = get_test_extractor()
+
+            with test_extractor.writer:
+                checks = test_extractor.writer.check_mapping(mapping)
+
+            rows_processed, rows_with_value = test_extractor.extract(mapping, limit=limit)
+            checks.update({
                 'domain': domain,
                 'mapping': mapping,
                 'rows_processed': rows_processed,
                 'rows_with_value': rows_with_value,
-                'data': test_writer.data
+                'data': test_extractor.writer.data,
             })
+            return render(request, template, checks)
         except ResourceNotFound:
             raise Http404()
 

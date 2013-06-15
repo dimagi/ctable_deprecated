@@ -1,4 +1,4 @@
-from ctable.writer import SqlTableWriter, ColumnTypeException
+from ctable.writer import SqlTableWriter, ColumnTypeException, InMemoryWriter
 from . import TestBase, engine
 
 TABLE = "test_table"
@@ -9,6 +9,7 @@ class TestWriter(TestBase):
         self.connection = engine.connect()
         self.trans = self.connection.begin()
         self.writer = SqlTableWriter(self.connection)
+        self.memory_writer = InMemoryWriter(self.connection)
 
     def tearDown(self):
         super(TestWriter, self).tearDown()
@@ -70,3 +71,73 @@ class TestWriter(TestBase):
         with self.assertRaises(ColumnTypeException):
             with self.writer:
                 self.writer.make_table_compatible(TABLE, columns)
+
+    def test_check_table_missing_key_column_in_table(self):
+        self.test_init_table()
+
+        extract = self.SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
+            self.ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
+            self.ColumnDef(name="col_c", data_type="integer", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="c")]),
+            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+        ])
+
+        with self.memory_writer:
+            messages = self.memory_writer.check_mapping(extract)
+
+        self.assertEqual(len(messages['warnings']), 0)
+        self.assertEqual(messages['errors'], ['Key column exists in table but not in mapping: col_b'])
+
+    def test_check_table_missing_column_in_table(self):
+        self.test_init_table()
+
+        extract = self.SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
+            self.ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
+            self.ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
+            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+        ])
+
+        with self.memory_writer:
+            messages = self.memory_writer.check_mapping(extract)
+
+        self.assertEqual(len(messages['errors']), 0)
+        self.assertEqual(messages['warnings'], ['Column exists in table but not in mapping: col_c'])
+
+    def test_check_table_missing_key_column_in_mapping(self):
+        self.test_init_table()
+
+        extract = self.SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
+            self.ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
+            self.ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
+            self.ColumnDef(name="col_e", data_type="date", value_source='key', value_index=2),
+            self.ColumnDef(name="col_c", data_type="integer", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="c")]),
+            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+        ])
+
+        with self.memory_writer:
+            messages = self.memory_writer.check_mapping(extract)
+
+        self.assertEqual(len(messages['warnings']), 0)
+        self.assertEqual(messages['errors'], ['Key column exists in mapping but not in table: col_e'])
+
+    def test_check_table_mismatch_data_type(self):
+        self.test_init_table()
+
+        extract = self.SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
+            self.ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
+            self.ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
+            self.ColumnDef(name="col_c", data_type="string", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="c")]),
+            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+        ])
+
+        with self.memory_writer:
+            messages = self.memory_writer.check_mapping(extract)
+
+        self.assertEqual(len(messages['warnings']), 0)
+        self.assertEqual(messages['errors'], ['Column types do not match: col_c'])
