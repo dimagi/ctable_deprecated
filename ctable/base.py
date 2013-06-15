@@ -187,3 +187,7 @@ class CtableExtractor(object):
         for grain in grains:
             result.extend(self.get_couch_rows(fluff_view, grain, grain + [{}], db=get_db(database)))
         return result
+
+    def drop_table(self, table_name):
+        with self.writer:
+            self.writer.drop_table(table_name)

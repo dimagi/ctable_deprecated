@@ -14,6 +14,7 @@ from corehq.apps.users.decorators import require_permission
 from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
+from ctable.util import get_extractor
 
 require_can_edit_sql_mappings = require_permission(Permissions.edit_data)
 
@@ -82,6 +83,19 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
 
 
 @require_can_edit_sql_mappings
+def clear_data(request, domain, mapping_id):
+    if mapping_id:
+        try:
+            mapping = SqlExtractMapping.get(mapping_id)
+            get_extractor().drop_table(mapping.table_name)
+            return redirect('sql_mappings_test', domain=domain, mapping_id=mapping_id)
+        except ResourceNotFound:
+            raise Http404()
+
+    return redirect('sql_mappings_list', domain=domain)
+
+
+@require_can_edit_sql_mappings
 def poll_state(request, domain, job_id=None):
     if not job_id:
         return redirect('sql_mappings_list', domain=domain)
@@ -106,7 +120,7 @@ def run(request, domain, mapping_id):
     elif date_range:
         date_range = int(date_range)
     job = process_extract.delay(mapping_id, limit=limit, date_range=date_range)
-    return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain':domain, 'job_id':job.id})})
+    return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain': domain, 'job_id': job.id})})
 
 
 @login_required

@@ -89,6 +89,10 @@ class SqlTableWriter(CtableWriter):
                 if not isinstance(current_ty, BASE_TYPE_MAP[column.data_type]):
                     raise ColumnTypeException("Column types don't match", column.name)
 
+    def drop_table(self, table_name):
+        if table_name in self.metadata.tables:
+            self.op.drop_table(table_name)
+
     def upsert(self, table, row_dict, key_columns):
 
         # For atomicity "insert, catch, update" is slightly better than "select, insert or update".

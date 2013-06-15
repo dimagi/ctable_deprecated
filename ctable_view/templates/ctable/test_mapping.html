@@ -64,31 +64,39 @@
     <h3>Results from running '{{ mapping.name  }}' mapping
         <div class="btn-toolbar pull-right">
             <div class="btn-group">
-                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                {% trans "Test again" %}
-                <span class="caret"></span>
+                <div class="btn-group">
+                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    {% trans "Test again" %}
+                    <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=100">100 rows</a></li>
+                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=250">250 rows</a></li>
+                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=500">500 rows</a></li>
+                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=1000">1000 rows</a></li>
+                    </ul>
+                </div>
+                <a class="btn" href="{% url sql_mappings_edit domain mapping.get_id %}">
+                    {% if mapping.auto_generated %}
+                        <i class="icon-file-alt"></i>
+                        {% trans "View" %}
+                    {% else %}
+                        <i class="icon-edit"></i>
+                        {% trans "Edit" %}
+                    {% endif  %}
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=100">100 rows</a></li>
-                    <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=250">250 rows</a></li>
-                    <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=500">500 rows</a></li>
-                    <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=1000">1000 rows</a></li>
-                </ul>
+                <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Back" %}</a>
             </div>
-            <a class="btn" href="{% url sql_mappings_edit domain mapping.get_id %}">
-                {% if mapping.auto_generated %}
-                    <i class="icon-file-alt"></i>
-                    {% trans "View" %}
-                {% else %}
-                    <i class="icon-edit"></i>
-                    {% trans "Edit" %}
-                {% endif  %}
-            </a>
-            <a class="btn" href="#run_mapping" role="button" data-toggle="modal">
-                <i class="icon-play"></i>
-                {% trans "Run" %}
-            </a>
-            <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Back" %}</a>
+            <div class="btn-group">
+                <a class="btn btn-success" href="#run_mapping" role="button" data-toggle="modal">
+                    <i class="icon-play"></i>
+                    {% trans "Run" %}
+                </a>
+                <a class="btn btn-danger" href="#clear_data" role="button" data-toggle="modal">
+                    <i class="icon-remove icon-white"></i>
+                    {% trans "Clear existing data" %}
+                </a>
+            </div>
         </div>
     </h3>
     <ul>
@@ -166,6 +174,29 @@
                 </div>
                 <span data-bind="text: current"></span> of <span data-bind="text: total"></span> rows processed
             </div>
+        </div>
+    </div>
+
+    <div id="clear_data" class="modal hide fade">
+        <div class="modal-header alert-error">
+            <a class="close" data-dismiss="modal">×</a>
+              <h4>Clear existing data</h4>
+        </div>
+        <div class="modal-body">
+            <p>
+            {% blocktrans with table_name=mapping.table_name %}
+                This will delete the mapping table '<strong>{{ table_name }}</strong>'.
+            {% endblocktrans %}
+            </p>
+
+            <p>{% blocktrans %}
+                The table will be re-created next time the mapping is run.
+                Until then any reports that query the table will not run.
+            {% endblocktrans %}</p>
+        </div>
+        <div class="modal-footer">
+            <a class="btn btn-warning" href="{% url sql_mappings_clear domain mapping.get_id%}">{% trans "Clear data" %}</a>
+            <a href="#" class="btn" data-dismiss="modal">{% trans "Close" %}</a>
         </div>
     </div>
 {% endblock %}
