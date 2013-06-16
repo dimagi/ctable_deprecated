@@ -14,6 +14,7 @@ from corehq.apps.users.decorators import require_permission
 from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
+from ctable.util import get_extractor
 
 require_can_edit_sql_mappings = require_permission(Permissions.edit_data)
 
@@ -25,7 +26,8 @@ def _to_kwargs(req):
     return dict((str(k), v) for k, v in json.load(req).items())
 
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def view(request, domain, template='ctable/list_mappings.html'):
     mappings = SqlExtractMapping.by_domain(domain)
     return render(request, template, {
@@ -34,7 +36,8 @@ def view(request, domain, template='ctable/list_mappings.html'):
     })
 
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
     if request.method == 'POST':
             d = _to_kwargs(request)
@@ -58,7 +61,8 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
     })
 
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
     if mapping_id:
         try:
@@ -75,6 +79,20 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
                 'rows_with_value': rows_with_value,
                 'data': test_writer.data
             })
+        except ResourceNotFound:
+            raise Http404()
+
+    return redirect('sql_mappings_list', domain=domain)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def clear_data(request, domain, mapping_id):
+    if mapping_id:
+        try:
+            mapping = SqlExtractMapping.get(mapping_id)
+            get_extractor().drop_table(mapping.table_name)
+            return redirect('sql_mappings_test', domain=domain, mapping_id=mapping_id)
         except ResourceNotFound:
             raise Http404()
 
@@ -106,7 +124,7 @@ def run(request, domain, mapping_id):
     elif date_range:
         date_range = int(date_range)
     job = process_extract.delay(mapping_id, limit=limit, date_range=date_range)
-    return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain':domain, 'job_id':job.id})})
+    return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain': domain, 'job_id': job.id})})
 
 
 @login_required
@@ -124,7 +142,8 @@ def toggle(request, domain, mapping_id):
 
     return redirect('sql_mappings_list', domain=domain)
 
-@require_can_edit_sql_mappings
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def delete(request, domain, mapping_id):
     if mapping_id:
         try:
