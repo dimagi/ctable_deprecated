@@ -99,6 +99,26 @@
             </div>
         </div>
     </h3>
+    {% if errors %}
+    <div class="alert alert-error">
+        <h5>{% trans "Some problems were found with the mapping that would prevent it from being run." %}</h5>
+        <ul>
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% if warnings %}
+    <div class="alert alert-warning">
+        <h5>{% trans "Warnings" %}</h5>
+        <ul>
+        {% for warning in warnings %}
+            <li>{{ warning }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
     <ul>
         <li data-bind="visible: date_range() > 0">Date range: {{ mapping.couch_date_range }} days</li>
         <li>Rows processed: {{ rows_processed }} ({{ rows_with_value }} matched a value column)</li>

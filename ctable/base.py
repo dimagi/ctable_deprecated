@@ -11,10 +11,13 @@ fluff_view = 'fluff/generic'
 
 
 class CtableExtractor(object):
-    def __init__(self, sql_connection_or_url, couch_db, writer=None):
+    def __init__(self, sql_connection_or_url, couch_db, writer_class=None):
         self.db = couch_db
         self.sql_connection_or_url = sql_connection_or_url
-        self.writer = writer or SqlTableWriter(self.sql_connection_or_url)
+        if writer_class:
+            self.writer = writer_class(self.sql_connection_or_url)
+        else:
+            self.writer = SqlTableWriter(self.sql_connection_or_url)
 
         from ctable.util import combine_rows
         self.combine_rows = combine_rows

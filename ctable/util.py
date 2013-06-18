@@ -1,4 +1,5 @@
 from couchdbkit import ResourceNotFound
+from ctable.writer import InMemoryWriter
 from dimagi.utils.chunked import chunked
 from django.conf import settings
 from ctable.base import CtableExtractor
@@ -10,6 +11,11 @@ from dimagi.utils.decorators.memoized import memoized
 @memoized
 def get_extractor():
     return CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.get_db())
+
+
+@memoized
+def get_test_extractor():
+    return CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.get_db(), writer_class=InMemoryWriter)
 
 
 def combine_rows(rows, extract_mapping, chunksize=250):
