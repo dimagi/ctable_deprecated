@@ -1,12 +1,9 @@
 import json
 from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
-from django.contrib.auth.decorators import user_passes_test, login_required
 from django.views.decorators.http import require_POST
 from corehq.apps.domain.decorators import require_superuser
-from ctable.base import CtableExtractor
 from ctable.util import get_test_extractor
-from ctable.writer import InMemoryWriter
 from dimagi.utils.web import json_response
 from django.utils.translation import ugettext_noop as _
 
