@@ -79,7 +79,7 @@
       <button type="button" class="close" data-dismiss="alert">&times;</button>
       <p></p>
     </div>
-    <h3>Results from running '{{ mapping.name  }}' mapping
+    <h3>{% blocktrans %}Results from running '{{ mapping.name  }}' mapping{% endblocktrans %}
         <div class="btn-toolbar pull-right">
             <div class="btn-group">
                 <div class="btn-group">
@@ -88,10 +88,10 @@
                     <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=100">100 rows</a></li>
-                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=250">250 rows</a></li>
-                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=500">500 rows</a></li>
-                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=1000">1000 rows</a></li>
+                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=100">100 {% trans rows %}</a></li>
+                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=250">250 {% trans rows %}</a></li>
+                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=500">500 {% trans rows %}</a></li>
+                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=1000">1000 {% trans rows %}</a></li>
                     </ul>
                 </div>
                 <a class="btn" href="{% url sql_mappings_edit domain mapping.get_id %}">
@@ -138,9 +138,9 @@
     </div>
     {% endif %}
     <ul>
-        <li data-bind="visible: date_range() > 0">Date range: {{ mapping.couch_date_range }} days</li>
-        <li>Rows processed: {{ rows_processed }} ({{ rows_with_value }} matched a value column)</li>
-        <li>Table name: {{ data.table_name }}</li>
+        <li data-bind="visible: date_range() > 0">{% blocktrans %}Date range: {{ mapping.couch_date_range }} days{% endblocktrans %}</li>
+        <li>{% blocktrans %}Rows processed: {{ rows_processed }} ({{ rows_with_value }} matched a value column" {% endblocktrans %})</li>
+        <li>{% trans "Table name:" %} {{ data.table_name }}</li>
     </ul>
 
     <table class="table table-bordered">
@@ -165,7 +165,7 @@
     <div id="run_mapping" class="modal hide fade">
         <div class="modal-header">
             <a class="close" data-dismiss="modal">×</a>
-            <h3>{% trans "Run mapping:" %} "{{ mapping.name }}"?</h3>
+            <h3>{% trans "Run mapping" %}: "{{ mapping.name }}"?</h3>
         </div>
         <form name="execute_mapping" data-bind="submit: execute">
             <div class="modal-body">
@@ -199,12 +199,12 @@
     <div id="run_progress" class="modal hide fade">
         <div class="modal-header">
             <a class="close" data-dismiss="modal">×</a>
-            <h3>{% trans "Running " %} "{{ mapping.name }}" {% trans "extract" %}</h3>
+            <h3>{% blocktrans %}Running "{{ mapping.name }}" extract{% endblocktrans %}</h3>
         </div>
         <div class="modal-body">
             <div id="loading">
             <img src="/static/hqwebapp/img/ajax-loader.gif" alt="loading indicator">
-                Waiting for job to start
+                {% trans "Waiting for job to start" %}
             </div>
             <div id="progress" style="display: none">
                 <div class="progress progress-striped">
@@ -218,7 +218,7 @@
     <div id="clear_data" class="modal hide fade">
         <div class="modal-header alert-error">
             <a class="close" data-dismiss="modal">×</a>
-              <h4>Clear existing data</h4>
+              <h4>{% trans "Clear existing data" %}</h4>
         </div>
         <div class="modal-body">
             <p>
@@ -238,8 +238,8 @@
         </div>
     </div>
 
-    <div class="hq-loading" style="opacity: 0.9381533400219317; display: none">
+    <div class="hq-loading" style="display: none">
         <img src="/static/hqwebapp/img/ajax-loader.gif" alt="loading indicator">
-        <h6>Clearing data</h6>
+        <h6>{% trans "Clearing data" %}</h6>
     </div>
 {% endblock %}
