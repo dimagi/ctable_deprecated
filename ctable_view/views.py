@@ -1,11 +1,11 @@
 import json
 from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
-from django.contrib.auth.decorators import user_passes_test, login_required
-from ctable.base import CtableExtractor
+from django.views.decorators.http import require_POST
+from corehq.apps.domain.decorators import require_superuser
 from ctable.util import get_test_extractor
-from ctable.writer import InMemoryWriter
 from dimagi.utils.web import json_response
+from django.utils.translation import ugettext_noop as _
 
 from django.core.urlresolvers import reverse
 from django.http import Http404
@@ -27,8 +27,7 @@ def _to_kwargs(req):
     return dict((str(k), v) for k, v in json.load(req).items())
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+@require_superuser
 def view(request, domain, template='ctable/list_mappings.html'):
     mappings = SqlExtractMapping.by_domain(domain)
     return render(request, template, {
@@ -37,8 +36,7 @@ def view(request, domain, template='ctable/list_mappings.html'):
     })
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+@require_superuser
 def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
     if request.method == 'POST':
             d = _to_kwargs(request)
@@ -62,8 +60,7 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
     })
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+@require_superuser
 def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
     if mapping_id:
         try:
@@ -92,21 +89,21 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
     return redirect('sql_mappings_list', domain=domain)
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+@require_superuser
+@require_POST
 def clear_data(request, domain, mapping_id):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
             get_extractor().drop_table(mapping.table_name)
-            return redirect('sql_mappings_test', domain=domain, mapping_id=mapping_id)
+            return json_response({'status': 'success', 'message': _('Data successfully cleared.')})
         except ResourceNotFound:
-            raise Http404()
+            return json_response({'status': 'error', 'message': _('Mapping not found.')})
 
-    return redirect('sql_mappings_list', domain=domain)
+    return json_response({'status': 'error', 'message': _('Mapping not found.')})
 
 
-@require_can_edit_sql_mappings
+@require_superuser
 def poll_state(request, domain, job_id=None):
     if not job_id:
         return redirect('sql_mappings_list', domain=domain)
@@ -116,8 +113,7 @@ def poll_state(request, domain, job_id=None):
     return json_response(data)
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+@require_superuser
 def run(request, domain, mapping_id):
     limit = request.GET.get('limit', None)
     date_range = request.GET.get('date_range', None)
@@ -134,8 +130,7 @@ def run(request, domain, mapping_id):
     return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain': domain, 'job_id': job.id})})
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+@require_superuser
 def toggle(request, domain, mapping_id):
     if mapping_id:
         try:
@@ -149,8 +144,8 @@ def toggle(request, domain, mapping_id):
 
     return redirect('sql_mappings_list', domain=domain)
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+
+@require_superuser
 def delete(request, domain, mapping_id):
     if mapping_id:
         try:

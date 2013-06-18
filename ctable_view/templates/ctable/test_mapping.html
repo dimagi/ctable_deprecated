@@ -54,6 +54,20 @@
                         })
                     }
                 }
+
+                self.clearData = function() {
+                    $('.hq-loading').show();
+                    $.post('{% url sql_mappings_clear domain mapping.get_id%}', function(data) {
+                        $('.hq-loading').hide();
+                        self.showMessage(data.message, data.status);
+                    });
+                }
+
+                self.showMessage = function(text, style) {
+                    $('#message p').text(text);
+                    $('#message').attr('class', 'alert alert-'+style);
+                    $('#message').show();
+                }
             };
             ko.applyBindings(new view_model());
         });
@@ -61,6 +75,10 @@
 {% endblock %}
 
 {% block centered-content %}
+    <div id="message" class="alert hide">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <p></p>
+    </div>
     <h3>Results from running '{{ mapping.name  }}' mapping
         <div class="btn-toolbar pull-right">
             <div class="btn-group">
@@ -88,7 +106,7 @@
                 <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Back" %}</a>
             </div>
             <div class="btn-group">
-                <a class="btn btn-success" href="#run_mapping" role="button" data-toggle="modal">
+                <a class="btn btn-success {% if errors %}disabled{% endif %}" href="#run_mapping" role="button" {% if not errors %}data-toggle="modal"{% endif %}>
                     <i class="icon-play"></i>
                     {% trans "Run" %}
                 </a>
@@ -215,8 +233,13 @@
             {% endblocktrans %}</p>
         </div>
         <div class="modal-footer">
-            <a class="btn btn-warning" href="{% url sql_mappings_clear domain mapping.get_id%}">{% trans "Clear data" %}</a>
+            <a class="btn btn-warning" data-dismiss="modal" data-bind="click: clearData">{% trans "Clear data" %}</a>
             <a href="#" class="btn" data-dismiss="modal">{% trans "Close" %}</a>
         </div>
+    </div>
+
+    <div class="hq-loading" style="opacity: 0.9381533400219317; display: none">
+        <img src="/static/hqwebapp/img/ajax-loader.gif" alt="loading indicator">
+        <h6>Clearing data</h6>
     </div>
 {% endblock %}
