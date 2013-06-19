@@ -43,6 +43,8 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
             if domain not in d['domains']:
                 d['domains'].append(domain)
             mapping = SqlExtractMapping.from_json(d)
+            if mapping.couch_key_prefix and mapping.couch_key_prefix[0] == '':
+                mapping.couch_key_prefix = None
             mapping.save()
             return json_response({'redirect': reverse('sql_mappings_list', kwargs={'domain': domain})})
 
@@ -68,11 +70,13 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
             limit = min(limit, 1000)
 
             mapping = SqlExtractMapping.get(mapping_id)
-
             test_extractor = get_test_extractor()
 
             with test_extractor.writer:
                 checks = test_extractor.writer.check_mapping(mapping)
+
+            if mapping.couch_date_range > 0:
+                mapping.couch_date_range = -1
 
             rows_processed, rows_with_value = test_extractor.extract(mapping, limit=limit)
             checks.update({

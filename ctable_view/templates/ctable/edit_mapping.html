@@ -180,8 +180,9 @@
                     {% trans "Edit" %}
                 </button>
                 <button class="btn btn-danger" data-bind="click: $parent.removeColumn">
-                    {% trans "Delete" %}
+                    <i class="icon-trash"></i>
                 </button>
+
 
                 <div class="modal hide fade" data-bind="modal: name.editing">
                     <div class="alert alert-error" data-bind="text: validate.error, visible: validate.error() != ''">

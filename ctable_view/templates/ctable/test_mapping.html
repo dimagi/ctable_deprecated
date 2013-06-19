@@ -79,7 +79,7 @@
       <button type="button" class="close" data-dismiss="alert">&times;</button>
       <p></p>
     </div>
-    <h3>{% blocktrans %}Results from running '{{ mapping.name  }}' mapping{% endblocktrans %}
+    <h3>{% blocktrans with name=mapping.name%}Results from running '{{ name  }}' mapping{% endblocktrans %}
         <div class="btn-toolbar pull-right">
             <div class="btn-group">
                 <div class="btn-group">
@@ -138,8 +138,8 @@
     </div>
     {% endif %}
     <ul>
-        <li data-bind="visible: date_range() > 0">{% blocktrans %}Date range: {{ mapping.couch_date_range }} days{% endblocktrans %}</li>
-        <li>{% blocktrans %}Rows processed: {{ rows_processed }} ({{ rows_with_value }} matched a value column" {% endblocktrans %})</li>
+        <li data-bind="visible: date_range() > 0">{% blocktrans with range=apping.couch_date_range %}Date range: {{ range }} days{% endblocktrans %}</li>
+        <li>{% blocktrans with processed=rows_processed matched=rows_with_value%}Rows processed: {{ processed }} ({{ matched }} matched a value column" {% endblocktrans %})</li>
         <li>{% trans "Table name:" %} {{ data.table_name }}</li>
     </ul>
 
@@ -199,7 +199,7 @@
     <div id="run_progress" class="modal hide fade">
         <div class="modal-header">
             <a class="close" data-dismiss="modal">×</a>
-            <h3>{% blocktrans %}Running "{{ mapping.name }}" extract{% endblocktrans %}</h3>
+            <h3>{% blocktrans with name=mapping.name%}Running "{{ name }}" extract{% endblocktrans %}</h3>
         </div>
         <div class="modal-body">
             <div id="loading">
