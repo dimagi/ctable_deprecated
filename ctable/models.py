@@ -22,7 +22,7 @@ class KeyMatcher(DocumentSchema, RowMatcher):
     value = StringProperty()
 
     def matches(self, row_key, row_value):
-        return row_key[self.index] == self.value
+        return row_key[self.index] == self.value if len(row_key) > self.index else False
 
 
 class ColumnDef(DocumentSchema):
@@ -72,13 +72,16 @@ class ColumnDef(DocumentSchema):
             else:
                 return self.default_null_value_placeholder
 
-        if self.data_type == "date" or self.data_type == "datetime":
-            converted = datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%SZ")
-            return converted.date() if self.data_type == "date" else converted
-        elif self.data_type == "integer":
-            return int(value)
-        else:
-            return value
+        try:
+            if self.data_type == "date" or self.data_type == "datetime":
+                converted = datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%SZ")
+                return converted.date() if self.data_type == "date" else converted
+            elif self.data_type == "integer":
+                return int(value)
+            else:
+                return value
+        except ValueError:
+            return self.null_value_placeholder or self.default_null_value_placeholder
 
     @property
     def sql_type(self):
@@ -98,7 +101,7 @@ class ColumnDef(DocumentSchema):
         if self.data_type == "string":
             return '__none__'
         elif self.data_type == "integer":
-            return 161803398875  # see http://en.wikipedia.org/wiki/Golden_ratio
+            return 1618033988  # see http://en.wikipedia.org/wiki/Golden_ratio
         elif self.data_type == "date":
             return date.min
         elif self.data_type == 'datetime':

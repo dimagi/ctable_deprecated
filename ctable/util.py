@@ -13,7 +13,6 @@ def get_extractor():
     return CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.get_db())
 
 
-@memoized
 def get_test_extractor():
     return CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.get_db(), writer_class=InMemoryWriter)
 
