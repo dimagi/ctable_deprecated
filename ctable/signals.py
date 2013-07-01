@@ -1,10 +1,12 @@
 from ctable.util import get_extractor
 from fluff.signals import indicator_document_updated
-from .util import is_pillow_enabled_for_sql
+from .util import get_backend_name_for_fluff_pillow
 
 
 def process_fluff_diff(sender, diff=None, **kwargs):
-    if diff and is_pillow_enabled_for_sql(diff['doc_type']):
-        get_extractor().process_fluff_diff(diff)
+    backend_name = get_backend_name_for_fluff_pillow(diff['doc_type'])
+    print 'CareBiharFluffPillow', backend_name
+    if diff and backend_name:
+        get_extractor(backend_name).process_fluff_diff(diff, backend_name)
 
 indicator_document_updated.connect(process_fluff_diff)

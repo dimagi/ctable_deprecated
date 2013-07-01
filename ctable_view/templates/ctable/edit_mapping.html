@@ -36,6 +36,20 @@
                     <span class="help-inline"><small class="label">REQUIRED</small></span>
                 </div>
             </div>
+            <div class="control-group">
+                <label class="control-label" for="id_backene">
+                    {%  trans "Backend" %}
+                </label>
+
+                <div class="controls">
+                   <select name="backend" id="id_backend" data-bind="value: backend">
+                       {% for backend in backends %}
+                        <option value="{{ backend }}">{{ backend }}</option>
+                       {% endfor %}
+                    </select>
+                    <span class="help-inline"><small class="label">REQUIRED</small></span>
+                </div>
+            </div>
             <div class="well">
                 <div class="control-group">
                     <label class="control-label" for="id_schedule_type">

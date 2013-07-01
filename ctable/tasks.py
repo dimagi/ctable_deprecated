@@ -13,8 +13,8 @@ def process_extract(extract_id, limit=None, date_range=None):
             current_task.update_state(state='PROGRESS', meta=meta)
         return update_current
 
-    extract = SqlExtractMapping.get(extract_id)
-    get_extractor().extract(extract, limit=limit, date_range=date_range, status_callback=update_status)
+    mapping = SqlExtractMapping.get(extract_id)
+    get_extractor(mapping.backend).extract(mapping, limit=limit, date_range=date_range, status_callback=update_status)
 
 
 @periodic_task(run_every=crontab(hour="*", minute="1", day_of_week="*"))

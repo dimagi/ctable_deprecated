@@ -1,20 +1,31 @@
 from couchdbkit import ResourceNotFound
-from ctable.writer import InMemoryWriter
+from ctable.backends import InMemoryBackend
 from dimagi.utils.chunked import chunked
 from django.conf import settings
 from ctable.base import CtableExtractor
 from ctable.models import SqlExtractMapping
 from dimagi.utils.couch.database import get_db
 from dimagi.utils.decorators.memoized import memoized
+from dimagi.utils.modules import to_function
 
 
 @memoized
-def get_extractor():
-    return CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.get_db())
+def get_extractor(backend_name):
+    return CtableExtractor(SqlExtractMapping.get_db(), get_backend(backend_name))
 
 
 def get_test_extractor():
-    return CtableExtractor(settings.SQL_REPORTING_DATABASE_URL, SqlExtractMapping.get_db(), writer_class=InMemoryWriter)
+    return CtableExtractor(SqlExtractMapping.get_db(), InMemoryBackend())
+
+
+@memoized
+def get_backend(backend_name):
+    if not backend_name:
+        backend_name = 'SQL'
+    backend_class_name = settings.CTABLE_BACKENDS[backend_name]
+    backend_class = to_function(backend_class_name, failhard=True)
+    backend = backend_class()
+    return backend
 
 
 def combine_rows(rows, extract_mapping, chunksize=250):
@@ -35,16 +46,17 @@ def combine_rows(rows, extract_mapping, chunksize=250):
                 yield row
 
 
+@memoized
 def get_enabled_fluff_pillows():
-    hardcoded = getattr(settings, 'FLUFF_PILLOW_TYPES_TO_SQL', [])
+    hardcoded = getattr(settings, 'FLUFF_PILLOW_TYPES_TO_SQL', {})
     try:
-        dynamic = get_db().get('FLUFF_PILLOW_TYPES_TO_SQL').get('enabled_pillows', [])
+        dynamic = get_db().get('FLUFF_PILLOW_TYPES_TO_SQL').get('enabled_pillows', {})
     except ResourceNotFound:
         dynamic = []
 
-    hardcoded.extend(dynamic)
+    hardcoded.update(dynamic)
     return hardcoded
 
 
-def is_pillow_enabled_for_sql(pillow_name):
-    return pillow_name in get_enabled_fluff_pillows()
+def get_backend_name_for_fluff_pillow(pillow_name):
+    return get_enabled_fluff_pillows().get(pillow_name, None)

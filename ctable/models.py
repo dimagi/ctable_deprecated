@@ -130,7 +130,10 @@ SCHEDULE_VIEW = "ctable/schedule"
 
 
 class SqlExtractMapping(Document):
+    backend = StringProperty()
+    """See CTABLE_BACKENDS in settings"""
     database = StringProperty(required=False)
+    """CouchDB Database name where raw data is stored"""
     domains = StringListProperty(required=True)
     name = StringProperty(required=True, validators=validate_name)
     columns = SchemaListProperty(ColumnDef, required=True)

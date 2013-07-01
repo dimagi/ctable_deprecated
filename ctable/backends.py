@@ -3,6 +3,7 @@ import six
 import sqlalchemy
 import alembic
 from django.utils.translation import ugettext as _
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +17,32 @@ class ColumnTypeException(Exception):
     pass
 
 
-class CtableWriter(object):
-    def __init__(self, url_or_connection):
+class CtableBackend(object):
+
+    def write_rows(self, rows, extract_mapping):
+        raise NotImplementedError()
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+    def check_mapping(self, mapping):
+        pass
+
+    def clear_all_data(self, mapping):
+        pass
+
+
+class SqlBackend(CtableBackend):
+    """
+    Write rows to a database specified by URL
+    """
+    def __init__(self, url_or_connection=None):
+        if not url_or_connection:
+            url_or_connection = settings.SQL_REPORTING_DATABASE_URL
+
         if isinstance(url_or_connection, six.string_types):
             self.base_connection = sqlalchemy.create_engine(url_or_connection)
         else:
@@ -43,14 +68,6 @@ class CtableWriter(object):
     def table(self, table_name):
         return sqlalchemy.Table(table_name, self.metadata, autoload=True, autoload_with=self.connection)
 
-    def write_table(self, rows, extract_mapping, status_callback=None):
-        raise NotImplementedError()
-
-
-class SqlTableWriter(CtableWriter):
-    """
-    Write rows to a database specified by URL
-    """
     @property
     def op(self):
         if not hasattr(self, '_op') or self._op is None:
@@ -83,40 +100,10 @@ class SqlTableWriter(CtableWriter):
                 if not isinstance(current_ty, BASE_TYPE_MAP[column.data_type]):
                     raise ColumnTypeException("Column types don't match", column.name)
 
-    def drop_table(self, table_name):
+    def clear_all_data(self, mapping):
+        table_name = mapping.table_name
         if table_name in self.metadata.tables:
             self.op.drop_table(table_name)
-
-    def upsert(self, table, row_dict, key_columns):
-
-        # For atomicity "insert, catch, update" is slightly better than "select, insert or update".
-        # The latter may crash, while the former may overwrite data (which should be fine if whatever is
-        # racing against this is importing from the same source... if not you are busted anyhow
-        try:
-            insert = table.insert().values(**row_dict)
-            self.connection.execute(insert)
-        except sqlalchemy.exc.IntegrityError:
-            update = table.update()
-            for k in key_columns:
-                k_val = row_dict.pop(k)
-                update = update.where(getattr(table.c, k) == k_val)
-
-            update = update.values(**row_dict)
-            self.connection.execute(update)
-
-    def write_table(self, rows, extract_mapping):
-        table_name = extract_mapping.table_name
-        columns = extract_mapping.columns
-        key_columns = extract_mapping.key_columns
-
-        self.init_table(table_name, columns)
-        for row_dict in rows:
-            logger.debug(".")
-            self.upsert(self.table(table_name), row_dict, key_columns)
-
-
-class InMemoryWriter(CtableWriter):
-    data = {}
 
     def check_mapping(self, mapping):
         errors = []
@@ -144,7 +131,38 @@ class InMemoryWriter(CtableWriter):
 
         return {'errors': errors, 'warnings': warnings}
 
-    def write_table(self, rows, extract_mapping):
+    def upsert(self, table, row_dict, key_columns):
+
+        # For atomicity "insert, catch, update" is slightly better than "select, insert or update".
+        # The latter may crash, while the former may overwrite data (which should be fine if whatever is
+        # racing against this is importing from the same source... if not you are busted anyhow
+        try:
+            insert = table.insert().values(**row_dict)
+            self.connection.execute(insert)
+        except sqlalchemy.exc.IntegrityError:
+            update = table.update()
+            for k in key_columns:
+                k_val = row_dict.pop(k)
+                update = update.where(getattr(table.c, k) == k_val)
+
+            update = update.values(**row_dict)
+            self.connection.execute(update)
+
+    def write_rows(self, rows, extract_mapping):
+        table_name = extract_mapping.table_name
+        columns = extract_mapping.columns
+        key_columns = extract_mapping.key_columns
+
+        self.init_table(table_name, columns)
+        for row_dict in rows:
+            logger.debug(".")
+            self.upsert(self.table(table_name), row_dict, key_columns)
+
+
+class InMemoryBackend(CtableBackend):
+    data = {}
+
+    def write_rows(self, rows, extract_mapping):
         table_name = extract_mapping.table_name
         columns = [c.name for c in extract_mapping.columns]
 
