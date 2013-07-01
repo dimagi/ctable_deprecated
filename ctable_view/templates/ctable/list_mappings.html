@@ -33,6 +33,7 @@
                     <th rowspan="2">Schedule status</th>
                 {% endif %}
                 <th rowspan="2">Table name</th>
+                <th rowspan="2">Backend</th>
                 <th rowspan="2"></th>
             </tr>
             <tr>
@@ -65,6 +66,7 @@
                     </td>
                 {% endif %}
                 <td>{{ mapping.table_name }}</td>
+                <td>{{ mapping.backend }}</td>
                 <td>
                     {% if request.user.is_superuser %}
                     <a class="btn btn-small {% if mapping.auto_generated %}disabled{% endif  %}" href="{% url sql_mappings_toggle_state domain mapping.get_id %}">

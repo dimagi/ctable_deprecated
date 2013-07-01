@@ -1,6 +1,5 @@
 from couchdbkit import ResourceNotFound
 from .models import SqlExtractMapping, ColumnDef, KeyMatcher
-from .writer import SqlTableWriter
 from couchdbkit.ext.django.loading import get_db
 from datetime import datetime, timedelta
 import logging
@@ -11,13 +10,9 @@ fluff_view = 'fluff/generic'
 
 
 class CtableExtractor(object):
-    def __init__(self, sql_connection_or_url, couch_db, writer_class=None):
+    def __init__(self, couch_db, backend):
         self.db = couch_db
-        self.sql_connection_or_url = sql_connection_or_url
-        if writer_class:
-            self.writer = writer_class(self.sql_connection_or_url)
-        else:
-            self.writer = SqlTableWriter(self.sql_connection_or_url)
+        self.backend = backend
 
         from ctable.util import combine_rows
         self.combine_rows = combine_rows
@@ -51,12 +46,12 @@ class CtableExtractor(object):
 
         return total_rows, rows_with_value
 
-    def process_fluff_diff(self, diff):
+    def process_fluff_diff(self, diff, backend_name):
         """
         Given a Fluff diff, update the data in SQL to reflect the changes. This will
         query CouchDB in order to re-calculate all the grains that have changed.
         """
-        mapping = self.get_extract_mapping(diff)
+        mapping = self.get_fluff_extract_mapping(diff, backend_name)
         grains = self.get_fluff_grains(diff)
         couch_rows = self.recalculate_grains(grains, diff['database'])
         sql_rows = self.couch_rows_to_sql_rows(couch_rows, mapping)
@@ -90,8 +85,8 @@ class CtableExtractor(object):
         return result
 
     def write_rows_to_sql(self, rows, extract_mapping):
-        with self.writer:
-            self.writer.write_table(rows, extract_mapping)
+        with self.backend:
+            self.backend.write_rows(rows, extract_mapping)
 
     def couch_rows_to_sql_rows(self, couch_rows, mapping, status_callback=None):
         """
@@ -126,60 +121,56 @@ class CtableExtractor(object):
                 for value in ind['values']:
                     yield key_prefix + [value[0].isoformat()]
 
-    def get_extract_mapping(self, diff):
+    def get_fluff_extract_mapping(self, diff, backend_name):
         """
         Get the SqlExtractMapping for the Fluff diff. This assumes the Fluff
         view is emitting data as follows:
 
             [doc_type, group1... groupN, calc_name, emitter_name, emitter_value] = 1
         """
-        mapping = SqlExtractMapping(_id=diff['doc_type'],
-                                    database=diff['database'],
-                                    domains=diff['domains'],
-                                    name=diff['doc_type'],
-                                    couch_view=fluff_view,
-                                    active=False,
-                                    auto_generated=True)
-        columns = []
+        mapping_id = 'CtableFluffMapping_%s' % diff['doc_type']
+        try:
+            mapping = SqlExtractMapping.get(mapping_id)
+        except ResourceNotFound:
+            mapping = SqlExtractMapping(_id=mapping_id,
+                                        backend=backend_name,
+                                        database=diff['database'],
+                                        domains=diff['domains'],
+                                        name=diff['doc_type'],
+                                        couch_view=fluff_view,
+                                        active=False,
+                                        auto_generated=True)
+
         for i, group in enumerate(diff['group_names']):
-            columns.append(ColumnDef(name=group,
-                                     data_type='string',
-                                     value_source='key',
-                                     value_index=1 + i))
+            if not any(x.name == group for x in mapping.columns):
+                mapping.columns.append(ColumnDef(name=group,
+                                                 data_type='string',
+                                                 value_source='key',
+                                                 value_index=1 + i))
 
         num_groups = len(diff['group_names'])
-        columns.append(ColumnDef(name='date',
-                                 data_type='date',
-                                 date_format="%Y-%m-%d",
-                                 value_source='key',
-                                 value_index=3 + num_groups))
+        if not any(x.name == 'date' for x in mapping.columns):
+            mapping.columns.append(ColumnDef(name='date',
+                                             data_type='date',
+                                             date_format="%Y-%m-%d",
+                                             value_source='key',
+                                             value_index=3 + num_groups))
 
         for indicator in diff['indicator_changes']:
             calc_name = indicator['calculator']
             emitter_name = indicator['emitter']
-            columns.append(ColumnDef(name='{0}_{1}'.format(calc_name, emitter_name),
-                                     data_type='integer',
-                                     value_source='value',
-                                     value_attribute=indicator['reduce_type'],
-                                     match_keys=[
-                                         KeyMatcher(index=1 + num_groups, value=calc_name),
-                                         KeyMatcher(index=2 + num_groups, value=emitter_name)
-                                     ]))
-        mapping.columns = columns
+            name = '{0}_{1}'.format(calc_name, emitter_name)
+            if not any(x.name == name for x in mapping.columns):
+                mapping.columns.append(ColumnDef(name=name,
+                                                 data_type='integer',
+                                                 value_source='value',
+                                                 value_attribute=indicator['reduce_type'],
+                                                 match_keys=[
+                                                     KeyMatcher(index=1 + num_groups, value=calc_name),
+                                                     KeyMatcher(index=2 + num_groups, value=emitter_name)
+                                                 ]))
 
-        try:
-            existing_mapping = SqlExtractMapping.get(mapping.get_id)
-            existing_mapping.domains = mapping.domains
-            existing_columns = existing_mapping.columns
-            for c in mapping.columns:
-                if not any(x for x in existing_columns if x.name == c.name):
-                    existing_columns.append(c)
-
-            existing_mapping.active = False
-            existing_mapping.save()
-        except ResourceNotFound:
-            mapping.save()
-
+        mapping.save()
         return mapping
 
     def recalculate_grains(self, grains, database):
@@ -191,6 +182,6 @@ class CtableExtractor(object):
             result.extend(self.get_couch_rows(fluff_view, grain, grain + [{}], db=get_db(database)))
         return result
 
-    def drop_table(self, table_name):
-        with self.writer:
-            self.writer.drop_table(table_name)
+    def clear_all_data(self, mapping):
+        with self.backend:
+            self.backend.clear_all_data(mapping)

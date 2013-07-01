@@ -4,6 +4,7 @@ from fakecouch import FakeCouchDb
 from mock import patch
 from datetime import date, datetime, timedelta
 from . import TestBase, engine
+from ctable.backends import SqlBackend
 
 DOMAIN = "test"
 MAPPING_NAME = "demo_extract"
@@ -16,7 +17,7 @@ class TestCTable(TestBase):
         self.connection = engine.connect()
         self.trans = self.connection.begin()
         self.db.reset()
-        self.ctable = self.CtableExtractor(self.connection, self.db)
+        self.ctable = self.CtableExtractor(self.db, SqlBackend(self.connection))
 
         self.p2 = patch("ctable.base.get_db", return_value=self.db)
         self.p2.start()
@@ -150,7 +151,7 @@ class TestCTable(TestBase):
     def test_convert_indicator_diff_to_extract_mapping(self):
         diff = self._get_fluff_diff()
 
-        em = self.ctable.get_extract_mapping(diff)
+        em = self.ctable.get_fluff_extract_mapping(diff, 'SQL')
 
         self.assertEqual(em.table_name, "test_MockIndicators")
         self.assertEqual(len(em.columns), 4)
@@ -197,7 +198,7 @@ class TestCTable(TestBase):
             )
         ])
 
-        em = self.ctable.get_extract_mapping(diff)
+        em = self.ctable.get_fluff_extract_mapping(diff, 'SQL')
 
         self.assertEqual(em.table_name, "test_MockIndicators")
         self.assertEqual(len(em.columns), 4)
@@ -224,8 +225,8 @@ class TestCTable(TestBase):
                                                                      self.KeyMatcher(index=3, value='all_visits')]))
 
         self.assertEquals(len(self.db.mock_docs), 1)
-        self.assertIn('MockIndicators', self.db.mock_docs)
-        columns = self.db.mock_docs['MockIndicators']['columns']
+        self.assertIn('CtableFluffMapping_MockIndicators', self.db.mock_docs)
+        columns = self.db.mock_docs['CtableFluffMapping_MockIndicators']['columns']
         self.assertEquals(len(columns), 4)
         self.assertTrue(any(x for x in columns if x['name'] == 'owner_id'))
         self.assertTrue(any(x for x in columns if x['name'] == 'date'))
@@ -264,7 +265,7 @@ class TestCTable(TestBase):
                                        [r]) for r in rows])
 
         diff = self._get_fluff_diff()
-        self.ctable.process_fluff_diff(diff)
+        self.ctable.process_fluff_diff(diff, 'SQL')
         result = dict(
             [('%s_%s' % (row.owner_id, row.date), row) for row in
              self.connection.execute('SELECT * FROM "%s_%s"' % ('_'.join(diff['domains']), diff['doc_type']))])

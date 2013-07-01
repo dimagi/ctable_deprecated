@@ -3,7 +3,7 @@ from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
 from django.views.decorators.http import require_POST
 from corehq.apps.domain.decorators import require_superuser
-from ctable.util import get_test_extractor
+from ctable.util import get_test_extractor, get_backend
 from dimagi.utils.web import json_response
 from django.utils.translation import ugettext_noop as _
 
@@ -16,6 +16,7 @@ from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
 from ctable.util import get_extractor
+from django.conf import settings
 
 require_can_edit_sql_mappings = require_permission(Permissions.edit_data)
 
@@ -59,6 +60,7 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
     return render(request, template, {
         'domain': domain,
         'mapping': mapping,
+        'backends': settings.CTABLE_BACKENDS.keys()
     })
 
 
@@ -72,8 +74,9 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
             mapping = SqlExtractMapping.get(mapping_id)
             test_extractor = get_test_extractor()
 
-            with test_extractor.writer:
-                checks = test_extractor.writer.check_mapping(mapping)
+            backend = get_backend(mapping.backend)
+            with backend:
+                checks = backend.check_mapping(mapping)
 
             if mapping.couch_date_range > 0:
                 mapping.couch_date_range = -1
@@ -84,7 +87,7 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
                 'mapping': mapping,
                 'rows_processed': rows_processed,
                 'rows_with_value': rows_with_value,
-                'data': test_extractor.writer.data,
+                'data': test_extractor.backend.data,
             })
             return render(request, template, checks)
         except ResourceNotFound:
@@ -99,7 +102,7 @@ def clear_data(request, domain, mapping_id):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
-            get_extractor().drop_table(mapping.table_name)
+            get_extractor(mapping.backend).clear_all_data(mapping)
             return json_response({'status': 'success', 'message': _('Data successfully cleared.')})
         except ResourceNotFound:
             return json_response({'status': 'error', 'message': _('Mapping not found.')})
@@ -154,6 +157,8 @@ def delete(request, domain, mapping_id):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
+            assert mapping.domain == domain
+            assert mapping.doc_type == SqlExtractMapping._doc_type
             mapping.delete()
         except ResourceNotFound:
             raise Http404()

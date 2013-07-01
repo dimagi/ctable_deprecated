@@ -15,6 +15,9 @@ class TestSignals(TestBase):
         from ctable import signals
         cls.signals = signals
 
+    def setUp(self):
+        self.db.reset()
+
     def test_process_fluff_diff_not_in_list(self):
         diff = dict(doc_type='MockIndicators')
 
@@ -23,18 +26,19 @@ class TestSignals(TestBase):
             self.assertFalse(mock().called)
 
 
-    @patch('ctable.util.settings', FLUFF_PILLOW_TYPES_TO_SQL=['MockIndicators'])
-    def test_process_fluff_diff_in_settings_list(self, list):
+    @patch('ctable.util.settings', FLUFF_PILLOW_TYPES_TO_SQL={'MockIndicators': 'SQL'})
+    @patch('ctable.signals.get_extractor')
+    def test_process_fluff_diff_in_settings_list(self, mock_extractor, list):
         diff = dict(doc_type='MockIndicators')
 
-        with patch('ctable.signals.get_extractor', return_value=MagicMock()) as mock:
-            self.signals.process_fluff_diff(self, diff)
-            mock().process_fluff_diff.assert_called_once_with(diff)
+        self.signals.process_fluff_diff(self, diff)
 
-    def test_process_fluff_diff_in_db_list(self):
+        mock_extractor().process_fluff_diff.assert_called_once_with(diff, 'SQL')
+
+    @patch('ctable.signals.get_extractor')
+    def test_process_fluff_diff_in_db_list(self, mock_extractor):
         diff = dict(doc_type='MockIndicators')
-        self.db.mock_docs['FLUFF_PILLOW_TYPES_TO_SQL'] = {'enabled_pillows': ['MockIndicators']}
+        self.db.mock_docs['FLUFF_PILLOW_TYPES_TO_SQL'] = {'enabled_pillows': {'MockIndicators': 'SQL'}}
 
-        with patch('ctable.signals.get_extractor', return_value=MagicMock()) as mock:
-            self.signals.process_fluff_diff(self, diff)
-            mock().process_fluff_diff.assert_called_once_with(diff)
+        self.signals.process_fluff_diff(self, diff)
+        mock_extractor().process_fluff_diff.assert_called_once_with(diff, 'SQL')
