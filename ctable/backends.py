@@ -13,7 +13,11 @@ BASE_TYPE_MAP = dict(string=sqlalchemy.String,
                      datetime=sqlalchemy.DateTime)
 
 
-class ColumnTypeException(Exception):
+class CompatibilityException(Exception):
+    pass
+
+
+class ColumnTypeException(CompatibilityException):
     pass
 
 
