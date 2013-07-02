@@ -7,7 +7,7 @@ setup(
     author='Dimagi',
     author_email='dev@dimagi.com',
     url='http://github.com/dimagi/ctable',
-    packages=['ctable'],
+    packages=['ctable', 'ctable_view'],
     include_package_data=True,
     test_suite='tests',
     test_loader='unittest2:TestLoader',
@@ -26,8 +26,5 @@ setup(
         'unittest2',
         'fakecouch>=0.0.3',
         'mock>=0.0.8'
-    ],
-    dependency_links=[
-        'http://github.com/dimagi/fluff/tarball/master#egg=pillowfluff-0.0.1',
-    ],
+    ]
 )

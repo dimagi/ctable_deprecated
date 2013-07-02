@@ -1,0 +1,3 @@
+recursive-include ctable/_design *
+recursive-include ctable_view/static *
+recursive-include ctable_view/templates *
