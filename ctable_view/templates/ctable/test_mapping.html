@@ -60,6 +60,9 @@
                     $.post('{% url sql_mappings_clear domain mapping.get_id%}', function(data) {
                         $('.hq-loading').hide();
                         self.showMessage(data.message, data.status);
+                    }).fail(function() {
+                        $('.hq-loading').hide();
+                        self.showMessage('{% trans "Unable to clear data due to an error." %}', 'error');
                     });
                 }
 

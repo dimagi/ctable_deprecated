@@ -147,7 +147,7 @@ ko.bindingHandlers.csvValue = {
         var interceptor = ko.dependentObservable({
             read: underlyingObservable,
             write: function(value) {
-                underlyingObservable(value.split(/[\s,]+/));
+                underlyingObservable(value.split(/\s*,\s*/));
             }
         });
         ko.bindingHandlers.value.init(element, function() { return interceptor }, allBindingsAccessor);
