@@ -110,6 +110,8 @@ class SqlBackend(CtableBackend):
         table_name = mapping.table_name
         if table_name in self.metadata.tables:
             self.op.drop_table(table_name)
+            self.metadata.clear()
+            self.metadata.reflect()
 
     def check_mapping(self, mapping):
         errors = []

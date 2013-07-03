@@ -11,12 +11,14 @@ engine = sqlalchemy.create_engine(TEST_DB_URL)
 
 
 class TestBase(TestCase):
-
     @classmethod
     def setUpClass(cls):
         from django.conf import settings
         if not settings.configured:
-            settings.configure(DEBUG=True, SQL_REPORTING_DATABASE_URL=TEST_DB_URL, COUCH_STALE_QUERY=False)
+            settings.configure(DEBUG=True,
+                               SQL_REPORTING_DATABASE_URL=TEST_DB_URL,
+                               SQL_REPORTING_OBJECT_OWNER=None,
+                               COUCH_STALE_QUERY=False)
 
         cls.db = FakeCouchDb()
         cls.p1 = patch('couchdbkit.ext.django.schema.get_db', return_value=cls.db)
