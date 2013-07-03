@@ -3,6 +3,7 @@ import logging
 from unittest2 import TestCase
 from fakecouch import FakeCouchDb
 from mock import patch
+from django.conf import settings
 
 logging.basicConfig()
 
@@ -13,7 +14,6 @@ engine = sqlalchemy.create_engine(TEST_DB_URL)
 class TestBase(TestCase):
     @classmethod
     def setUpClass(cls):
-        from django.conf import settings
         if not settings.configured:
             settings.configure(DEBUG=True,
                                SQL_REPORTING_DATABASE_URL=TEST_DB_URL,

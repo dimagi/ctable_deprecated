@@ -2,6 +2,7 @@ import sqlalchemy
 from sqlalchemy.exc import ProgrammingError
 from ctable.backends import SqlBackend, ColumnTypeException
 from . import TestBase, engine
+from django.conf import settings
 
 TABLE = "test_table"
 
@@ -172,6 +173,8 @@ class TestBackendsMultiUser(TestBase):
         self.trans.commit()
         self.connection.close()
 
+        settings.SQL_REPORTING_OBJECT_OWNER = None
+
     def test_multi_user_fail(self):
         columns = [
             self.ColumnDef(name="col_a", data_type="string", value_source='key'),
@@ -193,7 +196,6 @@ class TestBackendsMultiUser(TestBase):
         class Mapping(object):
             table_name = TABLE
 
-        from django.conf import settings
         settings.SQL_REPORTING_OBJECT_OWNER = 'testgroup'
 
         columns = [
