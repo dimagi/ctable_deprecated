@@ -1,5 +1,5 @@
 from couchdbkit import ResourceNotFound
-from ctable.backends import InMemoryBackend
+from ctable.backends import InMemoryBackend, SqlBackend
 from dimagi.utils.chunked import chunked
 from django.conf import settings
 from ctable.base import CtableExtractor
@@ -21,10 +21,11 @@ def get_test_extractor():
 @memoized
 def get_backend(backend_name):
     if not backend_name:
-        backend_name = 'SQL'
-    backend_class_name = settings.CTABLE_BACKENDS[backend_name]
-    backend_class = to_function(backend_class_name, failhard=True)
-    backend = backend_class()
+        backend = SqlBackend()
+    else:
+        backend_class_name = settings.CTABLE_BACKENDS[backend_name]
+        backend_class = to_function(backend_class_name, failhard=True)
+        backend = backend_class()
     return backend
 
 

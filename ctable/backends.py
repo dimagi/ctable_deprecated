@@ -84,8 +84,9 @@ class SqlBackend(CtableBackend):
             logger.info('Creating new reporting table: %s', table_name)
             columns = [c.sql_column for c in column_defs]
             self.op.create_table(table_name, *columns)
-            if settings.SQL_REPORTING_OBJECT_OWNER:
-                self.op.execute('ALTER TABLE "%s" OWNER TO %s' % (table_name, settings.SQL_REPORTING_OBJECT_OWNER))
+            owner = getattr(settings, 'SQL_REPORTING_OBJECT_OWNER', None)
+            if owner:
+                self.op.execute('ALTER TABLE "%s" OWNER TO %s' % (table_name, owner))
             self.metadata.reflect()
         else:
             self.make_table_compatible(table_name, column_defs)
