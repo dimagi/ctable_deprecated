@@ -157,7 +157,7 @@ def delete(request, domain, mapping_id):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
-            assert mapping.domain == domain
+            assert domain in mapping.domains
             assert mapping.doc_type == SqlExtractMapping._doc_type
             mapping.delete()
         except ResourceNotFound:
