@@ -15,44 +15,55 @@
                 var self = this;
                 self.limit = ko.observable();
                 self.date_range = ko.observable({{ mapping.couch_date_range }});
+                self.run_date_range = ko.observable({{ mapping.couch_date_range }});
                 self.total = ko.observable();
                 self.current = ko.observable();
 
                 self.execute = function(element) {
                     var url = '{% url sql_mappings_run domain mapping.get_id %}';
                     url += '?limit=' + self.limit()
-                    url += '&date_range=' + self.date_range()
+                    url += '&date_range=' + self.run_date_range()
                     $.get(url, function(response) {
                         self.progress_url = response.redirect;
                         $('#run_mapping').modal('hide');
                         $(".bar").width('0%');
                         $('#run_progress').modal('show');
-                        window.setTimeout( self.update_progress, 1000 );
+                        window.setTimeout( self.updateProgress, 1000 );
                     })
                 }
 
-                self.update_progress = function() {
+                self.updateProgress = function() {
                     if (self.progress_url) {
                         $.get(self.progress_url, function(response) {
                             console.log(response);
                             if (response === 'SUCCESS'){
-                                $('#run_progress').modal('hide');
-                                $('#loading').show();
-                                $('#progress').hide();
-                                return;
+                                self.resetProgress();
+                                self.showMessage('{% trans "Data extract success." %}', 'success')
                             } else if (response === 'PENDING') {
-                                window.setTimeout( self.update_progress, 1000 );
-                                return;
+                                window.setTimeout( self.updateProgress, 1000 );
+                            } else if (response.error) {
+                                self.resetProgress();
+                                self.showMessage(response.error, 'error');
+                            } else {
+                                $('#loading').hide();
+                                $('#progress').show();
+                                self.total(response.total);
+                                self.current(response.current);
+                                var width = Math.round(response.current * 100 / response.total) + '%';
+                                $(".bar").width(width);
+                                window.setTimeout( self.updateProgress, 1000 );
                             }
-                            $('#loading').hide();
-                            $('#progress').show();
-                            self.total(response.total);
-                            self.current(response.current);
-                            var width = Math.round(response.current * 100 / response.total) + '%';
-                            $(".bar").width(width);
-                            window.setTimeout( self.update_progress, 1000 );
-                        })
+                        }).fail(function(){
+                            self.resetProgress();
+                            self.showMessage('{% trans "An unknown error occurred." %}');
+                        });
                     }
+                }
+
+                self.resetProgress = function() {
+                    $('#loading').show();
+                    $('#progress').hide();
+                    $('#run_progress').modal('hide');
                 }
 
                 self.clearData = function() {
@@ -141,8 +152,7 @@
     </div>
     {% endif %}
     <ul>
-        <li data-bind="visible: date_range() > 0">{% blocktrans with range=apping.couch_date_range %}Date range: {{ range }} days{% endblocktrans %}</li>
-        <li>{% blocktrans with processed=rows_processed matched=rows_with_value%}Rows processed: {{ processed }} ({{ matched }} matched a value column" {% endblocktrans %})</li>
+        <li>{% blocktrans with processed=rows_processed matched=rows_with_value%}Rows processed: {{ processed }} ({{ matched }} matched a value column {% endblocktrans %})</li>
         <li>{% trans "Table name:" %} {{ data.table_name }}</li>
     </ul>
 
@@ -187,7 +197,7 @@
                     </label>
 
                     <div class="controls">
-                        <input type="text" name="date_range" id="id_date_range" data-bind="value: date_range">
+                        <input type="text" name="date_range" id="id_date_range" data-bind="value: run_date_range">
                     </div>
                 </div>
                 <p>{% trans "Are you sure you want to execute this mapping?" %}</p>

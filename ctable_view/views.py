@@ -68,7 +68,12 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
 def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
     if mapping_id:
         try:
-            limit = int(request.GET.get('limit', 100))
+            limit = request.GET.get('limit', 100)
+            if not limit or limit == 'undefined':
+                limit = None
+            elif limit:
+                limit = int(limit)
+
             limit = min(limit, 1000)
 
             mapping = SqlExtractMapping.get(mapping_id)
@@ -78,10 +83,7 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
             with backend:
                 checks = backend.check_mapping(mapping)
 
-            if mapping.couch_date_range > 0:
-                mapping.couch_date_range = -1
-
-            rows_processed, rows_with_value = test_extractor.extract(mapping, limit=limit)
+            rows_processed, rows_with_value = test_extractor.extract(mapping, date_range=-1, limit=limit)
             checks.update({
                 'domain': domain,
                 'mapping': mapping,
@@ -117,7 +119,10 @@ def poll_state(request, domain, job_id=None):
 
     job = AsyncResult(job_id)
     data = job.result or job.state
-    return json_response(data)
+    try:
+        return json_response(data)
+    except TypeError:
+        return json_response(dict(error=str(data)))
 
 
 @require_superuser
@@ -130,9 +135,10 @@ def run(request, domain, mapping_id):
         limit = int(limit)
 
     if not date_range or date_range == 'undefined':
-        date_range = None
+        date_range = -1
     elif date_range:
         date_range = int(date_range)
+
     job = process_extract.delay(mapping_id, limit=limit, date_range=date_range)
     return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain': domain, 'job_id': job.id})})
 
