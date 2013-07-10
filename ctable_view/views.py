@@ -29,7 +29,7 @@ def _to_kwargs(req):
 
 
 @require_superuser
-def view(request, domain, template='ctable/list_mappings.html'):
+def view(request, domain=None, template='ctable/list_mappings.html'):
     if domain:
         mappings = SqlExtractMapping.by_domain(domain)
     else:
@@ -42,7 +42,7 @@ def view(request, domain, template='ctable/list_mappings.html'):
 
 
 @require_superuser
-def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
+def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
     if request.method == 'POST':
             d = _to_kwargs(request)
             if domain and domain not in d['domains']:
@@ -70,7 +70,7 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
 
 
 @require_superuser
-def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
+def test(request, mapping_id, domain=None, template='ctable/test_mapping.html'):
     if mapping_id:
         try:
             limit = request.GET.get('limit', 100)
@@ -106,7 +106,7 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
 
 @require_superuser
 @require_POST
-def clear_data(request, domain, mapping_id):
+def clear_data(request, mapping_id, domain=None):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
@@ -119,7 +119,7 @@ def clear_data(request, domain, mapping_id):
 
 
 @require_superuser
-def poll_state(request, domain, job_id=None):
+def poll_state(request, domain=None, job_id=None):
     if not job_id:
         kwargs = {'domain': domain} if domain else {}
         return redirect('sql_mappings_list', **kwargs)
@@ -133,7 +133,7 @@ def poll_state(request, domain, job_id=None):
 
 
 @require_superuser
-def run(request, domain, mapping_id):
+def run(request, mapping_id, domain=None):
     limit = request.GET.get('limit', None)
     date_range = request.GET.get('date_range', None)
     if not limit or limit == 'undefined':
@@ -153,7 +153,7 @@ def run(request, domain, mapping_id):
     return json_response({'redirect': reverse('sql_mappings_poll', kwargs=kwargs)})
 
 @require_superuser
-def toggle(request, domain, mapping_id):
+def toggle(request, mapping_id, domain=None):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
@@ -169,7 +169,7 @@ def toggle(request, domain, mapping_id):
 
 
 @require_superuser
-def delete(request, domain, mapping_id):
+def delete(request, mapping_id, domain=None):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)

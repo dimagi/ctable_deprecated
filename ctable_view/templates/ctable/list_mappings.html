@@ -18,8 +18,7 @@
 {% block content %}
 
 <div class="row-fluid">
-    <div class="span1">&nbsp;</div>
-    <div class="span10">
+    <div class="span10 offset1">
         <h3>SQL Extract Mappings
         {% if domain %}
             {% url sql_mappings_edit domain '' as new_url %}
@@ -36,20 +35,20 @@
             <thead>
             <tr>
                     {% if not domain %}
-                        <th rowspan="2">Domains</th>
+                        <th rowspan="2">{% trans "Domains" %}</th>
                     {%  endif %}
-                    <th rowspan="2">Name</th>
-                    <th rowspan="2">Schedule</th>
-                    <th colspan="3">Couch View</th>
-                    <th rowspan="2">Schedule Status</th>
-                    <th rowspan="2">Table name</th>
-                    <th rowspan="2">Backend</th>
+                    <th rowspan="2">{% trans "Name" %}</th>
+                    <th rowspan="2">{% trans "Schedule" %}</th>
+                    <th colspan="3">{% trans "Couch View" %}</th>
+                    <th rowspan="2">{% trans "Schedule Status" %}</th>
+                    <th rowspan="2">{% trans "Table name" %}</th>
+                    <th rowspan="2">{% trans "Backend" %}</th>
                     <th rowspan="2"></th>
                 </tr>
                 <tr>
-                    <th>Name</th>
-                    <th>Key Prefix</th>
-                    <th>Date Range</th>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Key Prefix" %}</th>
+                    <th>{% trans "Date Range    " %}</th>
                 </tr>
             </thead>
             <tbody>
