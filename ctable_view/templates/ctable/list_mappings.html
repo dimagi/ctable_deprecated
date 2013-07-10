@@ -1,4 +1,4 @@
-{% extends 'hqwebapp/centered.html' %}
+{% extends base_template %}
 {% load i18n %}
 {% load hq_shared_tags %}
 {% load hqstyle_tags %}
@@ -15,94 +15,119 @@
     </script>
 {% endblock %}
 
-{% block centered-content %}
-    <h3>SQL Extract Mappings
-    <a class="btn pull-right" href="{% url sql_mappings_edit domain '' %}">
-        <i class="icon-edit"></i>
-        {% trans "New Mapping" %}
-    </a>
-    </h3>
+{% block content %}
 
-    <table class="table table-bordered">
-        <thead>
+<div class="row-fluid">
+    <div class="span10 offset1">
+        <h3>SQL Extract Mappings
+        {% if domain %}
+            {% url sql_mappings_edit domain '' as new_url %}
+        {% else %}
+            {% url sql_mappings_edit '' as new_url %}
+        {% endif %}
+        <a class="btn pull-right" href="{{ new_url }}">
+            <i class="icon-edit"></i>
+            {% trans "New Mapping" %}
+        </a>
+        </h3>
+
+        <table class="table table-bordered">
+            <thead>
             <tr>
-                <th rowspan="2">Name</th>
-                <th rowspan="2">Schedule</th>
-                <th colspan="3">Couch View</th>
-                {% if not request.user.is_superuser %}
-                    <th rowspan="2">Schedule status</th>
+                    {% if not domain %}
+                        <th rowspan="2">{% trans "Domains" %}</th>
+                    {%  endif %}
+                    <th rowspan="2">{% trans "Name" %}</th>
+                    <th rowspan="2">{% trans "Schedule" %}</th>
+                    <th colspan="3">{% trans "Couch View" %}</th>
+                    <th rowspan="2">{% trans "Schedule Status" %}</th>
+                    <th rowspan="2">{% trans "Table name" %}</th>
+                    <th rowspan="2">{% trans "Backend" %}</th>
+                    <th rowspan="2"></th>
+                </tr>
+                <tr>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Key Prefix" %}</th>
+                    <th>{% trans "Date Range    " %}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% regroup mappings|dictsort:"domains" by domains as mapping_list %}
+            {% for gmap in mapping_list %}
+                {% if not domain %}
+                <tr><td colspan="{% if domain %}9{% else %}10{% endif %}"><strong>Domains: {{ gmap.grouper }}</strong></td></tr>
                 {% endif %}
-                <th rowspan="2">Table name</th>
-                <th rowspan="2">Backend</th>
-                <th rowspan="2"></th>
-            </tr>
-            <tr>
-                <th>Name</th>
-                <th>Key Prefix</th>
-                <th>Date Range</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for mapping in mappings %}
-            <tr class="{% if mapping.active %}success{% else %}warning{% endif %}">
-                <td>{{ mapping.name }}</td>
-                <td>
-                    {{ mapping.schedule_type }}
-                    {% if mapping.schedule_type != 'daily' %} on day {{ mapping.schedule_day }}{% endif %}
-                    at {{ mapping.schedule_hour }}:00
-                </td>
-                <td>{{ mapping.couch_view }}</td>
-                <td>{{ mapping.couch_key_prefix }}</td>
-                <td>{{ mapping.couch_date_range }}</td>
-                {% if not request.user.is_superuser %}
+                {% for mapping in gmap.list %}
+                <tr class="{% if mapping.active %}success{% else %}warning{% endif %}">
+                    {% if not domain %}
+                    <td>
+                        <ul>
+                            {% for domain in mapping.domains %}
+                            <li>{{ domain }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    {% endif %}
+                    <td>{{ mapping.name }}</td>
+                    <td>
+                        {{ mapping.schedule_type }}
+                        {% if mapping.schedule_type != 'daily' %} on day {{ mapping.schedule_day }}{% endif %}
+                        at {{ mapping.schedule_hour }}:00
+                    </td>
+                    <td>{{ mapping.couch_view }}</td>
+                    <td>{{ mapping.couch_key_prefix }}</td>
+                    <td>{{ mapping.couch_date_range }}</td>
                     <td>
                         {% if mapping.active %}
-                            <i class="icon-stop"></i>
-                            {% trans "Inactive" %}
-                        {% else %}
                             <i class="icon-play"></i>
-                            {% trans "Active" %}
+                            {% trans "Enabled" %}
+                        {% else %}
+                            <i class="icon-stop"></i>
+                            {% trans "Disabled" %}
                         {% endif %}
                     </td>
-                {% endif %}
-                <td>{{ mapping.table_name }}</td>
-                <td>{{ mapping.backend }}</td>
-                <td>
-                    {% if request.user.is_superuser %}
-                    <a class="btn btn-small {% if mapping.auto_generated %}disabled{% endif  %}" href="{% url sql_mappings_toggle_state domain mapping.get_id %}">
-                        {% if mapping.active %}
-                            <i class="icon-stop"></i>
-                            {% trans "De-activate" %}
+                    <td>{{ mapping.table_name }}</td>
+                    <td>{% if mapping.backend %}{{ mapping.backend }}{% else %}{% trans "Default" %}{% endif %}</td>
+                    <td>
+                        {% if domain %}
+                            {% url sql_mappings_toggle_state domain mapping.get_id as toggle_url %}
+                            {% url sql_mappings_edit domain mapping.get_id as edit_url %}
+                            {% url sql_mappings_test mapping.get_id as test_url%}
                         {% else %}
-                            <i class="icon-play"></i>
-                            {% trans "Activate" %}
+                            {% url sql_mappings_toggle_state mapping.get_id as toggle_url %}
+                            {% url sql_mappings_edit mapping.get_id as edit_url %}
+                            {% url sql_mappings_test mapping.get_id as test_url%}
                         {% endif %}
-                    </a>
-                    {% endif %}
-                    <a class="btn btn-small" href="{% url sql_mappings_edit domain mapping.get_id %}">
-                        {% if mapping.auto_generated %}
-                            <i class="icon-file-alt"></i>
-                            {% trans "View" %}
-                        {% else %}
-                            <i class="icon-edit"></i>
-                            {% trans "Edit" %}
-                        {% endif  %}
-                    </a>
-                    {% if request.user.is_superuser %}
-                    <a class="btn btn-small btn-info" href="{% url sql_mappings_test domain mapping.get_id %}">
-                        <i class="icon-beaker icon-white"></i>
-                        {% trans "Test" %}
-                    </a>
-                    {%  endif %}
-                    <a class="btn btn-small btn-danger" data-toggle="modal" href="#delete-sql-mapping-{{ mapping.get_id }}">
-                        <i class="icon-remove icon-white"></i>
-                        {% trans "Delete" %}
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                        <div class="btn-group">
+                          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                            <i class="icon-cog"></i>
+                            <span class="caret"></span>
+                          </a>
+                          <ul class="dropdown-menu">
+                              {% if not mapping.auto_generated %}
+                                {% if mapping.active %}
+                                  <li><a href="{{ toggle_url }}"><i class="icon-stop"></i>{% trans "Disable Schedule" %}</a></li>
+                                {% else %}
+                                  <li><a href="{{ toggle_url }}"><i class="icon-play"></i>{% trans "Enable Schedule" %}</a></li>
+                                {% endif %}
+                              {% endif %}
+                              {% if mapping.auto_generated %}
+                                  <li><a href="{{ edit_url }}"><i class="icon-file-alt"></i>{% trans "View" %}</a></li>
+                              {% else %}
+                                  <li><a href="{{ edit_url }}"><i class="icon-edit"></i>{% trans "Edit" %}</a></li>
+                              {% endif  %}
+                              <li><a href="{{ test_url }}"><i class="icon-beaker"></i>{% trans "Test" %}</a></li>
+                              <li><a data-toggle="modal" href="#delete-sql-mapping-{{ mapping.get_id }}"><i class="icon-remove icon-white"></i>{% trans "Delete" %}</a></li>
+                          </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}
 
 {% block modals %}{{ block.super }}

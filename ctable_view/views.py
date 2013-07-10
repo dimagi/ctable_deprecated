@@ -29,8 +29,12 @@ def _to_kwargs(req):
 
 
 @require_superuser
-def view(request, domain, template='ctable/list_mappings.html'):
-    mappings = SqlExtractMapping.by_domain(domain)
+def view(request, domain=None, template='ctable/list_mappings.html'):
+    if domain:
+        mappings = SqlExtractMapping.by_domain(domain)
+    else:
+        mappings = SqlExtractMapping.all()
+
     return render(request, template, {
         'domain': domain,
         'mappings': mappings
@@ -38,16 +42,17 @@ def view(request, domain, template='ctable/list_mappings.html'):
 
 
 @require_superuser
-def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
+def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
     if request.method == 'POST':
             d = _to_kwargs(request)
-            if domain not in d['domains']:
+            if domain and domain not in d['domains']:
                 d['domains'].append(domain)
             mapping = SqlExtractMapping.from_json(d)
             if mapping.couch_key_prefix and mapping.couch_key_prefix[0] == '':
                 mapping.couch_key_prefix = None
             mapping.save()
-            return json_response({'redirect': reverse('sql_mappings_list', kwargs={'domain': domain})})
+            kwargs = {'domain': domain} if domain else {}
+            return json_response({'redirect': reverse('sql_mappings_list', kwargs=kwargs)})
 
     if mapping_id:
         try:
@@ -65,7 +70,7 @@ def edit(request, domain, mapping_id, template='ctable/edit_mapping.html'):
 
 
 @require_superuser
-def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
+def test(request, mapping_id, domain=None, template='ctable/test_mapping.html'):
     if mapping_id:
         try:
             limit = request.GET.get('limit', 100)
@@ -95,12 +100,13 @@ def test(request, domain, mapping_id, template='ctable/test_mapping.html'):
         except ResourceNotFound:
             raise Http404()
 
-    return redirect('sql_mappings_list', domain=domain)
+    kwargs = {'domain': domain} if domain else {}
+    return redirect('sql_mappings_list', **kwargs)
 
 
 @require_superuser
 @require_POST
-def clear_data(request, domain, mapping_id):
+def clear_data(request, mapping_id, domain=None):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
@@ -113,9 +119,10 @@ def clear_data(request, domain, mapping_id):
 
 
 @require_superuser
-def poll_state(request, domain, job_id=None):
+def poll_state(request, domain=None, job_id=None):
     if not job_id:
-        return redirect('sql_mappings_list', domain=domain)
+        kwargs = {'domain': domain} if domain else {}
+        return redirect('sql_mappings_list', **kwargs)
 
     job = AsyncResult(job_id)
     data = job.result or job.state
@@ -126,7 +133,7 @@ def poll_state(request, domain, job_id=None):
 
 
 @require_superuser
-def run(request, domain, mapping_id):
+def run(request, mapping_id, domain=None):
     limit = request.GET.get('limit', None)
     date_range = request.GET.get('date_range', None)
     if not limit or limit == 'undefined':
@@ -140,11 +147,13 @@ def run(request, domain, mapping_id):
         date_range = int(date_range)
 
     job = process_extract.delay(mapping_id, limit=limit, date_range=date_range)
-    return json_response({'redirect': reverse('sql_mappings_poll', kwargs={'domain': domain, 'job_id': job.id})})
 
+    kwargs = {'domain': domain} if domain else {}
+    kwargs['job_id'] = job.id
+    return json_response({'redirect': reverse('sql_mappings_poll', kwargs=kwargs)})
 
 @require_superuser
-def toggle(request, domain, mapping_id):
+def toggle(request, mapping_id, domain=None):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
@@ -155,18 +164,21 @@ def toggle(request, domain, mapping_id):
         except ResourceNotFound:
             raise Http404()
 
-    return redirect('sql_mappings_list', domain=domain)
+    kwargs = {'domain': domain} if domain else {}
+    return redirect('sql_mappings_list', **kwargs)
 
 
 @require_superuser
-def delete(request, domain, mapping_id):
+def delete(request, mapping_id, domain=None):
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
-            assert domain in mapping.domains
+            if domain:
+                assert domain in mapping.domains
             assert mapping.doc_type == SqlExtractMapping._doc_type
             mapping.delete()
         except ResourceNotFound:
             raise Http404()
 
-    return redirect('sql_mappings_list', domain=domain)
+    kwargs = {'domain': domain} if domain else {}
+    return redirect('sql_mappings_list', **kwargs)

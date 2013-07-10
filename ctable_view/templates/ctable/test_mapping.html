@@ -20,7 +20,12 @@
                 self.current = ko.observable();
 
                 self.execute = function(element) {
-                    var url = '{% url sql_mappings_run domain mapping.get_id %}';
+                    {% if domain %}
+                        {% url sql_mappings_run domain mapping.get_id as run_url%}
+                    {% else %}
+                        {% url sql_mappings_run mapping.get_id as run_url%}
+                    {% endif %}
+                    var url = '{{ run_url }}';
                     url += '?limit=' + self.limit()
                     url += '&date_range=' + self.run_date_range()
                     $.get(url, function(response) {
@@ -96,19 +101,28 @@
     <h3>{% blocktrans with name=mapping.name%}Results from running '{{ name  }}' mapping{% endblocktrans %}
         <div class="btn-toolbar pull-right">
             <div class="btn-group">
+                {% if domain %}
+                    {% url sql_mappings_test domain mapping.get_id as test_url%}
+                    {% url sql_mappings_edit domain mapping.get_id as edit_url%}
+                    {% url sql_mappings_list domain as list_url%}
+                {% else %}
+                    {% url sql_mappings_test mapping.get_id as test_url%}
+                    {% url sql_mappings_edit mapping.get_id as edit_url%}
+                    {% url sql_mappings_list as list_url%}
+                {% endif %}
                 <div class="btn-group">
                     <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                     {% trans "Test again" %}
                     <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=100">100 {% trans rows %}</a></li>
-                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=250">250 {% trans rows %}</a></li>
-                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=500">500 {% trans rows %}</a></li>
-                        <li><a href="{% url sql_mappings_test domain mapping.get_id %}?limit=1000">1000 {% trans rows %}</a></li>
+                        <li><a href="{{ test_url }}?limit=100">100 {% trans rows %}</a></li>
+                        <li><a href="{{ test_url }}?limit=250">250 {% trans rows %}</a></li>
+                        <li><a href="{{ test_url }}?limit=500">500 {% trans rows %}</a></li>
+                        <li><a href="{{ test_url }}?limit=1000">1000 {% trans rows %}</a></li>
                     </ul>
                 </div>
-                <a class="btn" href="{% url sql_mappings_edit domain mapping.get_id %}">
+                <a class="btn" href="{{ edit_url }}">
                     {% if mapping.auto_generated %}
                         <i class="icon-file-alt"></i>
                         {% trans "View" %}
@@ -117,7 +131,7 @@
                         {% trans "Edit" %}
                     {% endif  %}
                 </a>
-                <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Back" %}</a>
+                <a class="btn" href="{{ list_url }}">{% trans "Back" %}</a>
             </div>
             <div class="btn-group">
                 <a class="btn btn-success {% if errors %}disabled{% endif %}" href="#run_mapping" role="button" {% if not errors %}data-toggle="modal"{% endif %}>
