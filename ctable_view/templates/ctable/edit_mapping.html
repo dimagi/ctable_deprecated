@@ -25,7 +25,8 @@
     </div>
     <form class="form form-horizontal" method="post" data-bind="submit: save">
         <fieldset>
-            <legend>{% trans "Create new data mapping" %}</legend>
+            <legend data-bind="visible: _id()">{% trans "Edit data mapping" %}</legend>
+            <legend data-bind="visible: !_id()">{% trans "Create new data mapping" %}</legend>
             <div class="control-group">
                 <label class="control-label" for="id_name">
                     {%  trans "Name" %}
@@ -36,6 +37,21 @@
                     <span class="help-inline"><small class="label">REQUIRED</small></span>
                 </div>
             </div>
+            {% if not domain %}
+            <div class="control-group">
+                <label class="control-label" for="id_domains">
+                    {%  trans "Domains" %}
+                </label>
+
+                <div class="controls">
+                    <input id="id_name" type="text" name="domains" data-bind="csvValue: domains">
+                    <span class="help-inline"><small class="label">REQUIRED</small></span>
+                    <p class="help-block">
+                        {% trans "Comma separated values" %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
             <div class="control-group">
                 <label class="control-label" for="id_backene">
                     {%  trans "Backend" %}
@@ -167,11 +183,16 @@
             </div>
         </fieldset>
         <div class="form-actions">
+            {% if domain %}
+                {% url sql_mappings_list domain as list_url%}
+            {% else %}
+                {% url sql_mappings_list as list_url%}
+            {% endif %}
             {% if mapping.auto_generated %}
-                <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Back" %}</a>
+                <a class="btn" href="{{ list_url }}">{% trans "Back" %}</a>
             {% else %}
                 <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
-                <a class="btn" href="{% url sql_mappings_list domain%}">{% trans "Cancel" %}</a>
+                <a class="btn" href="{{ list_url }}">{% trans "Cancel" %}</a>
             {% endif  %}
         </div>
     </form>
