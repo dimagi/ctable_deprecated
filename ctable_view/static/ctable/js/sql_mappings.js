@@ -109,6 +109,10 @@ function ColumnDef(json) {
                self.validate.error('Must supply index > 0 for key value source.');
                return false;
            }
+       } else if (self.value_source() === 'value') {
+           if ($.trim(self.value_attribute()) === '') {
+               self.value_attribute(null);
+           }
        }
        return true;
    }
