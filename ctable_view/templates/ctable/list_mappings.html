@@ -92,7 +92,7 @@
                         {% if domain %}
                             {% url sql_mappings_toggle_state domain mapping.get_id as toggle_url %}
                             {% url sql_mappings_edit domain mapping.get_id as edit_url %}
-                            {% url sql_mappings_test mapping.get_id as test_url%}
+                            {% url sql_mappings_test domain mapping.get_id as test_url%}
                         {% else %}
                             {% url sql_mappings_toggle_state mapping.get_id as toggle_url %}
                             {% url sql_mappings_edit mapping.get_id as edit_url %}
