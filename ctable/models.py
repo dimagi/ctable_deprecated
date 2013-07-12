@@ -22,6 +22,7 @@ class CtableMappingFixture(object):
     name = None
     domains = []
     couch_view = ''
+    schedule_active = False
 
     @property
     def columns(self):
