@@ -47,10 +47,21 @@ def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
             d = _to_kwargs(request)
             if domain and domain not in d['domains']:
                 d['domains'].append(domain)
+
             mapping = SqlExtractMapping.from_json(d)
             if mapping.couch_key_prefix and mapping.couch_key_prefix[0] == '':
                 mapping.couch_key_prefix = None
+
+            # check for unique name
+            for dom in mapping.domains:
+                existing = SqlExtractMapping.by_name(dom, mapping.name)
+                if existing and existing._id != mapping._id:
+                    args = {'domain': dom}
+                    return json_response({'error': _("Mapping with the same name exists "
+                                                     "in the '%(domain)s' domain.") % args})
+
             mapping.save()
+
             kwargs = {'domain': domain} if domain else {}
             return json_response({'redirect': reverse('sql_mappings_list', kwargs=kwargs)})
 

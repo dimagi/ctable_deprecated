@@ -21,6 +21,10 @@
 {% endblock %}
 
 {% block centered-content %}
+    <div id="message" class="alert hide">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <p></p>
+    </div>
     <div class="alert alert-error" data-bind="text: validate.error, visible: validate.error() != ''">
     </div>
     <form class="form form-horizontal" method="post" data-bind="submit: save">

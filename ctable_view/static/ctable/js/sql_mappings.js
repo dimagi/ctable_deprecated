@@ -52,9 +52,20 @@ function SqlExtractMapping(data) {
         if (self.validate()) {
             var data = ko.mapping.toJSON(self);
             $.post(self._id() || '', data, function (response) {
+                if (response.error) {
+                    self.showMessage(response.error, 'error');
+                } else {
                     window.location.href = response.redirect;
-                }, 'json').fail(function() { alert("Saving failed."); })
+                }
+            }, 'json').fail(function() { self.showMessage('Saving failed', 'error'); })
         }
+    }
+
+    self.showMessage = function(text, style) {
+        $('#message p').text(text);
+        $('#message').attr('class', 'alert alert-'+style);
+        $('#message').show();
+        $('html,body').scrollTop(0);
     }
 }
 

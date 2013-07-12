@@ -86,6 +86,7 @@
                     $('#message p').text(text);
                     $('#message').attr('class', 'alert alert-'+style);
                     $('#message').show();
+                    $('html,body').scrollTop(0);
                 }
             };
             ko.applyBindings(new view_model());
