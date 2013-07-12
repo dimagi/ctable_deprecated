@@ -12,6 +12,45 @@ def validate_name(value, search=re.compile(r'[^a-zA-Z0-9_]').search):
         raise BadValueError("Only a-z, 0-9 and '_' characters allowed")
 
 
+class CtableMappingFixture(object):
+    """
+    Base class for creating ctable mapping fixtures.
+
+    Sub-classes should be created in a 'ctable_mappings' module in the app root
+    and will get synced during syncdb.
+    """
+    name = None
+    domains = []
+    couch_view = ''
+
+    @property
+    def columns(self):
+        return []
+
+    def create(self):
+        if not self.name or not self.domains:
+            raise Exception('Missing name or domains property')
+
+        mapping = SqlExtractMapping()
+        for domain in self.domains:
+            existing = SqlExtractMapping.by_name(domain, self.name)
+            if existing:
+                mapping = existing
+                break
+
+        mapping.auto_generated = True
+        mapping.name = self.name
+        mapping.domains = self.domains
+        mapping.couch_view = self.couch_view
+        mapping.columns = self.columns
+
+        self.customize(mapping)
+        mapping.save()
+
+    def customize(self, mapping):
+        pass
+
+
 class RowMatcher(object):
     def matches(self, row_key, row_value):
         raise NotImplementedError()
@@ -163,20 +202,21 @@ class SqlExtractMapping(Document):
 
     @classmethod
     def all(cls):
-        key = ['by_type', SqlExtractMapping._doc_type]
-        all = cls.view('doc_summary/summary',
-                        startkey=key,
-                        endkey=key + [{}],
+        return cls.view('ctable/by_name',
+                        startkey=[None],
+                        endkey=[None, {}],
                         reduce=False,
                         include_docs=True,
                         stale=settings.COUCH_STALE_QUERY).all()
 
-        unique = dict([(d._id, d) for d in all if hasattr(d, '_id')])
-        return unique.values()
-
     @classmethod
     def by_domain(cls, domain):
-        return cls.by_name(domain, None)
+        return cls.view('ctable/by_name',
+                        startkey=[domain],
+                        endkey=[domain, {}],
+                        reduce=False,
+                        include_docs=True,
+                        stale=settings.COUCH_STALE_QUERY).all()
 
     @classmethod
     def by_name(cls, domain, name):
@@ -186,7 +226,7 @@ class SqlExtractMapping(Document):
                         endkey=key + [{}],
                         reduce=False,
                         include_docs=True,
-                        stale=settings.COUCH_STALE_QUERY).all()
+                        stale=settings.COUCH_STALE_QUERY).one()
 
 
 
