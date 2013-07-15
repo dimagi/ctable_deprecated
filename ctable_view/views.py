@@ -3,7 +3,7 @@ from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
 from django.views.decorators.http import require_POST
 from corehq.apps.domain.decorators import require_superuser
-from ctable.util import get_test_extractor, get_backend
+from ctable.util import get_test_extractor, get_backend, backends
 from dimagi.utils.web import json_response
 from django.utils.translation import ugettext_noop as _
 
@@ -16,7 +16,6 @@ from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
 from ctable.util import get_extractor
-from django.conf import settings
 
 require_can_edit_sql_mappings = require_permission(Permissions.edit_data)
 
@@ -65,7 +64,7 @@ def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
     return render(request, template, {
         'domain': domain,
         'mapping': mapping,
-        'backends': settings.CTABLE_BACKENDS.keys()
+        'backends': backends()
     })
 
 

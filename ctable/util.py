@@ -18,12 +18,16 @@ def get_test_extractor():
     return CtableExtractor(SqlExtractMapping.get_db(), InMemoryBackend())
 
 
+def backends():
+    return getattr(settings, 'CTABLE_BACKENDS', {'SQL': 'ctable.backends.SqlBackend'})
+
+
 @memoized
 def get_backend(backend_name):
     if not backend_name:
         backend = SqlBackend()
     else:
-        backend_class_name = settings.CTABLE_BACKENDS[backend_name]
+        backend_class_name = backends()[backend_name]
         backend_class = to_function(backend_class_name, failhard=True)
         backend = backend_class()
     return backend
