@@ -222,13 +222,14 @@ class SqlExtractMapping(Document):
     @classmethod
     def by_name(cls, domain, name):
         key = [domain, name] if name else [domain]
-        return cls.view('ctable/by_name',
+        ret = cls.view('ctable/by_name',
                         startkey=key,
                         endkey=key + [{}],
                         reduce=False,
                         include_docs=True,
-                        stale=settings.COUCH_STALE_QUERY).one()
+                        stale=settings.COUCH_STALE_QUERY).all()
 
+        return ret[0] if ret else None
 
 
     @classmethod
