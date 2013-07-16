@@ -1,3 +1,4 @@
+import functools
 from couchdbkit import ResourceNotFound
 from .models import SqlExtractMapping, ColumnDef, KeyMatcher
 from couchdbkit.ext.django.loading import get_db
@@ -32,9 +33,7 @@ class CtableExtractor(object):
             logger.info("Total rows: %d", total_rows)
 
             if status_callback:
-                # note that some rows may get excluded (if they don't match any value columns)
-                # so total_rows is only an upper bound
-                status_callback = status_callback(total_rows)
+                status_callback = functools.partial(status_callback, total_rows)
 
             rows = self.couch_rows_to_sql_rows(result, mapping, status_callback=status_callback)
             if limit:
