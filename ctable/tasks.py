@@ -7,11 +7,9 @@ from .models import SqlExtractMapping
 
 @task
 def process_extract(extract_id, limit=None, date_range=None):
-    def update_status(total):
-        def update_current(current):
-            meta = {'current': current, 'total': total}
-            current_task.update_state(state='PROGRESS', meta=meta)
-        return update_current
+    def update_status(total, current):
+        meta = {'current': current, 'total': total}
+        current_task.update_state(state='PROGRESS', meta=meta)
 
     mapping = SqlExtractMapping.get(extract_id)
     get_extractor(mapping.backend).extract(mapping, limit=limit, date_range=date_range, status_callback=update_status)
