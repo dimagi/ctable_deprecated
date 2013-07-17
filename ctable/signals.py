@@ -9,7 +9,6 @@ from .util import get_backend_name_for_fluff_pillow
 
 def process_fluff_diff(sender, diff=None, **kwargs):
     backend_name = get_backend_name_for_fluff_pillow(diff['doc_type'])
-    print 'CareBiharFluffPillow', backend_name
     if diff and backend_name:
         get_extractor(backend_name).process_fluff_diff(diff, backend_name)
 

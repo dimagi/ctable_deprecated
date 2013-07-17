@@ -10,6 +10,6 @@ SQL_REPORTING_OBJECT_OWNER = None
 # When ctable receives a fluff diff for one of these types it will process the diff using the
 # mapped backend.
 # See CTABLE_BACKENDS for list of available backends.
-FLUFF_PILLOW_TYPES_TO_CTABLE = {'MyAwesomeFluff': 'SQL'}
+FLUFF_PILLOW_TYPES_TO_SQL = {'MyAwesomeFluff': 'SQL'}
 
 CTABLE_BACKENDS = {'SQL': 'ctable.backends.SqlBackend'}
