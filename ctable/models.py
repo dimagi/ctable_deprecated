@@ -163,31 +163,30 @@ class SqlExtractMapping(Document):
 
     @classmethod
     def all(cls):
-        key = ['by_type', SqlExtractMapping._doc_type]
-        all = cls.view('doc_summary/summary',
-                        startkey=key,
-                        endkey=key + [{}],
+        return cls.view('ctable/by_name',
+                        startkey=[None],
+                        endkey=[None, {}],
                         reduce=False,
-                        include_docs=True,
-                        stale=settings.COUCH_STALE_QUERY).all()
-
-        unique = dict([(d._id, d) for d in all if hasattr(d, '_id')])
-        return unique.values()
+                        include_docs=True).all()
 
     @classmethod
     def by_domain(cls, domain):
-        return cls.by_name(domain, None)
+        return cls.view('ctable/by_name',
+                        startkey=[domain],
+                        endkey=[domain, {}],
+                        reduce=False,
+                        include_docs=True).all()
 
     @classmethod
     def by_name(cls, domain, name):
         key = [domain, name] if name else [domain]
-        return cls.view('ctable/by_name',
+        ret = cls.view('ctable/by_name',
                         startkey=key,
                         endkey=key + [{}],
                         reduce=False,
-                        include_docs=True,
-                        stale=settings.COUCH_STALE_QUERY).all()
+                        include_docs=True).all()
 
+        return ret[0] if ret else None
 
 
     @classmethod
