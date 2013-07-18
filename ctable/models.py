@@ -180,14 +180,11 @@ class SqlExtractMapping(Document):
     @classmethod
     def by_name(cls, domain, name):
         key = [domain, name] if name else [domain]
-        ret = cls.view('ctable/by_name',
+        return cls.view('ctable/by_name',
                         startkey=key,
                         endkey=key + [{}],
                         reduce=False,
-                        include_docs=True).all()
-
-        return ret[0] if ret else None
-
+                        include_docs=True).one()
 
     @classmethod
     def daily_schedule(cls, extract_date, active=True):
