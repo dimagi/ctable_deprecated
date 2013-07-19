@@ -28,6 +28,7 @@ class CtableMappingFixture(object):
                 mapping = existing
                 break
 
+        mapping.active = self.schedule_active
         mapping.auto_generated = True
         mapping.name = self.name
         mapping.domains = self.domains
