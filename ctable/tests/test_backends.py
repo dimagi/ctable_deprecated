@@ -1,15 +1,16 @@
 import sqlalchemy
 from sqlalchemy.exc import ProgrammingError
 from ctable.backends import SqlBackend, ColumnTypeException
-from . import TestBase, engine
+from ctable.tests import TestBase
 from django.conf import settings
+from ctable.models import ColumnDef, KeyMatcher, SqlExtractMapping
 
 TABLE = "test_table"
 
 
 class TestBackends(TestBase):
     def setUp(self):
-        self.connection = engine.connect()
+        self.connection = self.engine.connect()
         self.trans = self.connection.begin()
         self.backend = SqlBackend(self.connection)
 
@@ -23,12 +24,12 @@ class TestBackends(TestBase):
 
     def test_init_table(self):
         columns = [
-            self.ColumnDef(name="col_a", data_type="string", value_source='key'),
-            self.ColumnDef(name="col_b", data_type="date", value_source='key'),
-            self.ColumnDef(name="col_c", data_type="integer", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="c")]),
-            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+            ColumnDef(name="col_a", data_type="string", value_source='key'),
+            ColumnDef(name="col_b", data_type="date", value_source='key'),
+            ColumnDef(name="col_c", data_type="integer", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="c")]),
+            ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="d")]),
         ]
         with self.backend:
             self.backend.init_table(TABLE, columns)
@@ -47,10 +48,10 @@ class TestBackends(TestBase):
     def test_update_table(self):
         self.test_init_table()
         columns = [
-            self.ColumnDef(name="col_a", data_type="string", value_source='key'),
-            self.ColumnDef(name="col_b", data_type="date", value_source='key'),
-            self.ColumnDef(name="col_e", data_type="integer", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="e")]),
+            ColumnDef(name="col_a", data_type="string", value_source='key'),
+            ColumnDef(name="col_b", data_type="date", value_source='key'),
+            ColumnDef(name="col_e", data_type="integer", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="e")]),
         ]
         with self.backend:
             self.backend.init_table(TABLE, columns)
@@ -67,7 +68,7 @@ class TestBackends(TestBase):
         self.test_init_table()
 
         columns = [
-            self.ColumnDef(name="col_b", data_type="datetime", value_source='key'),
+            ColumnDef(name="col_b", data_type="datetime", value_source='key'),
         ]
 
         with self.assertRaises(ColumnTypeException):
@@ -77,12 +78,12 @@ class TestBackends(TestBase):
     def test_check_table_missing_key_column_in_table(self):
         self.test_init_table()
 
-        extract = self.SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
-            self.ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
-            self.ColumnDef(name="col_c", data_type="integer", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="c")]),
-            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+        extract = SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
+            ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
+            ColumnDef(name="col_c", data_type="integer", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="c")]),
+            ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="d")]),
         ])
 
         with self.backend:
@@ -94,11 +95,11 @@ class TestBackends(TestBase):
     def test_check_table_missing_column_in_table(self):
         self.test_init_table()
 
-        extract = self.SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
-            self.ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
-            self.ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
-            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+        extract = SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
+            ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
+            ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
+            ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="d")]),
         ])
 
         with self.backend:
@@ -110,14 +111,14 @@ class TestBackends(TestBase):
     def test_check_table_missing_key_column_in_mapping(self):
         self.test_init_table()
 
-        extract = self.SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
-            self.ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
-            self.ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
-            self.ColumnDef(name="col_e", data_type="date", value_source='key', value_index=2),
-            self.ColumnDef(name="col_c", data_type="integer", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="c")]),
-            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+        extract = SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
+            ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
+            ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
+            ColumnDef(name="col_e", data_type="date", value_source='key', value_index=2),
+            ColumnDef(name="col_c", data_type="integer", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="c")]),
+            ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="d")]),
         ])
 
         with self.backend:
@@ -129,13 +130,13 @@ class TestBackends(TestBase):
     def test_check_table_mismatch_data_type(self):
         self.test_init_table()
 
-        extract = self.SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
-            self.ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
-            self.ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
-            self.ColumnDef(name="col_c", data_type="string", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="c")]),
-            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+        extract = SqlExtractMapping(domains=['test'], name='table', couch_view="c/view", columns=[
+            ColumnDef(name="col_a", data_type="string", value_source='key', value_index=1),
+            ColumnDef(name="col_b", data_type="date", value_source='key', value_index=2),
+            ColumnDef(name="col_c", data_type="string", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="c")]),
+            ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="d")]),
         ])
 
         with self.backend:
@@ -147,7 +148,7 @@ class TestBackends(TestBase):
 
 class TestBackendsMultiUser(TestBase):
     def setUp(self):
-        self.connection = engine.connect()
+        self.connection = self.engine.connect()
         self.trans = self.connection.begin()
         self.connection.execute("CREATE ROLE test1 LOGIN")
         self.connection.execute("CREATE ROLE test2 LOGIN")
@@ -177,12 +178,12 @@ class TestBackendsMultiUser(TestBase):
 
     def test_multi_user_fail(self):
         columns = [
-            self.ColumnDef(name="col_a", data_type="string", value_source='key'),
-            self.ColumnDef(name="col_b", data_type="date", value_source='key'),
-            self.ColumnDef(name="col_c", data_type="integer", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="c")]),
-            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+            ColumnDef(name="col_a", data_type="string", value_source='key'),
+            ColumnDef(name="col_b", data_type="date", value_source='key'),
+            ColumnDef(name="col_c", data_type="integer", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="c")]),
+            ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="d")]),
         ]
         with self.backend1:
             self.backend1.init_table(TABLE, columns)
@@ -199,12 +200,12 @@ class TestBackendsMultiUser(TestBase):
         settings.SQL_REPORTING_OBJECT_OWNER = 'testgroup'
 
         columns = [
-            self.ColumnDef(name="col_a", data_type="string", value_source='key'),
-            self.ColumnDef(name="col_b", data_type="date", value_source='key'),
-            self.ColumnDef(name="col_c", data_type="integer", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="c")]),
-            self.ColumnDef(name="col_d", data_type="datetime", value_source='value',
-                           match_keys=[self.KeyMatcher(index=1, value="d")]),
+            ColumnDef(name="col_a", data_type="string", value_source='key'),
+            ColumnDef(name="col_b", data_type="date", value_source='key'),
+            ColumnDef(name="col_c", data_type="integer", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="c")]),
+            ColumnDef(name="col_d", data_type="datetime", value_source='value',
+                           match_keys=[KeyMatcher(index=1, value="d")]),
         ]
         with self.backend1:
             self.backend1.init_table(TABLE, columns)

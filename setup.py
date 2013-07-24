@@ -9,8 +9,6 @@ setup(
     url='http://github.com/dimagi/ctable',
     packages=['ctable', 'ctable_view'],
     include_package_data=True,
-    test_suite='tests',
-    test_loader='unittest2:TestLoader',
     license='MIT',
     install_requires=[
         'SQLAlchemy>=0.8.1',
@@ -23,7 +21,6 @@ setup(
         'pillowfluff>=0.0.1',
     ],
     tests_require=[
-        'unittest2',
         'fakecouch>=0.0.3',
         'mock>=0.0.8'
     ]
