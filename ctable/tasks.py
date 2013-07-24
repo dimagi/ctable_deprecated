@@ -1,4 +1,5 @@
 from celery.schedules import crontab
+from django.conf import settings
 from celery.task import periodic_task, task
 from celery import current_task
 from ctable.util import get_extractor
@@ -15,7 +16,7 @@ def process_extract(extract_id, limit=None, date_range=None):
     get_extractor(mapping.backend).extract(mapping, limit=limit, date_range=date_range, status_callback=update_status)
 
 
-@periodic_task(run_every=crontab(hour="*", minute="1", day_of_week="*"))
+@periodic_task(run_every=crontab(hour="*", minute="1", day_of_week="*"), queue=settings.CELERY_PERIODIC_QUEUE)
 def ctable_extract_schedule():
     logger = ctable_extract_schedule.get_logger()
     exps = SqlExtractMapping.schedule()
