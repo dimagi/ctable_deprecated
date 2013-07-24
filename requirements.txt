@@ -9,3 +9,5 @@ pillowfluff==0.0.1
 
 mock>=0.0.8
 fakecouch>=0.0.3
+#required by dimagi-utils
+unittest2>=0.5.1
