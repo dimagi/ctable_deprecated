@@ -2,12 +2,12 @@ import inspect
 from django.db.models import signals
 from django.utils.importlib import import_module
 from ctable.fixtures import CtableMappingFixture
-from ctable.util import get_extractor
 from fluff.signals import indicator_document_updated
-from .util import get_backend_name_for_fluff_pillow
 
 
 def process_fluff_diff(sender, diff=None, **kwargs):
+    from ctable.util import get_extractor
+    from .util import get_backend_name_for_fluff_pillow
     backend_name = get_backend_name_for_fluff_pillow(diff['doc_type'])
     if diff and backend_name:
         get_extractor(backend_name).process_fluff_diff(diff, backend_name)

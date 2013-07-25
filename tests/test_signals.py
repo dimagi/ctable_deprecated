@@ -21,13 +21,13 @@ class TestSignals(TestBase):
     def test_process_fluff_diff_not_in_list(self):
         diff = dict(doc_type='MockIndicators')
 
-        with patch('ctable.signals.get_extractor', return_value=MagicMock()) as mock:
+        with patch('ctable.util.get_extractor', return_value=MagicMock()) as mock:
             self.signals.process_fluff_diff(self, diff)
             self.assertFalse(mock().called)
 
 
     @patch('ctable.util.settings', FLUFF_PILLOW_TYPES_TO_SQL={'MockIndicators': 'SQL'})
-    @patch('ctable.signals.get_extractor')
+    @patch('ctable.util.get_extractor')
     def test_process_fluff_diff_in_settings_list(self, mock_extractor, list):
         diff = dict(doc_type='MockIndicators')
 
@@ -35,7 +35,7 @@ class TestSignals(TestBase):
 
         mock_extractor().process_fluff_diff.assert_called_once_with(diff, 'SQL')
 
-    @patch('ctable.signals.get_extractor')
+    @patch('ctable.util.get_extractor')
     def test_process_fluff_diff_in_db_list(self, mock_extractor):
         diff = dict(doc_type='MockIndicators')
         self.db.mock_docs['FLUFF_PILLOW_TYPES_TO_SQL'] = {'enabled_pillows': {'MockIndicators': 'SQL'}}
