@@ -1,10 +1,10 @@
 import sqlalchemy
-from unittest2 import TestCase
-from fakecouch import FakeCouchDb
 from mock import patch
 from datetime import date, datetime, timedelta
-from . import TestBase, engine
+from ctable.tests import TestBase
 from ctable.backends import SqlBackend
+from ctable.base import CtableExtractor, fluff_view
+from ctable.models import SqlExtractMapping, ColumnDef, KeyMatcher
 
 DOMAIN = "test"
 MAPPING_NAME = "demo_extract"
@@ -14,10 +14,10 @@ TABLE = "%s_%s" % (DOMAIN, MAPPING_NAME)
 class TestCTable(TestBase):
 
     def setUp(self):
-        self.connection = engine.connect()
+        self.connection = self.engine.connect()
         self.trans = self.connection.begin()
         self.db.reset()
-        self.ctable = self.CtableExtractor(self.db, SqlBackend(self.connection))
+        self.ctable = CtableExtractor(self.db, SqlBackend(self.connection))
 
         self.p2 = patch("ctable.base.get_db", return_value=self.db)
         self.p2.start()
@@ -47,16 +47,16 @@ class TestCTable(TestBase):
             )
         ])
 
-        extract = self.SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
-            self.ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
-            self.ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
+        extract = SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
+            ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
+            ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
                       value_source="key", value_index=2),
-            self.ColumnDef(name="rename_indicator_a", data_type="integer", value_source="value", value_attribute="sum",
-                      match_keys=[self.KeyMatcher(index=1, value="indicator_a")]),
-            self.ColumnDef(name="indicator_b", data_type="integer", value_source="value", value_attribute="sum",
-                      match_keys=[self.KeyMatcher(index=1, value="indicator_b")]),
-            self.ColumnDef(name="indicator_c", data_type="integer", value_source="value", value_attribute="sum",
-                      match_keys=[self.KeyMatcher(index=1, value="indicator_c")])
+            ColumnDef(name="rename_indicator_a", data_type="integer", value_source="value", value_attribute="sum",
+                      match_keys=[KeyMatcher(index=1, value="indicator_a")]),
+            ColumnDef(name="indicator_b", data_type="integer", value_source="value", value_attribute="sum",
+                      match_keys=[KeyMatcher(index=1, value="indicator_b")]),
+            ColumnDef(name="indicator_c", data_type="integer", value_source="value", value_attribute="sum",
+                      match_keys=[KeyMatcher(index=1, value="indicator_c")])
         ])
 
         self.ctable.extract(extract)
@@ -79,12 +79,12 @@ class TestCTable(TestBase):
             )
         ])
 
-        extract = self.SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
-            self.ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
-            self.ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
+        extract = SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
+            ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
+            ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
                       value_source="key", value_index=2),
-            self.ColumnDef(name="indicator", data_type="integer", value_source="value",
-                      match_keys=[self.KeyMatcher(index=1, value="indicator_a")])
+            ColumnDef(name="indicator", data_type="integer", value_source="value",
+                      match_keys=[KeyMatcher(index=1, value="indicator_a")])
         ])
 
         self.ctable.extract(extract)
@@ -95,26 +95,26 @@ class TestCTable(TestBase):
         self.assertEqual(result['indicator'], 1)
 
     def test_empty_view_result(self):
-        extract = self.SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
-            self.ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0)
+        extract = SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
+            ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0)
         ])
 
         self.ctable.extract(extract)
 
-        metadata = sqlalchemy.MetaData(bind=engine)
+        metadata = sqlalchemy.MetaData(bind=self.engine)
         metadata.reflect()
         self.assertNotIn(extract.table_name, metadata.tables)
 
     def test_couch_rows_to_sql(self):
-        extract = self.SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
-            self.ColumnDef(name="username", data_type="string", max_length=50, value_source="key",
+        extract = SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
+            ColumnDef(name="username", data_type="string", max_length=50, value_source="key",
                            value_index=0, null_value_placeholder='123abc'),
-            self.ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
+            ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
                            value_source="key", value_index=2),
-            self.ColumnDef(name="indicator1", data_type="integer", value_source="value",
-                           match_keys=[self.KeyMatcher(index=1, value="indicator_a")]),
-            self.ColumnDef(name="indicator2", data_type="integer", value_source="value",
-                           match_keys=[self.KeyMatcher(index=1, value="indicator_b")])
+            ColumnDef(name="indicator1", data_type="integer", value_source="value",
+                           match_keys=[KeyMatcher(index=1, value="indicator_a")]),
+            ColumnDef(name="indicator2", data_type="integer", value_source="value",
+                           match_keys=[KeyMatcher(index=1, value="indicator_b")])
         ])
         rows = [
             dict(key=['user1', 'indicator_a', '2012-02-15T00:00:00.000Z'], value=1),
@@ -155,35 +155,35 @@ class TestCTable(TestBase):
 
         self.assertEqual(em.table_name, "test_MockIndicators")
         self.assertEqual(len(em.columns), 4)
-        self.assertColumnsEqual(em.columns[0], self.ColumnDef(name='owner_id',
+        self.assertColumnsEqual(em.columns[0], ColumnDef(name='owner_id',
                                                          data_type='string',
                                                          value_source='key',
                                                          value_index=1))
-        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
+        self.assertColumnsEqual(em.columns[1], ColumnDef(name='date',
                                                          data_type='date',
                                                          date_format='%Y-%m-%d',
                                                          value_source='key',
                                                          value_index=4))
-        self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
+        self.assertColumnsEqual(em.columns[2], ColumnDef(name='visits_week_null_emitter',
                                                          data_type='integer',
                                                          value_source='value',
                                                          value_attribute='count',
-                                                         match_keys=[self.KeyMatcher(index=2, value='visits_week'),
-                                                                     self.KeyMatcher(index=3, value='null_emitter')]))
-        self.assertColumnsEqual(em.columns[3], self.ColumnDef(name='visits_week_all_visits',
+                                                         match_keys=[KeyMatcher(index=2, value='visits_week'),
+                                                                     KeyMatcher(index=3, value='null_emitter')]))
+        self.assertColumnsEqual(em.columns[3], ColumnDef(name='visits_week_all_visits',
                                                          data_type='integer',
                                                          value_source='value',
                                                          value_attribute='count',
-                                                         match_keys=[self.KeyMatcher(index=2, value='visits_week'),
-                                                                     self.KeyMatcher(index=3, value='all_visits')]))
+                                                         match_keys=[KeyMatcher(index=2, value='visits_week'),
+                                                                     KeyMatcher(index=3, value='all_visits')]))
 
         self.assertEquals(len(self.db.mock_docs), 1)
 
     def test_convert_indicator_diff_to_extract_mapping_with_existing(self):
         diff = self._get_fluff_diff()
 
-        existing = self.SqlExtractMapping(domains=diff['domains'], name=diff['doc_type'], couch_view="c/view",
-                                          columns=[self.ColumnDef(name="owner_id",
+        existing = SqlExtractMapping(domains=diff['domains'], name=diff['doc_type'], couch_view="c/view",
+                                          columns=[ColumnDef(name="owner_id",
                                                                   data_type="string",
                                                                   max_length=50,
                                                                   value_source="key",
@@ -202,27 +202,27 @@ class TestCTable(TestBase):
 
         self.assertEqual(em.table_name, "test_MockIndicators")
         self.assertEqual(len(em.columns), 4)
-        self.assertColumnsEqual(em.columns[0], self.ColumnDef(name='owner_id',
+        self.assertColumnsEqual(em.columns[0], ColumnDef(name='owner_id',
                                                          data_type='string',
                                                          value_source='key',
                                                          value_index=1))
-        self.assertColumnsEqual(em.columns[1], self.ColumnDef(name='date',
+        self.assertColumnsEqual(em.columns[1], ColumnDef(name='date',
                                                          data_type='date',
                                                          date_format='%Y-%m-%d',
                                                          value_source='key',
                                                          value_index=4))
-        self.assertColumnsEqual(em.columns[2], self.ColumnDef(name='visits_week_null_emitter',
+        self.assertColumnsEqual(em.columns[2], ColumnDef(name='visits_week_null_emitter',
                                                          data_type='integer',
                                                          value_source='value',
                                                          value_attribute='count',
-                                                         match_keys=[self.KeyMatcher(index=2, value='visits_week'),
-                                                                     self.KeyMatcher(index=3, value='null_emitter')]))
-        self.assertColumnsEqual(em.columns[3], self.ColumnDef(name='visits_week_all_visits',
+                                                         match_keys=[KeyMatcher(index=2, value='visits_week'),
+                                                                     KeyMatcher(index=3, value='null_emitter')]))
+        self.assertColumnsEqual(em.columns[3], ColumnDef(name='visits_week_all_visits',
                                                          data_type='integer',
                                                          value_source='value',
                                                          value_attribute='count',
-                                                         match_keys=[self.KeyMatcher(index=2, value='visits_week'),
-                                                                     self.KeyMatcher(index=3, value='all_visits')]))
+                                                         match_keys=[KeyMatcher(index=2, value='visits_week'),
+                                                                     KeyMatcher(index=3, value='all_visits')]))
 
         self.assertEquals(len(self.db.mock_docs), 1)
         self.assertIn('CtableFluffMapping_MockIndicators', self.db.mock_docs)
@@ -236,7 +236,7 @@ class TestCTable(TestBase):
     def test_get_rows_for_grains(self):
         r1 = {"key": ['a', 'b', None], "value": 3}
         r2 = {"key": ['a', 'b', '2013-01-03'], "value": 2}
-        self.db.add_view(self.fluff_view, [
+        self.db.add_view(fluff_view, [
             (
                 {'reduce': True, 'group': True, 'startkey': r1['key'], 'endkey': r1['key'] + [{}]},
                 [r1]
@@ -261,7 +261,7 @@ class TestCTable(TestBase):
                 {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-24'], "value": {'count': 2}},
                 {"key": ['MockIndicators', '123', 'visits_week', 'all_visits', '2012-02-25'], "value": {'count': 7}}]
 
-        self.db.add_view(self.fluff_view, [({'reduce': True, 'group': True, 'startkey': r['key'], 'endkey': r['key'] + [{}]},
+        self.db.add_view(fluff_view, [({'reduce': True, 'group': True, 'startkey': r['key'], 'endkey': r['key'] + [{}]},
                                        [r]) for r in rows])
 
         diff = self._get_fluff_diff()
@@ -276,7 +276,7 @@ class TestCTable(TestBase):
         self.assertEqual(result['123_2012-02-25']['visits_week_all_visits'], 7)
 
     def test_get_couch_keys(self):
-        mapping = self.SqlExtractMapping(couch_key_prefix=['a'])
+        mapping = SqlExtractMapping(couch_key_prefix=['a'])
         startkey, endkey = self.ctable.get_couch_keys(mapping)
 
         self.assertEqual(startkey, ['a'])
@@ -285,7 +285,7 @@ class TestCTable(TestBase):
     def test_get_couch_keys_with_dates(self):
         format = '%Y-%m-%d'
         range = 10
-        mapping = self.SqlExtractMapping(couch_key_prefix=['a'], couch_date_range=range, couch_date_format=format)
+        mapping = SqlExtractMapping(couch_key_prefix=['a'], couch_date_range=range, couch_date_format=format)
         startkey, endkey = self.ctable.get_couch_keys(mapping)
 
         end = datetime.utcnow()

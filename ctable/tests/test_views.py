@@ -1,12 +1,13 @@
 from datetime import datetime
 from fakecouch import FakeCouchDb
-from . import TestBase
+from ctable.models import SqlExtractMapping
+from ctable.tests import TestBase
 
 
 class TestViews(TestBase):
     def setUp(self):
         self.db = FakeCouchDb()
-        self.SqlExtractMapping._db = self.db
+        SqlExtractMapping._db = self.db
 
     def test_schedule_daily(self):
         from ctable.models import SCHEDULE_VIEW
@@ -26,17 +27,17 @@ class TestViews(TestBase):
         ])
 
         ed = datetime(2012, 1, 12, 8, 0, 0)
-        exts = self.SqlExtractMapping.daily_schedule(ed)
+        exts = SqlExtractMapping.daily_schedule(ed)
         self.assertEquals(exts[0], {'value': 'daily'})
 
-        exts = self.SqlExtractMapping.weekly_schedule(ed)
+        exts = SqlExtractMapping.weekly_schedule(ed)
         self.assertEquals(exts[0], {'value': 'weekly'})
 
-        exts = self.SqlExtractMapping.monthly_schedule(ed)
+        exts = SqlExtractMapping.monthly_schedule(ed)
         self.assertEquals(exts[0], {'value': 'monthly'})
 
-        exts = self.SqlExtractMapping.schedule(ed)
+        exts = SqlExtractMapping.schedule(ed)
         self.assertEquals(exts, [{'value': 'daily'}, {'value': 'weekly'}, {'value': 'monthly'}])
 
-        exts = self.SqlExtractMapping.schedule(ed, active=False)
+        exts = SqlExtractMapping.schedule(ed, active=False)
         self.assertEquals(exts[0], {'value': 'inactive_monthly'})

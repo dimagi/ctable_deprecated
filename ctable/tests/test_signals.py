@@ -1,6 +1,5 @@
 from mock import patch, MagicMock
-from fakecouch import FakeCouchDb
-from . import TestBase
+from ctable.tests import TestBase
 
 
 class TestSignals(TestBase):
@@ -8,7 +7,6 @@ class TestSignals(TestBase):
     def setUpClass(cls):
         super(TestSignals, cls).setUpClass()
 
-        cls.db = FakeCouchDb()
         cls.p1 = patch('ctable.util.get_db', return_value=cls.db)
         cls.p1.start()
 
