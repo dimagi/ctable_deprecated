@@ -105,7 +105,7 @@ class SqlBackend(CtableBackend):
                 columns = dict([(c.name, c) for c in self.table(table_name).columns])
                 current_ty = columns[column.name].type
                 if not isinstance(current_ty, BASE_TYPE_MAP[column.data_type]):
-                    raise ColumnTypeException("Column types don't match", column.name)
+                    raise ColumnTypeException("Column types don't match", table_name, column.name)
 
     def clear_all_data(self, mapping):
         table_name = mapping.table_name
