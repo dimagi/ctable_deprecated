@@ -148,8 +148,8 @@ class SqlExtractMapping(Document):
     couch_view = StringProperty(required=True)
     couch_key_prefix = ListProperty(default=[])
     couch_date_range = IntegerProperty(default=-1)
-    """Number of days in the past to query data for. This assumes that the last
-    element in the view key is a date."""
+    """Number of days in the past to query data for. This assumes that the first
+    element in the view key (after the key prefix) is a date."""
     couch_date_format = StringProperty(default='%Y-%m-%dT%H:%M:%S.%fZ')
     """Used when appending the date to the key (in cases where couch_date_range > 0)"""
 
