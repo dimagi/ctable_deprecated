@@ -25,6 +25,45 @@ This can be extracted into an SQL table of the following form:
 To do this we need to create an extract configuration which defines each column in the SQL table and where the
 data for that table comes from.
 
+## Usage
+```python
+# create extract configuration
+extract = SqlExtractMapping(
+    domains=['test'], 
+    name='demo', 
+    couch_view='my/view',
+    columns=[
+        ColumnDef(
+            name="user",
+            data_type="string",
+            max_length=50,
+            value_source="key",
+            value_index=0)
+        ColumnDef(
+            name="date",
+            data_type="date",
+            date_format="%Y-%m-%dT%H:%M:%S.%fZ",
+            value_source="key",
+            value_index=2),
+        ColumnDef(
+            name="rename_indicator_a",
+            data_type="integer",
+            value_source="value",
+            value_attribute="sum",
+            match_keys=[KeyMatcher(index=1, value="indicator_a")]),
+        ColumnDef(
+            name="indicator_b",
+            data_type="integer",
+            value_source="value",
+            value_attribute="sum",
+            match_keys=[KeyMatcher(index=1, value="indicator_b")]),
+    ])
+
+# perform extraction
+ex = CtableExtractor(couchdb, SqlBackend())
+ex.extract(extract)
+```
+
 ## Extract mapping
 Fields:
 
@@ -96,40 +135,3 @@ Fields:
 * match_keys
   * List of KeyMatcher objects
   * used to determine when this column is relevant e.g. rows where key[1] = 'indicator_a'
-
-```python
-ColumnDef(
-    name="user",
-    data_type="string",
-    max_length=50,
-    value_source="key",
-    value_index=0)
-ColumnDef(
-    name="date",
-    data_type="date",
-    date_format="%Y-%m-%dT%H:%M:%S.%fZ",
-    value_source="key",
-    value_index=2),
-ColumnDef(
-    name="rename_indicator_a",
-    data_type="integer",
-    value_source="value",
-    value_attribute="sum",
-    match_keys=[KeyMatcher(index=1, value="indicator_a")]),
-ColumnDef(
-    name="indicator_b",
-    data_type="integer",
-    value_source="value",
-    value_attribute="sum",
-    match_keys=[KeyMatcher(index=1, value="indicator_b")]),
-```
-
-## Usage
-```python
-# create extract configuration
-extract = SqlExtractMapping(domains=['test'], name='demo', couch_view='my/view', columns=[...])
-
-# perform extraction
-ex = CtableExtractor(couchdb, SqlBackend())
-ex.extract(extract, startkey=[...], endkey=[...])
-```
