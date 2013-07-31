@@ -121,6 +121,7 @@ class TestCTable(TestBase):
             dict(key=['user2', 'indicator_a', None], value=2),
             dict(key=['user1', 'indicator_b', '2012-02-15T00:00:00.000Z'], value=3),
             dict(key=[None, 'indicator_b', '2012-02-15T00:00:00.000Z'], value=4),
+            dict(key=[None, 'indicator_c', '2012-02-15T00:00:00.000Z'], value=4),  # row doesn't match so not returned
         ]
         sql_rows = list(self.ctable.couch_rows_to_sql_rows(rows, extract))
         self.assertEqual(len(sql_rows), 4)
@@ -128,6 +129,22 @@ class TestCTable(TestBase):
         self.assertEqual(sql_rows[1], dict(username='user2', date=date.min, indicator1=2))
         self.assertEqual(sql_rows[2], dict(username='user1', date=date(2012, 02, 15), indicator2=3))
         self.assertEqual(sql_rows[3], dict(username='123abc', date=date(2012, 02, 15), indicator2=4))
+
+    def test_couch_rows_to_sql_match_all(self):
+        extract = SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
+            ColumnDef(name="username", data_type="string", max_length=50, value_source="key",
+                           value_index=0, null_value_placeholder='123abc'),
+            ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
+                           value_source="key", value_index=1)
+        ])
+        rows = [
+            dict(key=['user1', '2012-02-15T00:00:00.000Z'], value=1),
+            dict(key=['user2', None], value=2),
+        ]
+        sql_rows = list(self.ctable.couch_rows_to_sql_rows(rows, extract))
+        self.assertEqual(len(sql_rows), 2)
+        self.assertEqual(sql_rows[0], dict(username='user1', date=date(2012, 02, 15)))
+        self.assertEqual(sql_rows[1], dict(username='user2', date=date.min))
 
     def test_convert_indicator_diff_to_grains_date(self):
         diff = self._get_fluff_diff(['all_visits'],

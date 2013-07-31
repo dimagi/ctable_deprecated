@@ -89,22 +89,29 @@ class CtableExtractor(object):
 
     def couch_rows_to_sql_rows(self, couch_rows, mapping, status_callback=None):
         """
-        Convert the list of rows from CouchDB into rows for insertion into SQL.
+        Convert the list of rows from CouchDB into rows for insertion into SQL. To prevent getting
+        empty rows in SQL (rows with no data columns) the following rules are applied to determine if a row
+        should be return:
+
+        * At least one 'non-key' column must match the row i.e. one column that has at least one matcher
+        OR
+        * All columns in the mapping must match the row.
         """
+        num_cols = len(mapping.columns)
         count = 0
         for crow in couch_rows:
             sql_row = {}
-            row_has_value = False
+            non_key_match = False
             for mc in mapping.columns:
                 if mc.matches(crow['key'], crow['value']):
                     sql_row[mc.name] = mc.get_value(crow['key'], crow['value'])
-                    row_has_value = row_has_value or not mc.is_key_column
+                    non_key_match = non_key_match or not mc.is_key_column
 
             count += 1
             if status_callback and (count % 100) == 0:
                 status_callback(count)
 
-            if row_has_value:
+            if non_key_match or len(sql_row) == num_cols:
                 yield sql_row
 
     def get_fluff_grains(self, diff):
