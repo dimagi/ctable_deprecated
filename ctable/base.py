@@ -163,7 +163,7 @@ class CtableExtractor(object):
                 mapping.columns.append(ColumnDef(name=name,
                                                  data_type='integer',
                                                  value_source='value',
-                                                 value_attribute=indicator['reduce_type'],
+                                                 value_attribute='reduce_type',
                                                  match_keys=[
                                                      KeyMatcher(index=1 + num_groups, value=calc_name),
                                                      KeyMatcher(index=2 + num_groups, value=emitter_name)
