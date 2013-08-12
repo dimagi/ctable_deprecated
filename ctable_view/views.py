@@ -1,8 +1,8 @@
 import json
 from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
+from django.contrib.auth.decorators import permission_required
 from django.views.decorators.http import require_POST
-from corehq.apps.domain.decorators import require_superuser
 from ctable.util import get_test_extractor, get_backend, backends
 from dimagi.utils.web import json_response
 from django.utils.translation import ugettext_noop as _
@@ -10,14 +10,12 @@ from django.utils.translation import ugettext_noop as _
 from django.core.urlresolvers import reverse
 from django.http import Http404
 
-from corehq.apps.users.models import Permissions
-from corehq.apps.users.decorators import require_permission
 from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
 from ctable.util import get_extractor
 
-require_can_edit_sql_mappings = require_permission(Permissions.edit_data)
+require_superuser = permission_required("is_superuser", login_url='/no_permissions/')
 
 
 def _to_kwargs(req):
@@ -98,14 +96,21 @@ def test(request, mapping_id, domain=None, template='ctable/test_mapping.html'):
             with backend:
                 checks = backend.check_mapping(mapping)
 
-            rows_processed, rows_with_value = test_extractor.extract(mapping, date_range=-1, limit=limit)
             checks.update({
                 'domain': domain,
                 'mapping': mapping,
-                'rows_processed': rows_processed,
-                'rows_with_value': rows_with_value,
-                'data': test_extractor.backend.data,
             })
+
+            try:
+                rows_processed, rows_with_value = test_extractor.extract(mapping, date_range=-1, limit=limit)
+                checks.update({
+                    'rows_processed': rows_processed,
+                    'rows_with_value': rows_with_value,
+                    'data': test_extractor.backend.data,
+                })
+            except Exception as e:
+                checks['errors'].append(e.message)
+
             return render(request, template, checks)
         except ResourceNotFound:
             raise Http404()
