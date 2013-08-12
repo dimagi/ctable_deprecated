@@ -73,7 +73,7 @@
 
                 self.clearData = function() {
                     $('.hq-loading').show();
-                    $.post('{% url sql_mappings_clear domain mapping.get_id%}', function(data) {
+                    $.post('{% url sql_mappings_clear domain mapping.get_id %}', function(data) {
                         $('.hq-loading').hide();
                         self.showMessage(data.message, data.status);
                     }).fail(function() {

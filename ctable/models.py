@@ -56,12 +56,17 @@ class ColumnDef(DocumentSchema):
         use_index = self.value_index is not None
         use_attr = self.value_attribute is not None
 
-        if self.value_source == "key" and use_index:
-            return key[self.value_index]
-        elif self.value_source == "value" and (use_index or use_attr):
-            return value[self.value_index if use_index else self.value_attribute]
-        else:
-            return value
+        try:
+            if self.value_source == "key" and use_index:
+                return key[self.value_index]
+            elif self.value_source == "value" and (use_index or use_attr):
+                return value[self.value_index if use_index else self.value_attribute]
+            else:
+                return value
+        except IndexError:
+            raise IndexError('Value index out of range: %s[%s]' % (self.value_source, self.value_index))
+        except KeyError:
+            raise KeyError('Value attribute error: %s[%s]' % (self.value_source, self.value_attribute))
 
     def convert_type(self, value):
         if value is None:
@@ -147,6 +152,8 @@ class SqlExtractMapping(Document):
 
     couch_view = StringProperty(required=True)
     couch_key_prefix = ListProperty(default=[])
+    couch_group_level = IntegerProperty()
+    """Group level parameter for CouchDB query. Leave blank for 'exact' grouping."""
     couch_date_range = IntegerProperty()
     """Number of days in the past to query data for. This assumes that the first
     element in the view key (after the key prefix) is a date."""
@@ -166,6 +173,9 @@ class SqlExtractMapping(Document):
 
         if self.couch_date_range is not None and self.couch_date_range <= 0:
             raise BadValueError('Couch Date Range must be > 0')
+
+        if self.couch_group_level is not None and self.couch_group_level < 0:
+                raise BadValueError('Couch Group Level must be >= 0')
 
     @classmethod
     def all(cls):

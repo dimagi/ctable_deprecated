@@ -1,3 +1,4 @@
+import datetime
 import sqlalchemy
 from sqlalchemy.exc import ProgrammingError
 from ctable.backends import SqlBackend, ColumnTypeException
@@ -144,6 +145,24 @@ class TestBackends(TestBase):
 
         self.assertEqual(len(messages['warnings']), 0)
         self.assertEqual(messages['errors'], ['Column types do not match: col_c'])
+
+    def test_update_only_key_columns(self):
+        extract = SqlExtractMapping(domains=['test'], name='table', couch_view="c/view")
+        extract.columns = [
+            ColumnDef(name="date", data_type="date", value_source="key", value_index=0,
+                      date_format="%Y-%m-%dT%H:%M:%SZ"),
+            ColumnDef(name="user_id", data_type="string", value_source="key", value_index=1),
+            ColumnDef(name="case_type", data_type="string", value_source="key", value_index=2),
+            ColumnDef(name="case_updates", data_type="integer", value_source="value"),
+        ]
+
+        rows = [{'user_id': '250', 'case_updates': 1, 'case_type': 'b', 'date': datetime.date(2013, 8, 2)},
+                {'user_id': 'ab5', 'case_updates': 1, 'case_type': 'c', 'date': datetime.date(2013, 8, 2)},
+                {'user_id': '3ce', 'case_updates': 1, 'case_type': 'a', 'date': datetime.date(2013, 8, 2)}]
+
+        with self.backend:
+            self.backend.write_rows(rows, extract)
+            self.backend.write_rows(rows, extract)
 
 
 class TestBackendsMultiUser(TestBase):
