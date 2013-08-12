@@ -99,6 +99,8 @@ Fields:
   * The name of the CouchDB view to query
 * couch_key_prefix
   * List of strings to prefix the CouchDB query key with
+* couch_group_level
+  * Group level parameter for CouchDB query. Leave blank for 'exact' grouping.
 * couch_date_range
   * Number of days in the past to query data for.
   * This requires that the first element in the view key after the key prefix is a date.

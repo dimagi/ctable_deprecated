@@ -25,7 +25,11 @@ class CtableExtractor(object):
         startkey, endkey = self.get_couch_keys(mapping, date_range=date_range)
 
         db = get_db(mapping.database) if mapping.database else self.db
-        result = self.get_couch_rows(mapping.couch_view, startkey, endkey, db=db, limit=limit)
+
+        kwargs = dict()
+        if mapping.couch_group_level:
+            kwargs['group_level'] = mapping.couch_group_level
+        result = self.get_couch_rows(mapping.couch_view, startkey, endkey, db=db, limit=limit, **kwargs)
 
         total_rows = result.total_rows
         rows_with_value = 0
