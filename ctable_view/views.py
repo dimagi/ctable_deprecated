@@ -186,6 +186,10 @@ def delete(request, mapping_id, domain=None):
             if domain:
                 assert domain in mapping.domains
             assert mapping.doc_type == SqlExtractMapping._doc_type
+
+            if request.GET.get('clear_data'):
+                get_extractor(mapping.backend).clear_all_data(mapping)
+
             mapping.delete()
         except ResourceNotFound:
             raise Http404()
