@@ -32,7 +32,12 @@ class KeyMatcher(DocumentSchema, RowMatcher):
     def matches(self, row_key, row_value):
         try:
             op = MATCH_OPS_FUNC.get(self.operator)
-            return op(row_key[self.index], self.value)
+            key_value = row_key[self.index]
+            # hack to allow matching empty dict in row key
+            if self.value == '{}' and isinstance(key_value, dict):
+                return op(key_value, {})
+
+            return op(key_value, self.value)
         except IndexError:
             return False
 
