@@ -56,12 +56,17 @@ class ColumnDef(DocumentSchema):
         use_index = self.value_index is not None
         use_attr = self.value_attribute is not None
 
-        if self.value_source == "key" and use_index:
-            return key[self.value_index]
-        elif self.value_source == "value" and (use_index or use_attr):
-            return value[self.value_index if use_index else self.value_attribute]
-        else:
-            return value
+        try:
+            if self.value_source == "key" and use_index:
+                return key[self.value_index]
+            elif self.value_source == "value" and (use_index or use_attr):
+                return value[self.value_index if use_index else self.value_attribute]
+            else:
+                return value
+        except IndexError:
+            raise IndexError('Value index out of range: %s[%s]' % (self.value_source, self.value_index))
+        except KeyError:
+            raise KeyError('Value attribute error: %s[%s]' % (self.value_source, self.value_attribute))
 
     def convert_type(self, value):
         if value is None:
