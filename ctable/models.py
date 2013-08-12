@@ -6,6 +6,13 @@ from datetime import datetime, date
 import sqlalchemy
 import re
 
+EQUAL = '=='
+NOT_EQUAL = '!='
+MATCH_OPS = [EQUAL, NOT_EQUAL]
+MATCH_OPS_FUNC = {
+    EQUAL: lambda input, reference: input == reference,
+    NOT_EQUAL: lambda input, reference: input != reference,
+}
 
 def validate_name(value, search=re.compile(r'[^a-zA-Z0-9_]').search):
     if not value or bool(search(value)):
@@ -20,9 +27,14 @@ class RowMatcher(object):
 class KeyMatcher(DocumentSchema, RowMatcher):
     index = IntegerProperty()
     value = StringProperty()
+    operator = StringProperty(choices=MATCH_OPS, default=EQUAL)
 
     def matches(self, row_key, row_value):
-        return row_key[self.index] == self.value if len(row_key) > self.index else False
+        try:
+            op = MATCH_OPS_FUNC.get(self.operator)
+            return op(row_key[self.index], self.value)
+        except IndexError:
+            return False
 
 
 class ColumnDef(DocumentSchema):

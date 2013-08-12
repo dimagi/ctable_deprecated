@@ -84,7 +84,7 @@ function ColumnDef(json) {
 
    self.addMatcher = function() {
        self.match_keys.push(ko.mapping.fromJS({
-           index: 1, value: ''
+           index: 1, value: '', operator: '=='
        }, {}));
    }
 
