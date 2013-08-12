@@ -14,8 +14,8 @@
             var view_model = function() {
                 var self = this;
                 self.limit = ko.observable();
-                self.date_range = ko.observable({{ mapping.couch_date_range }});
-                self.run_date_range = ko.observable({{ mapping.couch_date_range }});
+                self.date_range = ko.observable({{ mapping.couch_date_range|default_if_none:'' }});
+                self.run_date_range = ko.observable({{ mapping.couch_date_range|default_if_none:'' }});
                 self.total = ko.observable();
                 self.current = ko.observable();
 
