@@ -40,6 +40,10 @@ function SqlExtractMapping(data) {
             self.validate.error('Illegal characters in name.');
             return false;
         }
+        if (self.couch_group_level() < 0) {
+            self.validate.error('Couch group level must be >= 0.');
+            return false;
+        }
         if (self.columns().length == 0) {
             self.validate.error('Must have at least one column.');
             return false;
@@ -58,6 +62,8 @@ function SqlExtractMapping(data) {
                     window.location.href = response.redirect;
                 }
             }, 'json').fail(function() { self.showMessage('Saving failed', 'error'); })
+        } else {
+            $('html,body').scrollTop(0);
         }
     }
 

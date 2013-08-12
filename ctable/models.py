@@ -147,6 +147,8 @@ class SqlExtractMapping(Document):
 
     couch_view = StringProperty(required=True)
     couch_key_prefix = ListProperty(default=[])
+    couch_group_level = IntegerProperty()
+    """Group level parameter for CouchDB query. Leave blank for 'exact' grouping."""
     couch_date_range = IntegerProperty(default=-1)
     """Number of days in the past to query data for. This assumes that the first
     element in the view key (after the key prefix) is a date."""
@@ -160,6 +162,12 @@ class SqlExtractMapping(Document):
     @property
     def key_columns(self):
         return [c.name for c in self.columns if c.is_key_column]
+
+    def validate(self, required=True):
+        super(SqlExtractMapping, self).validate(required)
+
+        if self.couch_group_level is not None and self.couch_group_level < 0:
+                raise BadValueError('Couch Group Level must be >= 0')
 
     @classmethod
     def all(cls):
