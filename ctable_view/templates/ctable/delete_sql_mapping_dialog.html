@@ -12,7 +12,9 @@
         {% endif %}
         <form name="drop_report" action="{{ delete_url }}" method="delete">
             <div class="modal-body">
-                <p>{% trans "Are you sure you want to delete this mapping?" %}</p>
+                <label class="checkbox">
+                  <input name="clear_data" type="checkbox" checked>{% trans "Clear all data associated with this mapping" %}
+                </label>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-danger" type="submit"><i class="icon-remove icon-white"></i> {% trans "Delete" %}</button>
