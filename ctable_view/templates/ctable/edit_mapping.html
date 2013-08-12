@@ -221,7 +221,7 @@
             <td><span data-bind="text: value_source"></span><span data-bind="text: value_source.value_key"></span></td>
             <td>
                 <!-- ko foreach: match_keys -->
-                    key[<span data-bind="text: index"></span>] = '<span data-bind="text: value"></span>'<br/>
+                    key[<span data-bind="text: index"></span>] <span data-bind="text: operator"></span> '<span data-bind="text: value"></span>'<br/>
                 <!-- /ko -->
             </td>
             {% if not mapping.auto_generated %}
@@ -235,7 +235,7 @@
                 </button>
 
 
-                <div class="modal hide fade" data-bind="modal: name.editing">
+                <div class="modal hide fade" data-bind="modal: name.editing" style="width: 750px; margin-left: -375px">
                     <div class="alert alert-error" data-bind="text: validate.error, visible: validate.error() != ''">
                     </div>
                     <div class="modal-header">
@@ -330,6 +330,7 @@
                             </div>
                         </div>
                         <div class="well">
+                            <h4>{% trans "Matchers" %}</h4>
                             <div data-bind="template: { name: 'key-matcher-template', foreach: match_keys }"></div>
                             <button class="btn" data-bind="click: addMatcher">
                                 <i class="icon-add"></i>
@@ -352,23 +353,18 @@
     </script>
 
     <script type="text/html" id="key-matcher-template">
-        <h4>{% trans "Matcher" %} <span data-bind="text: $index"></span> <button type="button" class="close" data-bind="click: $parent.removeMatcher">&times;</button></h4>
         <div class="control-group">
-            <label class="control-label" for="id_match_index">
-                {% trans "Match Index" %}
-            </label>
-            <div class="controls">
-                <input type="text" name="match_index" id="id_match_index" data-bind="numericValue: index">
-                <span class="help-inline"><small class="label">REQUIRED</small></span>
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="id_match_value">
-                {% trans "Match Value" %}
-            </label>
-            <div class="controls">
-                <input type="text" name="match_value" id="id_match_value" data-bind="value: value">
-                <span class="help-inline"><small class="label">REQUIRED</small></span>
+            <span class="control-label">{% trans "Matcher" %} <span data-bind="text: $index"></span></span>
+            <div class="controls form-inline">
+                <label for="id_match_index">Key [</label>
+                <input type="text" class="input-mini" id="id_match_index" data-bind="numericValue: index">
+                <span> ]</span>
+                <select class="input-mini" name="operator" id="id_operator" data-bind="value: operator">
+                    <option value="==">==</option>
+                    <option value="!=">!=</option>
+                </select>
+                <input type="text" class="input-medium" id="id_match_value" data-bind="value: value">
+                <button type="button" class="close" data-bind="click: $parent.removeMatcher">&times;</button></h4>
             </div>
         </div>
     </script>

@@ -1,7 +1,7 @@
 from couchdbkit import BadValueError
 from datetime import date, datetime
 from ctable.tests import TestBase
-from ctable.models import SqlExtractMapping, KeyMatcher, ColumnDef
+from ctable.models import SqlExtractMapping, KeyMatcher, ColumnDef, NOT_EQUAL
 
 
 class TestModels(TestBase):
@@ -36,6 +36,12 @@ class TestModels(TestBase):
                         match_keys=[KeyMatcher(index=1, value="indicator_a")])
         val = self._get_column_values(col)
         self.assertEqual(val, [1])
+
+    def test_column_match_neq(self):
+        col = ColumnDef(name="indicator_a", data_type="integer", value_source="value", value_attribute="sum",
+                        match_keys=[KeyMatcher(index=1, value="indicator_a", operator=NOT_EQUAL)])
+        val = self._get_column_values(col)
+        self.assertEqual(val, [2])
 
     def test_column_match_multi_pass(self):
         col = ColumnDef(name="indicator_a", data_type="integer", value_source="value", value_attribute="sum",
