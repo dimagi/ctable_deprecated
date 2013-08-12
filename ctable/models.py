@@ -147,7 +147,7 @@ class SqlExtractMapping(Document):
 
     couch_view = StringProperty(required=True)
     couch_key_prefix = ListProperty(default=[])
-    couch_date_range = IntegerProperty(default=-1)
+    couch_date_range = IntegerProperty()
     """Number of days in the past to query data for. This assumes that the first
     element in the view key (after the key prefix) is a date."""
     couch_date_format = StringProperty(default='%Y-%m-%dT%H:%M:%S.%fZ')
@@ -160,6 +160,12 @@ class SqlExtractMapping(Document):
     @property
     def key_columns(self):
         return [c.name for c in self.columns if c.is_key_column]
+
+    def validate(self, required=True):
+        super(SqlExtractMapping, self).validate(required)
+
+        if self.couch_date_range is not None and self.couch_date_range <= 0:
+            raise BadValueError('Couch Date Range must be > 0')
 
     @classmethod
     def all(cls):
