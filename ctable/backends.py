@@ -154,8 +154,10 @@ class SqlBackend(CtableBackend):
                 k_val = row_dict.pop(k)
                 update = update.where(getattr(table.c, k) == k_val)
 
-            update = update.values(**row_dict)
-            self.connection.execute(update)
+            if row_dict:
+                # if there are any values to update
+                update = update.values(**row_dict)
+                self.connection.execute(update)
 
     def write_rows(self, rows, extract_mapping):
         table_name = extract_mapping.table_name
