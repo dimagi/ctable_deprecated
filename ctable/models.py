@@ -1,3 +1,4 @@
+import json
 from couchdbkit import BadValueError
 from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty, StringListProperty, Property,
                                           DocumentSchema, SchemaListProperty, ListProperty, BooleanProperty)
@@ -33,11 +34,14 @@ class KeyMatcher(DocumentSchema, RowMatcher):
         try:
             op = MATCH_OPS_FUNC.get(self.operator)
             key_value = row_key[self.index]
-            # hack to allow matching empty dict in row key
-            if self.value == '{}' and isinstance(key_value, dict):
-                return op(key_value, {})
+            reference = self.value
+            if not isinstance(key_value, basestring):
+                try:
+                    reference = json.loads(self.value)
+                except ValueError:
+                    pass
 
-            return op(key_value, self.value)
+            return op(key_value, reference)
         except IndexError:
             return False
 
