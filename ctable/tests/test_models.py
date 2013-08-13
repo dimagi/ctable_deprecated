@@ -29,7 +29,7 @@ class TestModels(TestBase):
     def test_column_match_all(self):
         col = ColumnDef(name="user", data_type="string", max_length=50, value_source="key", value_index=0)
         val = self._get_column_values(col)
-        self.assertEqual(val, ["1", "2"])
+        self.assertEqual(val, ["1", "2", 3])
 
     def test_column_match(self):
         col = ColumnDef(name="indicator_a", data_type="integer", value_source="value", value_attribute="sum",
@@ -41,7 +41,18 @@ class TestModels(TestBase):
         col = ColumnDef(name="indicator_a", data_type="integer", value_source="value", value_attribute="sum",
                         match_keys=[KeyMatcher(index=1, value="indicator_a", operator=NOT_EQUAL)])
         val = self._get_column_values(col)
-        self.assertEqual(val, [2])
+        self.assertEqual(val, [2, 5])
+
+    def test_column_match_json(self):
+        col = ColumnDef(name="other", data_type="integer", value_source="value", value_attribute="sum",
+                        match_keys=[KeyMatcher(index=1, value="{}")])
+        val = self._get_column_values(col)
+        self.assertEqual(val, [5])
+
+        col = ColumnDef(name="other", data_type="integer", value_source="value", value_attribute="sum",
+                        match_keys=[KeyMatcher(index=0, value="3")])
+        val = self._get_column_values(col)
+        self.assertEqual(val, [5])
 
     def test_column_match_multi_pass(self):
         col = ColumnDef(name="indicator_a", data_type="integer", value_source="value", value_attribute="sum",
@@ -77,6 +88,8 @@ class TestModels(TestBase):
              "value": {"sum": 1, "count": 3, "min": 1, "max": 1, "sumsqr": 3}},
             {"key": ["2", "indicator_b", "2013-03-02T12:00:00.000Z"],
              "value": {"sum": 2, "count": 2, "min": 1, "max": 1, "sumsqr": 2}},
+            {"key": [3, {}, "2013-03-02T12:00:00.000Z"],
+             "value": {"sum": 5, "count": 5, "min": 1, "max": 1, "sumsqr": 5}},
         ]
 
         values = []
