@@ -129,7 +129,7 @@ class CtableExtractor(object):
                 yield key_prefix + [None]
             elif ind['emitter_type'] == 'date':
                 for value in ind['values']:
-                    yield key_prefix + [value[0].isoformat()]
+                    yield key_prefix + [value['date'].isoformat()]
 
     def get_fluff_extract_mapping(self, diff, backend_name):
         """

@@ -310,9 +310,11 @@ class TestCTable(TestBase):
         self.assertEqual(startkey, ['a', start.strftime(format)])
         self.assertEqual(endkey, ['a', end.strftime(format), {}])
 
-    def _get_fluff_diff(self, emitters=['all_visits', 'null_emitter'],
-                        group_values=['123'],
-                        group_names=['owner_id']):
+    def _get_fluff_diff(self, emitters=None, group_values=None, group_names=None):
+        emitters = emitters or ['all_visits', 'null_emitter']
+        group_values = group_values or ['123']
+        group_names = group_names or ['owner_id']
+
         diff = dict(domains=[DOMAIN],
                     database='fluff',
                     doc_type='MockIndicators',
@@ -324,14 +326,20 @@ class TestCTable(TestBase):
                                           emitter='null_emitter',
                                           emitter_type='null',
                                           reduce_type='count',
-                                          values=[[None, 1], [None, 1]]))
+                                          values=[
+                                              dict(date=None, value=1, group_by=None),
+                                              dict(date=None, value=1, group_by=None),
+                                          ]))
 
         if 'all_visits' in emitters:
             indicator_changes.append(dict(calculator='visits_week',
                                           emitter='all_visits',
                                           emitter_type='date',
                                           reduce_type='count',
-                                          values=[[date(2012, 2, 24), 1], [date(2012, 2, 25), 1]]))
+                                          values=[
+                                              dict(date=date(2012, 2, 24), value=1, group_by=['abc', '123']),
+                                              dict(date=date(2012, 2, 25), value=1, group_by=None)
+                                          ]))
 
         diff['indicator_changes'] = indicator_changes
         return diff
