@@ -25,7 +25,10 @@ def catch_signal(app, **kwargs):
         mappings = [cls[1] for cls in clsmembers
                     if not cls[1] == CtableMappingFixture and issubclass(cls[1], CtableMappingFixture)]
         for mapping in mappings:
-            mapping().create()
+            try:
+                mapping().create()
+            except Exception as e:
+                raise Exception('Unable to create mapping %s' % mapping, e)
     except ImportError:
         pass
 
