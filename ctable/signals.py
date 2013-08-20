@@ -1,8 +1,11 @@
 import inspect
+import logging
 from django.db.models import signals
 from django.utils.importlib import import_module
 from ctable.fixtures import CtableMappingFixture
 from fluff.signals import indicator_document_updated
+
+logger = logging.getLogger(__name__)
 
 
 def process_fluff_diff(sender, diff=None, **kwargs):
@@ -28,7 +31,8 @@ def catch_signal(app, **kwargs):
             try:
                 mapping().create()
             except Exception as e:
-                raise Exception('Unable to create mapping %s' % mapping, e)
+                logging.error('Unable to create mapping %s' % mapping)
+                raise
     except ImportError:
         pass
 
