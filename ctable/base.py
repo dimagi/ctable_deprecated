@@ -180,6 +180,10 @@ class CtableExtractor(object):
                                                      KeyMatcher(index=2 + num_groups, value=emitter_name)
                                                  ]))
 
+        key_columns = [c for c in mapping.columns if c.is_key_column]
+        non_key_columns = [c for c in mapping.columns if not c.is_key_column]
+        mapping.columns = key_columns + sorted(non_key_columns, key=lambda c: c.name)
+
         mapping.save()
         return mapping
 

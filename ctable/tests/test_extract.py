@@ -181,18 +181,18 @@ class TestCTable(TestBase):
                                                          date_format='%Y-%m-%d',
                                                          value_source='key',
                                                          value_index=4))
-        self.assertColumnsEqual(em.columns[2], ColumnDef(name='visits_week_null_emitter',
-                                                         data_type='integer',
-                                                         value_source='value',
-                                                         value_attribute='count',
-                                                         match_keys=[KeyMatcher(index=2, value='visits_week'),
-                                                                     KeyMatcher(index=3, value='null_emitter')]))
-        self.assertColumnsEqual(em.columns[3], ColumnDef(name='visits_week_all_visits',
+        self.assertColumnsEqual(em.columns[2], ColumnDef(name='visits_week_all_visits',
                                                          data_type='integer',
                                                          value_source='value',
                                                          value_attribute='count',
                                                          match_keys=[KeyMatcher(index=2, value='visits_week'),
                                                                      KeyMatcher(index=3, value='all_visits')]))
+        self.assertColumnsEqual(em.columns[3], ColumnDef(name='visits_week_null_emitter',
+                                                         data_type='integer',
+                                                         value_source='value',
+                                                         value_attribute='count',
+                                                         match_keys=[KeyMatcher(index=2, value='visits_week'),
+                                                                     KeyMatcher(index=3, value='null_emitter')]))
 
         self.assertEquals(len(self.db.mock_docs), 1)
 
@@ -228,18 +228,18 @@ class TestCTable(TestBase):
                                                          date_format='%Y-%m-%d',
                                                          value_source='key',
                                                          value_index=4))
-        self.assertColumnsEqual(em.columns[2], ColumnDef(name='visits_week_null_emitter',
-                                                         data_type='integer',
-                                                         value_source='value',
-                                                         value_attribute='count',
-                                                         match_keys=[KeyMatcher(index=2, value='visits_week'),
-                                                                     KeyMatcher(index=3, value='null_emitter')]))
-        self.assertColumnsEqual(em.columns[3], ColumnDef(name='visits_week_all_visits',
+        self.assertColumnsEqual(em.columns[2], ColumnDef(name='visits_week_all_visits',
                                                          data_type='integer',
                                                          value_source='value',
                                                          value_attribute='count',
                                                          match_keys=[KeyMatcher(index=2, value='visits_week'),
                                                                      KeyMatcher(index=3, value='all_visits')]))
+        self.assertColumnsEqual(em.columns[3], ColumnDef(name='visits_week_null_emitter',
+                                                         data_type='integer',
+                                                         value_source='value',
+                                                         value_attribute='count',
+                                                         match_keys=[KeyMatcher(index=2, value='visits_week'),
+                                                                     KeyMatcher(index=3, value='null_emitter')]))
 
         self.assertEquals(len(self.db.mock_docs), 1)
         self.assertIn('CtableFluffMapping_MockIndicators', self.db.mock_docs)
