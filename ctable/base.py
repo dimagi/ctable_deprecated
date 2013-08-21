@@ -153,8 +153,9 @@ class CtableExtractor(object):
 
         for i, group in enumerate(diff['group_names']):
             if not any(x.name == group for x in mapping.columns):
+                type_map = diff.get('group_type_map') or {}
                 mapping.columns.append(ColumnDef(name=group,
-                                                 data_type='string',
+                                                 data_type=type_map.get(group, 'string'),
                                                  value_source='key',
                                                  value_index=1 + i))
 

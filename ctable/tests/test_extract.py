@@ -310,16 +310,18 @@ class TestCTable(TestBase):
         self.assertEqual(startkey, ['a', start.strftime(format)])
         self.assertEqual(endkey, ['a', end.strftime(format), {}])
 
-    def _get_fluff_diff(self, emitters=None, group_values=None, group_names=None):
+    def _get_fluff_diff(self, emitters=None, group_values=None, group_names=None, type_map=None):
         emitters = emitters or ['all_visits', 'null_emitter']
         group_values = group_values or ['123']
         group_names = group_names or ['owner_id']
+        type_map = type_map or {'owner_id': 'string'}
 
         diff = dict(domains=[DOMAIN],
                     database='fluff',
                     doc_type='MockIndicators',
                     group_values=group_values,
-                    group_names=group_names)
+                    group_names=group_names,
+                    group_type_map=type_map)
         indicator_changes = []
         if 'null_emitter' in emitters:
             indicator_changes.append(dict(calculator='visits_week',
