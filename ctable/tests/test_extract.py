@@ -344,6 +344,14 @@ class TestCTable(TestBase):
                                           ]))
 
         diff['indicator_changes'] = indicator_changes
+        diff['all_indicators'] = [dict(calculator='visits_week',
+                                          emitter='null_emitter',
+                                          emitter_type='null',
+                                          reduce_type='count'),
+                                  dict(calculator='visits_week',
+                                          emitter='all_visits',
+                                          emitter_type='date',
+                                          reduce_type='count')]
         return diff
 
     def assertColumnsEqual(self, left, right):

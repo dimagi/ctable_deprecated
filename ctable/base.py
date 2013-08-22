@@ -167,11 +167,13 @@ class CtableExtractor(object):
                                              value_source='key',
                                              value_index=3 + num_groups))
 
-        for indicator in diff['indicator_changes']:
+        existing_columns = [x.name for x in mapping.columns]
+        for indicator in diff['all_indicators']:
             calc_name = indicator['calculator']
             emitter_name = indicator['emitter']
             name = '{0}_{1}'.format(calc_name, emitter_name)
-            if not any(x.name == name for x in mapping.columns):
+            if name not in existing_columns:
+                existing_columns.append(name)
                 mapping.columns.append(ColumnDef(name=name,
                                                  data_type='integer',
                                                  value_source='value',
