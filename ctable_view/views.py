@@ -1,4 +1,5 @@
 import json
+import logging
 from celery.result import AsyncResult
 from couchdbkit import ResourceNotFound
 from django.contrib.auth.decorators import permission_required
@@ -14,6 +15,8 @@ from ctable.models import SqlExtractMapping
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
 from ctable.util import get_extractor
+
+logger = logging.getLogger(__name__)
 
 require_superuser = permission_required("is_superuser", login_url='/no_permissions/')
 
@@ -109,6 +112,7 @@ def test(request, mapping_id, domain=None, template='ctable/test_mapping.html'):
                     'data': test_extractor.backend.data,
                 })
             except Exception as e:
+                logger.exception('Error while testing ctable mapping: %s' % mapping.name)
                 checks['errors'].append(e.message)
 
             return render(request, template, checks)
