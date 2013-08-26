@@ -95,15 +95,16 @@ class SqlBackend(CtableBackend):
         if not table_name in self.metadata.tables:
             raise Exception("Table does not exist", table_name)
 
+        existing_columns =dict([(c.name, c) for c in self.table(table_name).columns])
         for column in column_defs:
-            if not column.name in [c.name for c in self.table(table_name).columns]:
+            if not column.name in existing_columns:
                 logger.info('Adding column to reporting table: %s.%s', table_name, column.name)
                 self.op.add_column(table_name, column.sql_column)
+                existing_columns[column.name] = column.sql_column
                 self.metadata.clear()
                 self.metadata.reflect()
             else:
-                columns = dict([(c.name, c) for c in self.table(table_name).columns])
-                current_ty = columns[column.name].type
+                current_ty = existing_columns[column.name].type
                 if not isinstance(current_ty, BASE_TYPE_MAP[column.data_type]):
                     raise ColumnTypeException("Column types don't match", table_name, column.name)
 
