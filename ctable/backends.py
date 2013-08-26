@@ -2,6 +2,7 @@ import logging
 import six
 import sqlalchemy
 import alembic
+import threading
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
@@ -43,6 +44,9 @@ class SqlBackend(CtableBackend):
     """
     Write rows to a database specified by URL
     """
+    lock_lock = threading.Lock()
+    lock_dict = {}
+
     def __init__(self, url_or_connection=None):
         if not url_or_connection:
             url_or_connection = settings.SQL_REPORTING_DATABASE_URL
@@ -59,6 +63,13 @@ class SqlBackend(CtableBackend):
 
     def __exit__(self, type, value, traceback):
         self.connection.close()
+
+    def _get_lock(self, table_name):
+        with self.lock_lock:
+            if table_name not in self.lock_dict:
+                self.lock_dict[table_name] = threading.Lock()
+
+        return self.lock_dict[table_name]
 
     @property
     def metadata(self):
@@ -82,16 +93,17 @@ class SqlBackend(CtableBackend):
         return self._op
 
     def init_table(self, table_name, column_defs):
-        if not table_name in self.metadata.tables:
-            logger.info('Creating new reporting table: %s', table_name)
-            columns = [c.sql_column for c in column_defs]
-            self.op.create_table(table_name, *columns)
-            owner = getattr(settings, 'SQL_REPORTING_OBJECT_OWNER', None)
-            if owner:
-                self.op.execute('ALTER TABLE "%s" OWNER TO %s' % (table_name, owner))
-            self.reset_meta()
-        else:
-            self.make_table_compatible(table_name, column_defs)
+        with self._get_lock(table_name):
+            if not table_name in self.metadata.tables:
+                logger.info('Creating new reporting table: %s', table_name)
+                columns = [c.sql_column for c in column_defs]
+                self.op.create_table(table_name, *columns)
+                owner = getattr(settings, 'SQL_REPORTING_OBJECT_OWNER', None)
+                if owner:
+                    self.op.execute('ALTER TABLE "%s" OWNER TO %s' % (table_name, owner))
+                self.reset_meta()
+            else:
+                self.make_table_compatible(table_name, column_defs)
 
     def make_table_compatible(self, table_name, column_defs):
         if not table_name in self.metadata.tables:
@@ -111,9 +123,10 @@ class SqlBackend(CtableBackend):
 
     def clear_all_data(self, mapping):
         table_name = mapping.table_name
-        if table_name in self.metadata.tables:
-            self.op.drop_table(table_name)
-            self.reset_meta()
+        with self._get_lock(table_name):
+            if table_name in self.metadata.tables:
+                self.op.drop_table(table_name)
+                self.reset_meta()
 
     def check_mapping(self, mapping):
         errors = []
