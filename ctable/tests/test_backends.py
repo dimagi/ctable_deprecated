@@ -35,8 +35,9 @@ class TestBackends(TestBase):
         with self.backend:
             self.backend.init_table(TABLE, columns)
 
-        self.assertIn(TABLE, self.backend.metadata.tables)
-        table_columns = self.backend.table(TABLE).columns
+            self.assertIn(TABLE, self.backend.metadata.tables)
+            table_columns = self.backend.table(TABLE).columns
+
         self.assertIn('col_a', table_columns)
         self.assertIn('col_b', table_columns)
         self.assertIn('col_c', table_columns)
@@ -57,8 +58,9 @@ class TestBackends(TestBase):
         with self.backend:
             self.backend.init_table(TABLE, columns)
 
-        self.assertIn(TABLE, self.backend.metadata.tables)
-        table_columns = self.backend.table(TABLE).columns
+            self.assertIn(TABLE, self.backend.metadata.tables)
+            table_columns = self.backend.table(TABLE).columns
+
         self.assertIn('col_a', table_columns)
         self.assertIn('col_b', table_columns)
         self.assertIn('col_c', table_columns)
@@ -207,7 +209,7 @@ class TestBackendsMultiUser(TestBase):
         with self.backend1:
             self.backend1.init_table(TABLE, columns)
 
-        self.assertIn(TABLE, self.backend1.metadata.tables)
+            self.assertIn(TABLE, self.backend1.metadata.tables)
 
         with self.assertRaises(ProgrammingError):
             self.conn_t2.execute("select * from %s" % TABLE)
@@ -229,11 +231,11 @@ class TestBackendsMultiUser(TestBase):
         with self.backend1:
             self.backend1.init_table(TABLE, columns)
 
-        self.assertIn(TABLE, self.backend1.metadata.tables)
+            self.assertIn(TABLE, self.backend1.metadata.tables)
 
         self.conn_t2.execute("select * from %s" % TABLE)
 
         with self.backend2:
             self.backend2.clear_all_data(Mapping)
 
-        self.assertNotIn(TABLE, self.backend2.metadata.tables)
+            self.assertNotIn(TABLE, self.backend2.metadata.tables)

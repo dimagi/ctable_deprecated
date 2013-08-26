@@ -139,9 +139,11 @@ class CtableExtractor(object):
             [doc_type, group1... groupN, calc_name, emitter_name, emitter_value] = 1
         """
         mapping_id = 'CtableFluffMapping_%s' % diff['doc_type']
+        save = False
         try:
             mapping = SqlExtractMapping.get(mapping_id)
         except ResourceNotFound:
+            save = True
             mapping = SqlExtractMapping(_id=mapping_id,
                                         backend=backend_name,
                                         database=diff['database'],
@@ -153,6 +155,7 @@ class CtableExtractor(object):
 
         for i, group in enumerate(diff['group_names']):
             if not any(x.name == group for x in mapping.columns):
+                save = True
                 type_map = diff.get('group_type_map') or {}
                 mapping.columns.append(ColumnDef(name=group,
                                                  data_type=type_map.get(group, 'string'),
@@ -161,6 +164,7 @@ class CtableExtractor(object):
 
         num_groups = len(diff['group_names'])
         if not any(x.name == 'date' for x in mapping.columns):
+            save = True
             mapping.columns.append(ColumnDef(name='date',
                                              data_type='date',
                                              date_format="%Y-%m-%d",
@@ -173,6 +177,7 @@ class CtableExtractor(object):
             emitter_name = indicator['emitter']
             name = '{0}_{1}'.format(calc_name, emitter_name)
             if name not in existing_columns:
+                save = True
                 existing_columns.append(name)
                 mapping.columns.append(ColumnDef(name=name,
                                                  data_type='integer',
@@ -183,11 +188,13 @@ class CtableExtractor(object):
                                                      KeyMatcher(index=2 + num_groups, value=emitter_name)
                                                  ]))
 
-        key_columns = [c for c in mapping.columns if c.is_key_column]
-        non_key_columns = [c for c in mapping.columns if not c.is_key_column]
-        mapping.columns = key_columns + sorted(non_key_columns, key=lambda c: c.name)
+        if save:
+            key_columns = [c for c in mapping.columns if c.is_key_column]
+            non_key_columns = [c for c in mapping.columns if not c.is_key_column]
+            mapping.columns = key_columns + sorted(non_key_columns, key=lambda c: c.name)
 
-        mapping.save()
+            mapping.save()
+
         return mapping
 
     def recalculate_grains(self, grains, database):
