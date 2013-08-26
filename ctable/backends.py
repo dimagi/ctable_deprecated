@@ -54,7 +54,6 @@ class SqlBackend(CtableBackend):
 
     def __enter__(self):
         self.connection = self.base_connection.connect()  # "forks" the SqlAlchemy connection
-        self._metadata = None
         self._op = None
         return self  # TODO: A safe context manager so this can be called many times
 
@@ -68,6 +67,9 @@ class SqlBackend(CtableBackend):
             self._metadata.bind = self.connection
             self._metadata.reflect()
         return self._metadata
+
+    def reset_meta(self):
+        self._metadata = None
 
     def table(self, table_name):
         return sqlalchemy.Table(table_name, self.metadata, autoload=True, autoload_with=self.connection)
@@ -87,7 +89,7 @@ class SqlBackend(CtableBackend):
             owner = getattr(settings, 'SQL_REPORTING_OBJECT_OWNER', None)
             if owner:
                 self.op.execute('ALTER TABLE "%s" OWNER TO %s' % (table_name, owner))
-            self.metadata.reflect()
+            self.reset_meta()
         else:
             self.make_table_compatible(table_name, column_defs)
 
@@ -99,8 +101,7 @@ class SqlBackend(CtableBackend):
             if not column.name in [c.name for c in self.table(table_name).columns]:
                 logger.info('Adding column to reporting table: %s.%s', table_name, column.name)
                 self.op.add_column(table_name, column.sql_column)
-                self.metadata.clear()
-                self.metadata.reflect()
+                self.reset_meta()
             else:
                 columns = dict([(c.name, c) for c in self.table(table_name).columns])
                 current_ty = columns[column.name].type
@@ -111,8 +112,7 @@ class SqlBackend(CtableBackend):
         table_name = mapping.table_name
         if table_name in self.metadata.tables:
             self.op.drop_table(table_name)
-            self.metadata.clear()
-            self.metadata.reflect()
+            self.reset_meta()
 
     def check_mapping(self, mapping):
         errors = []
