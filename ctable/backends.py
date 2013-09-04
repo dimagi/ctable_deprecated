@@ -58,6 +58,7 @@ class SqlBackend(CtableBackend):
 
     def __enter__(self):
         self.connection = self.base_connection.connect()  # "forks" the SqlAlchemy connection
+        self._metadata = None  # force metadata refresh
         self._op = None
         return self  # TODO: A safe context manager so this can be called many times
 
