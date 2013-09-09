@@ -72,19 +72,22 @@ class SqlBackend(CtableBackend):
 
         return self.lock_dict[table_name]
 
-    @property
-    def metadata(self):
+    def get_metadata(self, table_name=None):
+        def table_filter(name, metadata):
+            return not table_name or name == table_name
+
         if not hasattr(self, '_metadata') or self._metadata is None:
             self._metadata = sqlalchemy.MetaData()
             self._metadata.bind = self.connection
-            self._metadata.reflect()
+            self._metadata.reflect(only=table_filter)
         return self._metadata
 
     def reset_meta(self):
         self._metadata = None
 
     def table(self, table_name):
-        return sqlalchemy.Table(table_name, self.metadata, autoload=True, autoload_with=self.connection)
+        metadata = self.get_metadata(table_name)
+        return sqlalchemy.Table(table_name, metadata, autoload=True, autoload_with=self.connection)
 
     @property
     def op(self):
@@ -95,7 +98,7 @@ class SqlBackend(CtableBackend):
 
     def init_table(self, table_name, column_defs):
         with self._get_lock(table_name):
-            if not table_name in self.metadata.tables:
+            if not table_name in self.get_metadata(table_name).tables:
                 logger.info('Creating new reporting table: %s', table_name)
                 columns = [c.sql_column for c in column_defs]
                 self.op.create_table(table_name, *columns)
@@ -107,10 +110,10 @@ class SqlBackend(CtableBackend):
                 self.make_table_compatible(table_name, column_defs)
 
     def make_table_compatible(self, table_name, column_defs):
-        if not table_name in self.metadata.tables:
+        if not table_name in self.get_metadata(table_name).tables:
             raise Exception("Table does not exist", table_name)
 
-        existing_columns =dict([(c.name, c) for c in self.table(table_name).columns])
+        existing_columns = dict([(c.name, c) for c in self.table(table_name).columns])
         for column in column_defs:
             if not column.name in existing_columns:
                 logger.info('Adding column to reporting table: %s.%s', table_name, column.name)
@@ -125,14 +128,14 @@ class SqlBackend(CtableBackend):
     def clear_all_data(self, mapping):
         table_name = mapping.table_name
         with self._get_lock(table_name):
-            if table_name in self.metadata.tables:
+            if table_name in self.get_metadata(table_name).tables:
                 self.op.drop_table(table_name)
                 self.reset_meta()
 
     def check_mapping(self, mapping):
         errors = []
         warnings = []
-        if mapping.table_name in self.metadata.tables:
+        if mapping.table_name in self.get_metadata(mapping.table_name).tables:
             table = self.table(mapping.table_name)
             table_columns = dict([(c.name, c) for c in table.columns])
             mapping_columns = dict([(c.name, c) for c in mapping.columns])
