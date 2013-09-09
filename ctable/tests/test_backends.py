@@ -9,19 +9,40 @@ from ctable.models import ColumnDef, KeyMatcher, SqlExtractMapping
 TABLE = "test_table"
 
 
-class TestBackends(TestBase):
+class BackendBase(TestBase):
     def setUp(self):
+        super(BackendBase, self).setUp()
         self.connection = self.engine.connect()
         self.trans = self.connection.begin()
+
+    def tearDown(self):
+        super(BackendBase, self).tearDown()
+        self.trans.rollback()
+
+    @property
+    def metadata(self):
+        metadata = sqlalchemy.MetaData()
+        metadata.bind = self.connection
+        metadata.reflect()
+        return metadata
+
+    def table(self, table_name):
+        return sqlalchemy.Table(table_name, self.metadata, autoload=True, autoload_with=self.connection)
+
+
+class TestBackends(BackendBase):
+    def setUp(self):
+        super(TestBackends, self).setUp()
         self.backend = SqlBackend(self.connection)
 
     def tearDown(self):
         super(TestBackends, self).tearDown()
-        self.trans.rollback()
         self.trans = self.connection.begin()
         self.connection.execute('DROP TABLE IF EXISTS "%s"' % TABLE)
         self.trans.commit()
         self.connection.close()
+
+
 
     def test_init_table(self):
         columns = [
@@ -35,8 +56,8 @@ class TestBackends(TestBase):
         with self.backend:
             self.backend.init_table(TABLE, columns)
 
-            self.assertIn(TABLE, self.backend.metadata.tables)
-            table_columns = self.backend.table(TABLE).columns
+            self.assertIn(TABLE, self.metadata.tables)
+            table_columns = self.table(TABLE).columns
 
         self.assertIn('col_a', table_columns)
         self.assertIn('col_b', table_columns)
@@ -58,8 +79,8 @@ class TestBackends(TestBase):
         with self.backend:
             self.backend.init_table(TABLE, columns)
 
-            self.assertIn(TABLE, self.backend.metadata.tables)
-            table_columns = self.backend.table(TABLE).columns
+            self.assertIn(TABLE, self.metadata.tables)
+            table_columns = self.table(TABLE).columns
 
         self.assertIn('col_a', table_columns)
         self.assertIn('col_b', table_columns)
@@ -167,10 +188,9 @@ class TestBackends(TestBase):
             self.backend.write_rows(rows, extract)
 
 
-class TestBackendsMultiUser(TestBase):
+class TestBackendsMultiUser(BackendBase):
     def setUp(self):
-        self.connection = self.engine.connect()
-        self.trans = self.connection.begin()
+        super(TestBackendsMultiUser, self).setUp()
         self.connection.execute("CREATE ROLE test1 LOGIN")
         self.connection.execute("CREATE ROLE test2 LOGIN")
         self.connection.execute("CREATE ROLE testgroup")
@@ -186,7 +206,6 @@ class TestBackendsMultiUser(TestBase):
 
     def tearDown(self):
         super(TestBackendsMultiUser, self).tearDown()
-        self.trans.rollback()
         self.trans = self.connection.begin()
         self.connection.execute('DROP TABLE IF EXISTS "%s"' % TABLE)
         self.connection.execute('DROP ROLE test1')
@@ -209,7 +228,7 @@ class TestBackendsMultiUser(TestBase):
         with self.backend1:
             self.backend1.init_table(TABLE, columns)
 
-            self.assertIn(TABLE, self.backend1.metadata.tables)
+            self.assertIn(TABLE, self.metadata.tables)
 
         with self.assertRaises(ProgrammingError):
             self.conn_t2.execute("select * from %s" % TABLE)
@@ -231,11 +250,11 @@ class TestBackendsMultiUser(TestBase):
         with self.backend1:
             self.backend1.init_table(TABLE, columns)
 
-            self.assertIn(TABLE, self.backend1.metadata.tables)
+            self.assertIn(TABLE, self.metadata.tables)
 
         self.conn_t2.execute("select * from %s" % TABLE)
 
         with self.backend2:
             self.backend2.clear_all_data(Mapping)
 
-            self.assertNotIn(TABLE, self.backend2.metadata.tables)
+            self.assertNotIn(TABLE, self.metadata.tables)
