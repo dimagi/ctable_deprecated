@@ -62,8 +62,8 @@ class CtableExtractor(object):
         self.write_rows_to_sql(munged_rows, mapping)
 
     def get_couch_keys(self, extract_mapping, date_range=None):
-        startkey = extract_mapping.couch_key_prefix
-        endkey = extract_mapping.couch_key_prefix
+        startkey = list(extract_mapping.couch_key_prefix)
+        endkey = list(extract_mapping.couch_key_prefix)
         date_format = extract_mapping.couch_date_format
         if not date_range:
             date_range = extract_mapping.couch_date_range
