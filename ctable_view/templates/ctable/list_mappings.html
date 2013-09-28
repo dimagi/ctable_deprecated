@@ -21,9 +21,9 @@
     <div class="span10 offset1">
         <h3>SQL Extract Mappings
         {% if domain %}
-            {% url sql_mappings_edit domain '' as new_url %}
+            {% url "sql_mappings_edit" domain '' as new_url %}
         {% else %}
-            {% url sql_mappings_edit '' as new_url %}
+            {% url "sql_mappings_edit" '' as new_url %}
         {% endif %}
         <a class="btn pull-right" href="{{ new_url }}">
             <i class="icon-edit"></i>
@@ -90,13 +90,13 @@
                     <td>{% if mapping.backend %}{{ mapping.backend }}{% else %}{% trans "Default" %}{% endif %}</td>
                     <td>
                         {% if domain %}
-                            {% url sql_mappings_toggle_state domain mapping.get_id as toggle_url %}
-                            {% url sql_mappings_edit domain mapping.get_id as edit_url %}
-                            {% url sql_mappings_test domain mapping.get_id as test_url%}
+                            {% url "sql_mappings_toggle_state" domain mapping.get_id as toggle_url %}
+                            {% url "sql_mappings_edit" domain mapping.get_id as edit_url %}
+                            {% url "sql_mappings_test" domain mapping.get_id as test_url%}
                         {% else %}
-                            {% url sql_mappings_toggle_state mapping.get_id as toggle_url %}
-                            {% url sql_mappings_edit mapping.get_id as edit_url %}
-                            {% url sql_mappings_test mapping.get_id as test_url%}
+                            {% url "sql_mappings_toggle_state" mapping.get_id as toggle_url %}
+                            {% url "sql_mappings_edit" mapping.get_id as edit_url %}
+                            {% url "sql_mappings_test" mapping.get_id as test_url%}
                         {% endif %}
                         <div class="btn-group">
                           <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">

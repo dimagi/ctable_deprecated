@@ -200,9 +200,9 @@
         </fieldset>
         <div class="form-actions">
             {% if domain %}
-                {% url sql_mappings_list domain as list_url%}
+                {% url "sql_mappings_list" domain as list_url%}
             {% else %}
-                {% url sql_mappings_list as list_url%}
+                {% url "sql_mappings_list" as list_url%}
             {% endif %}
             {% if mapping.auto_generated %}
                 <a class="btn" href="{{ list_url }}">{% trans "Back" %}</a>
