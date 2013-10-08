@@ -1,3 +1,4 @@
+{% load url from future %}
 {% load i18n %}
 {% for mapping in mappings %}
     <div id="delete-sql-mapping-{{ mapping.get_id }}" class="modal hide fade">
@@ -6,9 +7,9 @@
             <h3>{% trans "Delete Mapping:" %} "{{ mapping.name }}"?</h3>
         </div>
         {% if domain %}
-            {% url sql_mappings_delete domain mapping.get_id as delete_url %}
+            {% url "sql_mappings_delete" domain mapping.get_id as delete_url %}
         {% else %}
-            {% url sql_mappings_delete mapping.get_id as delete_url %}
+            {% url "sql_mappings_delete" mapping.get_id as delete_url %}
         {% endif %}
         <form name="drop_report" action="{{ delete_url }}" method="delete">
             <div class="modal-body">

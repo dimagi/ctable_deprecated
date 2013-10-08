@@ -1,4 +1,5 @@
 {% extends 'hqwebapp/centered.html' %}
+{% load url from future %}
 {% load i18n %}
 {% load hq_shared_tags %}
 {% load hqstyle_tags %}
@@ -21,9 +22,9 @@
 
                 self.execute = function(element) {
                     {% if domain %}
-                        {% url sql_mappings_run domain mapping.get_id as run_url%}
+                        {% url "sql_mappings_run" domain mapping.get_id as run_url%}
                     {% else %}
-                        {% url sql_mappings_run mapping.get_id as run_url%}
+                        {% url "sql_mappings_run" mapping.get_id as run_url%}
                     {% endif %}
                     var url = '{{ run_url }}';
                     url += '?limit=' + self.limit()
@@ -73,7 +74,7 @@
 
                 self.clearData = function() {
                     $('.hq-loading').show();
-                    $.post('{% url sql_mappings_clear domain mapping.get_id %}', function(data) {
+                    $.post('{% url "sql_mappings_clear" domain mapping.get_id %}', function(data) {
                         $('.hq-loading').hide();
                         self.showMessage(data.message, data.status);
                     }).fail(function() {
@@ -103,13 +104,13 @@
         <div class="btn-toolbar pull-right">
             <div class="btn-group">
                 {% if domain %}
-                    {% url sql_mappings_test domain mapping.get_id as test_url%}
-                    {% url sql_mappings_edit domain mapping.get_id as edit_url%}
-                    {% url sql_mappings_list domain as list_url%}
+                    {% url "sql_mappings_test" domain mapping.get_id as test_url%}
+                    {% url "sql_mappings_edit" domain mapping.get_id as edit_url%}
+                    {% url "sql_mappings_list" domain as list_url%}
                 {% else %}
-                    {% url sql_mappings_test mapping.get_id as test_url%}
-                    {% url sql_mappings_edit mapping.get_id as edit_url%}
-                    {% url sql_mappings_list as list_url%}
+                    {% url "sql_mappings_test" mapping.get_id as test_url%}
+                    {% url "sql_mappings_edit" mapping.get_id as edit_url%}
+                    {% url "sql_mappings_list" as list_url%}
                 {% endif %}
                 <div class="btn-group">
                     <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
