@@ -1,7 +1,7 @@
 import json
 from couchdbkit import BadValueError
 from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty, StringListProperty, Property,
-                                          DocumentSchema, SchemaListProperty, ListProperty, BooleanProperty)
+                                          DocumentSchema, SchemaListProperty, ListProperty, BooleanProperty, DictProperty)
 from django.conf import settings
 from datetime import datetime, date
 import sqlalchemy
@@ -172,6 +172,8 @@ class SqlExtractMapping(Document):
     """Day of week for weekly, day of month for monthly, -1 for daily"""
 
     couch_view = StringProperty(required=True)
+    couch_view_params = DictProperty()
+    """Additional couch query params e.g. stale=ok"""
     couch_key_prefix = ListProperty(default=[])
     couch_group_level = IntegerProperty()
     """Group level parameter for CouchDB query. Leave blank for 'exact' grouping."""

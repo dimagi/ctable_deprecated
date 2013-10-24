@@ -69,6 +69,32 @@ class TestCTable(TestBase):
         self.assertEqual(result['2_2013-03-01']['rename_indicator_a'], 3)
         self.assertIsNone(result['2_2013-03-01']['indicator_b'])
 
+    def test_extra_query_params(self):
+        self.db.add_view('c/view', [
+            (
+                {'reduce': True, 'group': True, 'startkey': [], 'endkey': [{}], 'stale': 'ok'},
+                [
+                    {"key": ["1", "indicator_b", "2013-03-01T12:00:00.000Z"],
+                     "value": {"sum": 2, "count": 2, "min": 1, "max": 1, "sumsqr": 2}},
+                ]
+            )
+        ])
+
+        extract = SqlExtractMapping(domains=[DOMAIN], name=MAPPING_NAME, couch_view="c/view", columns=[
+            ColumnDef(name="username", data_type="string", max_length=50, value_source="key", value_index=0),
+            ColumnDef(name="date", data_type="date", date_format="%Y-%m-%dT%H:%M:%S.%fZ",
+                      value_source="key", value_index=2),
+            ColumnDef(name="indicator_b", data_type="integer", value_source="value", value_attribute="sum",
+                      match_keys=[KeyMatcher(index=1, value="indicator_b")]),
+        ], couch_view_params={'stale': 'ok'})
+
+        self.ctable.extract(extract)
+
+        result = dict(
+            [(row.username + "_" + self.format_date(row.date), row) for row in
+             self.connection.execute('SELECT * FROM %s' % extract.table_name)])
+        self.assertEqual(result['1_2013-03-01']['indicator_b'], 2)
+
     def test_null_column(self):
         self.db.add_view('c/view', [
             (
