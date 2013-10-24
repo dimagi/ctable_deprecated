@@ -26,7 +26,7 @@ class CtableExtractor(object):
 
         db = get_db(mapping.database) if mapping.database else self.db
 
-        kwargs = {}
+        kwargs = mapping.couch_view_params
         if mapping.couch_group_level:
             kwargs['group_level'] = mapping.couch_group_level
         result = self.get_couch_rows(mapping.couch_view, startkey, endkey, db=db, limit=limit, **kwargs)
