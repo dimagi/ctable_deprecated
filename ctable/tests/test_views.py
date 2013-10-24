@@ -13,16 +13,16 @@ class TestViews(TestBase):
         from ctable.models import SCHEDULE_VIEW
         self.db.add_view(SCHEDULE_VIEW, [
             (
-                {'key': ['active', 'daily', -1, 8]}, [{'value': 'daily'}]
+                {'key': ['active', 'daily', -1, 8], 'wrap_doc': True}, [{'value': 'daily'}]
             ),
             (
-                {'key': ['active', 'weekly', 3, 8]}, [{'value': 'weekly'}]
+                {'key': ['active', 'weekly', 3, 8], 'wrap_doc': True}, [{'value': 'weekly'}]
             ),
             (
-                {'key': ['active', 'monthly', 12, 8]}, [{'value': 'monthly'}]
+                {'key': ['active', 'monthly', 12, 8], 'wrap_doc': True}, [{'value': 'monthly'}]
             ),
             (
-                {'key': ['inactive', 'monthly', 12, 8]}, [{'value': 'inactive_monthly'}]
+                {'key': ['inactive', 'monthly', 12, 8], 'wrap_doc': True}, [{'value': 'inactive_monthly'}]
             ),
         ])
 
