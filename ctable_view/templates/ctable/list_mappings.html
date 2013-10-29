@@ -72,8 +72,8 @@
                     <td>{{ mapping.name }}</td>
                     <td>
                         {{ mapping.schedule_type }}
-                        {% if mapping.schedule_type != 'daily' %} on day {{ mapping.schedule_day }}{% endif %}
-                        at {{ mapping.schedule_hour }}:00
+                        {% if mapping.schedule_type == 'weekly' or mapping.schedule_type == 'monthly' %} on day {{ mapping.schedule_day }}{% endif %}
+                        {% if mapping.schedule_type != 'hourly' %}at {{ mapping.schedule_hour }}:00{% endif %}
                     </td>
                     <td>{{ mapping.couch_view }}</td>
                     <td>{{ mapping.couch_key_prefix }}</td>

@@ -27,8 +27,12 @@ function SqlExtractMapping(data) {
         self.columns.remove(column);
     }
 
+    self._id.show_hour = ko.computed(function() {
+        return self.schedule_type() != 'hourly';
+    }, self);
+
     self._id.show_day = ko.computed(function() {
-        return self.schedule_type() != 'daily';
+        return ['hourly', 'daily'].indexOf(self.schedule_type()) == -1;
     }, self);
 
     self.validate = function() {

@@ -79,6 +79,7 @@
 
                     <div class="controls">
                         <select name="schedule_type" id="id_schedule_type" data-bind="value: schedule_type">
+                            <option value="hourly">{% trans "Hourly" %}</option>
                             <option value="daily">{% trans "Daily" %}</option>
                             <option value="weekly">{% trans "Weekly" %}</option>
                             <option value="monthly">{% trans "Monthly" %}</option>
@@ -86,7 +87,7 @@
                         <span class="help-inline"><small class="label">REQUIRED</small></span>
                     </div>
                 </div>
-                <div class="control-group">
+                <div class="control-group" data-bind="visible: _id.show_hour">
                     <label class="control-label" for="id_schedule_hour">
                         {% trans "Schedule hour" %}
                     </label>

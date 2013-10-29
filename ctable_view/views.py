@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_noop as _
 from django.core.urlresolvers import reverse
 from django.http import Http404
 
-from ctable.models import SqlExtractMapping
+from ctable.models import SqlExtractMapping, ColumnDef
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
 from ctable.util import get_extractor
@@ -48,7 +48,7 @@ def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
             if domain and domain not in d['domains']:
                 d['domains'].append(domain)
 
-            mapping = SqlExtractMapping.from_json(d)
+            mapping = SqlExtractMapping.wrap(d)
             if mapping.couch_key_prefix and mapping.couch_key_prefix[0] == '':
                 mapping.couch_key_prefix = None
 
@@ -59,6 +59,12 @@ def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
                     args = {'domain': dom}
                     return json_response({'error': _("Mapping with the same name exists "
                                                      "in the '%(domain)s' domain.") % args})
+
+            if mapping.schedule_type == 'hourly':
+                mapping.schedule_hour = -1
+                mapping.schedule_day = -1
+            if mapping.schedule_type == 'daily':
+                mapping.schedule_day = -1
 
             mapping.save()
 
@@ -71,7 +77,19 @@ def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
         except ResourceNotFound:
             raise Http404()
     else:
-        mapping = SqlExtractMapping()
+        domains = [domain] if domain else ['test']
+        mapping = SqlExtractMapping(
+            domains=domains,
+            backend='SQL',
+            name='new_mapping',
+            couch_view='c/view',
+            columns=[
+                ColumnDef(
+                    name='domain',
+                    data_type='string',
+                    value_source='key',
+                    value_index=0)
+            ])
 
     return render(request, template, {
         'domain': domain,
