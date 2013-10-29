@@ -166,8 +166,9 @@ class SqlExtractMapping(Document):
     active = BooleanProperty(default=False)
     auto_generated = BooleanProperty(default=False)
 
-    schedule_type = StringProperty(choices=['daily', 'weekly', 'monthly'], default='daily')
+    schedule_type = StringProperty(choices=['hourly', 'daily', 'weekly', 'monthly'], default='daily')
     schedule_hour = IntegerProperty(default=8)
+    """Hour of day for daily, weekly, monthly, -1 for hourly"""
     schedule_day = IntegerProperty(default=-1)
     """Day of week for weekly, day of month for monthly, -1 for daily"""
 
@@ -223,6 +224,14 @@ class SqlExtractMapping(Document):
                         include_docs=True).one()
 
     @classmethod
+    def hourly_schedule(cls, active=True):
+        key = [cls._status(active), 'hourly']
+        return SqlExtractMapping.view(
+            SCHEDULE_VIEW,
+            startkey=key,
+            endkey=key + [{}]).all()
+
+    @classmethod
     def daily_schedule(cls, extract_date, active=True):
         key = [cls._status(active), 'daily', -1, extract_date.hour]
         return SqlExtractMapping.view(SCHEDULE_VIEW, key=key).all()
@@ -240,7 +249,8 @@ class SqlExtractMapping(Document):
     @classmethod
     def schedule(cls, extract_date=None, active=True):
         extract_date = extract_date or datetime.utcnow()
-        exps = cls.daily_schedule(extract_date, active)
+        exps = cls.hourly_schedule(active)
+        exps.extend(cls.daily_schedule(extract_date, active))
         exps.extend(cls.weekly_schedule(extract_date, active))
         exps.extend(cls.monthly_schedule(extract_date, active))
         return exps
