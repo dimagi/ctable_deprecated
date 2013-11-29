@@ -72,17 +72,6 @@
                     $('#run_progress').modal('hide');
                 }
 
-                self.clearData = function() {
-                    $('.hq-loading').show();
-                    $.post('{% url "sql_mappings_clear" domain mapping.get_id %}', function(data) {
-                        $('.hq-loading').hide();
-                        self.showMessage(data.message, data.status);
-                    }).fail(function() {
-                        $('.hq-loading').hide();
-                        self.showMessage('{% trans "Unable to clear data due to an error." %}', 'error');
-                    });
-                }
-
                 self.showMessage = function(text, style) {
                     $('#message p').text(text);
                     $('#message').attr('class', 'alert alert-'+style);
@@ -245,6 +234,7 @@
     </div>
 
     <div id="clear_data" class="modal hide fade">
+        <form name="clear" action="{% url "sql_mappings_clear" domain mapping.get_id %}" method="post">
         <div class="modal-header alert-error">
             <a class="close" data-dismiss="modal">×</a>
               <h4>{% trans "Clear existing data" %}</h4>
@@ -262,9 +252,10 @@
             {% endblocktrans %}</p>
         </div>
         <div class="modal-footer">
-            <a class="btn btn-warning" data-dismiss="modal" data-bind="click: clearData">{% trans "Clear data" %}</a>
+            <button type="submit" class="btn btn-warning">{% trans "Clear data" %}</button>
             <a href="#" class="btn" data-dismiss="modal">{% trans "Close" %}</a>
         </div>
+        </form>
     </div>
 
     <div class="hq-loading" style="display: none">
