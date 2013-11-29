@@ -15,6 +15,7 @@ from ctable.models import SqlExtractMapping, ColumnDef
 from django.shortcuts import render, redirect
 from ctable.tasks import process_extract
 from ctable.util import get_extractor
+from django.contrib import messages
 
 logger = logging.getLogger(__name__)
 
@@ -144,15 +145,19 @@ def test(request, mapping_id, domain=None, template='ctable/test_mapping.html'):
 @require_superuser
 @require_POST
 def clear_data(request, mapping_id, domain=None):
+    kwargs = {'domain': domain} if domain else {}
     if mapping_id:
         try:
             mapping = SqlExtractMapping.get(mapping_id)
             get_extractor(mapping.backend).clear_all_data(mapping)
-            return json_response({'status': 'success', 'message': _('Data successfully cleared.')})
+            messages.success(request, _('Data successfully cleared.'))
+            kwargs['mapping_id'] = mapping_id
+            return redirect('sql_mappings_test', **kwargs)
         except ResourceNotFound:
-            return json_response({'status': 'error', 'message': _('Mapping not found.')})
+            pass
 
-    return json_response({'status': 'error', 'message': _('Mapping not found.')})
+    messages.error(request, _('Mapping not found.'))
+    return redirect('sql_mappings_list', **kwargs)
 
 
 @require_superuser
