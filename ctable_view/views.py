@@ -183,6 +183,14 @@ def run(request, mapping_id, domain=None):
     elif date_range:
         date_range = int(date_range)
 
+    if request.GET.get('force') == 'true':
+        mapping = SqlExtractMapping.get(mapping_id)
+        backend = get_backend(mapping.backend)
+        with backend:
+            checks = backend.check_mapping(mapping)
+            if not checks['errors']:
+                backend.init_table(mapping.table_name, mapping.columns)
+
     job = process_extract.delay(mapping_id, limit=limit, date_range=date_range)
 
     kwargs = {'domain': domain} if domain else {}

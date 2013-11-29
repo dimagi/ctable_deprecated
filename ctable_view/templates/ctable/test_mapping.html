@@ -17,6 +17,7 @@
                 self.limit = ko.observable();
                 self.date_range = ko.observable({{ mapping.couch_date_range|default_if_none:'' }});
                 self.run_date_range = ko.observable({{ mapping.couch_date_range|default_if_none:'' }});
+                self.force = ko.observable(false);
                 self.total = ko.observable();
                 self.current = ko.observable();
 
@@ -27,8 +28,11 @@
                         {% url "sql_mappings_run" mapping.get_id as run_url%}
                     {% endif %}
                     var url = '{{ run_url }}';
-                    url += '?limit=' + self.limit()
-                    url += '&date_range=' + self.run_date_range()
+                    url += '?' + $.param({
+                       limit: self.limit(),
+                       date_range: self.date_range(),
+                       force: self.force()
+                    });
                     $.get(url, function(response) {
                         self.progress_url = response.redirect;
                         $('#run_mapping').modal('hide');
@@ -216,6 +220,17 @@
                         <input type="text" name="date_range" id="id_date_range" data-bind="value: run_date_range">
                     </div>
                 </div>
+                {% if not errors %}
+                <div class="control-group">
+                    <label class="control-label" for="id_force">
+                        {% trans "Force creation of the database table" %}
+                    </label>
+
+                    <div class="controls">
+                        <input type="checkbox" name="force" id="id_force" data-bind="checked: force">
+                    </div>
+                </div>
+                {% endif %}
                 <p>{% trans "Are you sure you want to execute this mapping?" %}</p>
             </div>
             <div class="modal-footer">
