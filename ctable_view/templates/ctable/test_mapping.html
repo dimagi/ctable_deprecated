@@ -29,7 +29,7 @@
                     var url = '{{ run_url }}';
                     url += '?' + $.param({
                        limit: self.limit(),
-                       date_range: self.date_range(),
+                       date_range: self.run_date_range(),
                        force: self.force()
                     });
                     $.get(url, function(response) {
