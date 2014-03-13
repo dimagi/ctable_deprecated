@@ -78,10 +78,14 @@ class CtableExtractor(object):
 
     def get_couch_rows(self, couch_view, startkey, endkey, db=None, **kwargs):
         db = db or self.db
+
+        if 'reduce' not in kwargs:
+            kwargs['reduce'] = True
+        if 'group' not in kwargs and kwargs['reduce']:
+            kwargs['group'] = True
+
         result = db.view(
             couch_view,
-            reduce=True,
-            group=True,
             startkey=startkey,
             endkey=endkey,
             **kwargs)
