@@ -6,7 +6,7 @@ from ctable.tests import TestBase
 from django.conf import settings
 from ctable.models import ColumnDef, KeyMatcher, SqlExtractMapping
 
-TABLE = "test_table"
+TABLE = "{0}_test_table".format(settings.CTABLE_PREFIX)
 
 
 class BackendBase(TestBase):
@@ -191,16 +191,16 @@ class TestBackends(BackendBase):
 class TestBackendsMultiUser(BackendBase):
     def setUp(self):
         super(TestBackendsMultiUser, self).setUp()
-        self.connection.execute("CREATE ROLE test1 LOGIN")
-        self.connection.execute("CREATE ROLE test2 LOGIN")
+        self.connection.execute("CREATE ROLE test1 LOGIN PASSWORD '123'")
+        self.connection.execute("CREATE ROLE test2 LOGIN PASSWORD '345'")
         self.connection.execute("CREATE ROLE testgroup")
         self.connection.execute("GRANT testgroup TO test1, test2")
         self.trans.commit()
 
-        self.conn_t1 = sqlalchemy.create_engine('postgresql://test1:@localhost/ctable_test').connect()
-        self.conn_t2 = sqlalchemy.create_engine('postgresql://test2:@localhost/ctable_test').connect()
-        self. backend1 = SqlBackend(self.conn_t1);
-        self. backend2 = SqlBackend(self.conn_t2);
+        self.conn_t1 = sqlalchemy.create_engine('postgresql://test1:123@localhost/ctable_test').connect()
+        self.conn_t2 = sqlalchemy.create_engine('postgresql://test2:345@localhost/ctable_test').connect()
+        self. backend1 = SqlBackend(self.conn_t1)
+        self. backend2 = SqlBackend(self.conn_t2)
 
         self.trans = self.connection.begin()
 

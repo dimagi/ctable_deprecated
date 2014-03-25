@@ -1,3 +1,4 @@
+from django.conf import settings
 import sqlalchemy
 from mock import patch
 from datetime import date, datetime, timedelta
@@ -8,7 +9,7 @@ from ctable.models import SqlExtractMapping, ColumnDef, KeyMatcher
 
 DOMAIN = "test"
 MAPPING_NAME = "demo_extract"
-TABLE = "%s_%s" % (DOMAIN, MAPPING_NAME)
+TABLE = "%s_%s_%s" % (settings.CTABLE_PREFIX, DOMAIN, MAPPING_NAME)
 
 
 class TestCTable(TestBase):
@@ -196,7 +197,7 @@ class TestCTable(TestBase):
 
         em = self.ctable.get_fluff_extract_mapping(diff, 'SQL')
 
-        self.assertEqual(em.table_name, "test_MockIndicators")
+        self.assertEqual(em.table_name, "{0}_test_MockIndicators".format(settings.CTABLE_PREFIX))
         self.assertEqual(len(em.columns), 4)
         self.assertColumnsEqual(em.columns[0], ColumnDef(name='owner_id',
                                                          data_type='string',
@@ -243,7 +244,7 @@ class TestCTable(TestBase):
 
         em = self.ctable.get_fluff_extract_mapping(diff, 'SQL')
 
-        self.assertEqual(em.table_name, "test_MockIndicators")
+        self.assertEqual(em.table_name, "{0}_test_MockIndicators".format(settings.CTABLE_PREFIX))
         self.assertEqual(len(em.columns), 4)
         self.assertColumnsEqual(em.columns[0], ColumnDef(name='owner_id',
                                                          data_type='string',
@@ -311,7 +312,11 @@ class TestCTable(TestBase):
         self.ctable.process_fluff_diff(diff, 'SQL')
         result = dict(
             [('%s_%s' % (row.owner_id, row.date), row) for row in
-             self.connection.execute('SELECT * FROM "%s_%s"' % ('_'.join(diff['domains']), diff['doc_type']))])
+             self.connection.execute('SELECT * FROM "%s_%s_%s"' % (
+                 settings.CTABLE_PREFIX,
+                 '_'.join(diff['domains']),
+                 diff['doc_type'])
+             )])
 
         self.assertEqual(len(result), 3)
         self.assertEqual(result['123_0001-01-01']['visits_week_null_emitter'], 3)
