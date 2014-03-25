@@ -186,7 +186,10 @@ class SqlExtractMapping(Document):
 
     @property
     def table_name(self):
-        return "{0}_{1}".format('_'.join(self.domains), self.name)
+        name = "{0}_{1}".format('_'.join(self.domains), self.name)
+        if settings.CTABLE_PREFIX:
+            name = "{0}_{1}".format(settings.CTABLE_PREFIX, name)
+        return name
 
     @property
     def key_columns(self):

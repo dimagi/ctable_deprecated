@@ -2,7 +2,7 @@ from couchdbkit import BadValueError
 from datetime import date, datetime
 from ctable.tests import TestBase
 from ctable.models import SqlExtractMapping, KeyMatcher, ColumnDef, NOT_EQUAL
-
+from django.conf import settings
 
 class TestModels(TestBase):
 
@@ -16,7 +16,7 @@ class TestModels(TestBase):
 
     def test_sql_extract_table_name(self):
         e = SqlExtractMapping(name="demo_name", domains=["test"])
-        self.assertEqual("test_demo_name", e.table_name)
+        self.assertEqual("{0}_test_demo_name".format(settings.CTABLE_PREFIX), e.table_name)
 
     def test_column_validate_key_index(self):
         col = ColumnDef(name="a", data_type="string", value_source="key", value_index=1)

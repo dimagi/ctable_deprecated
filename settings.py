@@ -13,3 +13,5 @@ SQL_REPORTING_OBJECT_OWNER = None
 FLUFF_PILLOW_TYPES_TO_SQL = {'MyAwesomeFluff': 'SQL'}
 
 CTABLE_BACKENDS = {'SQL': 'ctable.backends.SqlBackend'}
+
+CTABLE_PREFIX = 'ctable'
