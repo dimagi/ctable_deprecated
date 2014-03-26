@@ -187,7 +187,7 @@ class SqlExtractMapping(Document):
     @property
     def table_name(self):
         name = "{0}_{1}".format('_'.join(self.domains), self.name)
-        if settings.CTABLE_PREFIX:
+        if getattr(settings, 'CTABLE_PREFIX', None):
             name = "{0}_{1}".format(settings.CTABLE_PREFIX, name)
         return name
 
