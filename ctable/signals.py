@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def process_fluff_diff(sender, diff=None, backend=None, **kwargs):
-    if backend != BACKEND_COUCH:
+    if not diff or backend != BACKEND_COUCH:
         return
 
     from ctable.util import get_extractor
