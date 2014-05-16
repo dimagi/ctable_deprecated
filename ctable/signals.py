@@ -8,7 +8,7 @@ from fluff.signals import indicator_document_updated, BACKEND_COUCH
 logger = logging.getLogger(__name__)
 
 
-def process_fluff_diff(sender, doc_id=None, diff=None, backend=None, **kwargs):
+def process_fluff_diff(sender, diff=None, backend=None, **kwargs):
     if backend != BACKEND_COUCH:
         return
 
