@@ -31,5 +31,6 @@ def ctable_extract_schedule():
 
     logger.info("ctable_extract_schedule: processing %s extracts" % len(exps))
 
-    for exp in exps:
-        process_extract.delay(exp['id'])
+    stagger_gap = getattr(settings, 'CTABLE_TASK_STAGGER_GAP', 10)
+    for i, exp in enumerate(exps):
+        process_extract.apply_async(args=[exp['id']], countdown=stagger_gap * i)
