@@ -15,3 +15,6 @@ FLUFF_PILLOW_TYPES_TO_SQL = {'MyAwesomeFluff': 'SQL'}
 CTABLE_BACKENDS = {'SQL': 'ctable.backends.SqlBackend'}
 
 CTABLE_PREFIX = 'ctable'
+
+# This is the delay in seconds that will be used to stagger extract tasks. Defaults to 10s.
+CTABLE_TASK_STAGGER_GAP = 10
