@@ -4,8 +4,8 @@
 {% load hqstyle_tags %}
 
 {% block js %}{{ block.super }}
-    <script type="text/javascript" src="{% static 'hqwebapp/js/lib/knockout.mapping.js' %}"></script>
-    <script type="text/javascript" src="{% static 'hqwebapp/js/knockout-bindings.js' %}"></script>
+    <script type="text/javascript" src="{% static_hq 'hqwebapp/js/lib/knockout.mapping.js' %}"></script>
+    <script type="text/javascript" src="{% static_hq 'hqwebapp/js/knockout-bindings.js' %}"></script>
 {% endblock %}
 
 {% block js-inline %}{{ block.super }}
