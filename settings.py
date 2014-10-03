@@ -18,3 +18,5 @@ CTABLE_PREFIX = 'ctable'
 
 # This is the delay in seconds that will be used to stagger extract tasks. Defaults to 10s.
 CTABLE_TASK_STAGGER_GAP = 10
+
+UNIT_TESTING = True

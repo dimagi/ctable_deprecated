@@ -1,5 +1,6 @@
 import inspect
 import logging
+from django.conf import settings
 from django.db.models import signals
 from django.utils.importlib import import_module
 from ctable.fixtures import CtableMappingFixture
@@ -22,6 +23,9 @@ indicator_document_updated.connect(process_fluff_diff)
 
 
 def catch_signal(app, **kwargs):
+    if settings.UNIT_TESTING:
+        return
+
     app_name = app.__name__.rsplit('.', 1)[0]
     try:
         mod = import_module('.ctable_mappings', app_name)
