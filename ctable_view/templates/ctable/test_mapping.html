@@ -82,12 +82,13 @@
                     $('html,body').scrollTop(0);
                 }
             };
-            ko.applyBindings(new view_model());
+            ko.applyBindings(new view_model(), $("#test-sql-extract-mapping").get(0));
         });
     </script>
 {% endblock %}
 
 {% block centered-content %}
+<div id="test-sql-extract-mapping">
     <div id="message" class="alert hide">
       <button type="button" class="close" data-dismiss="alert">&times;</button>
       <p></p>
@@ -276,4 +277,5 @@
         <img src="/static/hqwebapp/img/ajax-loader.gif" alt="loading indicator">
         <h6>{% trans "Clearing data" %}</h6>
     </div>
+</div>
 {% endblock %}
