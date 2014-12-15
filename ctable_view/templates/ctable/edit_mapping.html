@@ -15,12 +15,13 @@
             var view_model = new SqlExtractMapping({
                 sql_mapping: {{ mapping.to_json|JSON }}
             });
-            ko.applyBindings(view_model);
+            ko.applyBindings(view_model, $("#sql-extract-mapping").get(0));
         });
     </script>
 {% endblock %}
 
 {% block centered-content %}
+<div id="sql-extract-mapping">
     <div id="message" class="alert hide">
       <button type="button" class="close" data-dismiss="alert">&times;</button>
       <p></p>
@@ -369,4 +370,5 @@
             </div>
         </div>
     </script>
+</div>
 {% endblock %}
