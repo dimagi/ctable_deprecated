@@ -1,6 +1,5 @@
 language: python
 python:
- - "2.6"
  - "2.7"
 install:
  - "sudo apt-get install libevent-dev"
@@ -9,7 +8,7 @@ install:
  - "psql -c 'create database ctable_test' -U postgres"
  - "curl http://127.0.0.1:5984/"
 script:
- - "coverage run manage.py test --noinput"
+ - "coverage run manage.py test ctable.tests --noinput"
 services:
  - couchdb
 after_success:
