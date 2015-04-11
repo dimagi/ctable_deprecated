@@ -1,6 +1,6 @@
 import json
 from couchdbkit import BadValueError
-from couchdbkit.ext.django.schema import (Document, StringProperty, IntegerProperty, StringListProperty, Property,
+from dimagi.ext.couchdbkit import (Document, StringProperty, IntegerProperty, StringListProperty, Property,
                                           DocumentSchema, SchemaListProperty, ListProperty, BooleanProperty, DictProperty)
 from django.conf import settings
 from datetime import datetime, date
