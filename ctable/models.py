@@ -1,7 +1,17 @@
 import json
 from couchdbkit import BadValueError
-from dimagi.ext.couchdbkit import (Document, StringProperty, IntegerProperty, StringListProperty, Property,
-                                          DocumentSchema, SchemaListProperty, ListProperty, BooleanProperty, DictProperty)
+from dimagi.ext.couchdbkit import (
+    BooleanProperty,
+    DateTimeProperty,
+    DictProperty,
+    Document,
+    DocumentSchema,
+    IntegerProperty,
+    ListProperty,
+    SchemaListProperty,
+    StringListProperty,
+    StringProperty,
+)
 from django.conf import settings
 from datetime import datetime, date
 import sqlalchemy
@@ -100,7 +110,12 @@ class ColumnDef(DocumentSchema):
 
         try:
             if self.data_type == "date" or self.data_type == "datetime":
-                converted = datetime.strptime(value, self.date_format or "%Y-%m-%dT%H:%M:%SZ")
+                if self.date_format:
+                    converted = datetime.strptime(value, self.date_format)
+                else:
+                    # I'd normally use iso_string_to_datetime,
+                    # but that's in corehq which isn't shared by this repo
+                    converted = DateTimeProperty().wrap(value)
                 return converted.date() if self.data_type == "date" else converted
             elif self.data_type == "integer":
                 return int(value)
