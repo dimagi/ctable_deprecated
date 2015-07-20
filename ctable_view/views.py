@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import permission_required
 from django.views.decorators.http import require_POST
 from ctable.util import get_test_extractor, get_backend, backends
 from dimagi.utils.web import json_response
-from django.utils.translation import ugettext_noop as _
+from django.utils.translation import ugettext as _
 
 from django.core.urlresolvers import reverse
 from django.http import Http404
@@ -45,32 +45,32 @@ def view(request, domain=None, template='ctable/list_mappings.html'):
 @require_superuser
 def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
     if request.method == 'POST':
-            d = _to_kwargs(request)
-            if domain and domain not in d['domains']:
-                d['domains'].append(domain)
+        d = _to_kwargs(request)
+        if domain and domain not in d['domains']:
+            d['domains'].append(domain)
 
-            mapping = SqlExtractMapping.wrap(d)
-            if mapping.couch_key_prefix and mapping.couch_key_prefix[0] == '':
-                mapping.couch_key_prefix = None
+        mapping = SqlExtractMapping.wrap(d)
+        if mapping.couch_key_prefix and mapping.couch_key_prefix[0] == '':
+            mapping.couch_key_prefix = None
 
-            # check for unique name
-            for dom in mapping.domains:
-                existing = SqlExtractMapping.by_name(dom, mapping.name)
-                if existing and existing._id != mapping._id:
-                    args = {'domain': dom}
-                    return json_response({'error': _("Mapping with the same name exists "
-                                                     "in the '%(domain)s' domain.") % args})
+        # check for unique name
+        for dom in mapping.domains:
+            existing = SqlExtractMapping.by_name(dom, mapping.name)
+            if existing and existing._id != mapping._id:
+                args = {'domain': dom}
+                return json_response({'error': _("Mapping with the same name exists "
+                                                 "in the '%(domain)s' domain.") % args})
 
-            if mapping.schedule_type == 'hourly':
-                mapping.schedule_hour = -1
-                mapping.schedule_day = -1
-            if mapping.schedule_type == 'daily':
-                mapping.schedule_day = -1
+        if mapping.schedule_type == 'hourly':
+            mapping.schedule_hour = -1
+            mapping.schedule_day = -1
+        if mapping.schedule_type == 'daily':
+            mapping.schedule_day = -1
 
-            mapping.save()
+        mapping.save()
 
-            kwargs = {'domain': domain} if domain else {}
-            return json_response({'redirect': reverse('sql_mappings_list', kwargs=kwargs)})
+        kwargs = {'domain': domain} if domain else {}
+        return json_response({'redirect': reverse('sql_mappings_list', kwargs=kwargs)})
 
     if mapping_id:
         try:
