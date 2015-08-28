@@ -12,7 +12,7 @@ setup(
     license='MIT',
     install_requires=[
         'SQLAlchemy==0.8.2',
-        'django<1.7',
+        'django<1.9',
         'jsonobject-couchdbkit>=0.6.5.2',
         'six>=1.2.0',
         'alembic==0.6.0',
