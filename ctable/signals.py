@@ -2,7 +2,7 @@ import inspect
 import logging
 from django.conf import settings
 from django.db.models import signals
-from django.utils.importlib import import_module
+from importlib import import_module
 from ctable.fixtures import CtableMappingFixture
 from fluff.signals import indicator_document_updated, BACKEND_COUCH
 
