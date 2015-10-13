@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='ctable',
-    version='0.0.7',
+    version='0.0.8',
     description='CouchDB view to SQL table',
     author='Dimagi',
     author_email='dev@dimagi.com',
