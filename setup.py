@@ -18,7 +18,7 @@ setup(
         'alembic==0.6.0',
         'celery>=3.0.15',
         'psycopg2>=2.4.1',
-        'pillowfluff>=0.0.4',
+        'pillowfluff>=0.0.5',
     ],
     tests_require=[
         'fakecouch==0.0.6',
