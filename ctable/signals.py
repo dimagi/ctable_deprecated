@@ -22,11 +22,11 @@ def process_fluff_diff(sender, diff=None, backend=None, **kwargs):
 indicator_document_updated.connect(process_fluff_diff)
 
 
-def catch_signal(app, **kwargs):
+def catch_signal(sender, **kwargs):
     if settings.UNIT_TESTING:
         return
 
-    app_name = app.__name__.rsplit('.', 1)[0]
+    app_name = sender.name
     try:
         mod = import_module('.ctable_mappings', app_name)
         print "Creating CTable mappings for %s" % app_name
@@ -44,5 +44,4 @@ def catch_signal(app, **kwargs):
         pass
 
 
-signals.post_syncdb.connect(catch_signal)
-
+signals.post_migrate.connect(catch_signal)
