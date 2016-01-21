@@ -250,6 +250,7 @@
 
     <div id="clear_data" class="modal hide fade">
         <form name="clear" action="{% url "sql_mappings_clear" domain mapping.get_id %}" method="post">
+        {% csrf_token %}
         <div class="modal-header alert-error">
             <a class="close" data-dismiss="modal">×</a>
               <h4>{% trans "Clear existing data" %}</h4>
