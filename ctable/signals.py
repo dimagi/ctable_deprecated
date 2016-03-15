@@ -1,6 +1,7 @@
 import inspect
 import logging
 from django.conf import settings
+from django.db import DEFAULT_DB_ALIAS
 from django.db.models import signals
 from importlib import import_module
 from ctable.fixtures import CtableMappingFixture
@@ -23,7 +24,7 @@ indicator_document_updated.connect(process_fluff_diff)
 
 
 def catch_signal(sender, **kwargs):
-    if settings.UNIT_TESTING:
+    if settings.UNIT_TESTING or kwargs['using'] != DEFAULT_DB_ALIAS:
         return
 
     app_name = sender.name
