@@ -1,25 +1,31 @@
 {% load i18n %}
 {% for mapping in mappings %}
-    <div id="delete-sql-mapping-{{ mapping.get_id }}" class="modal hide fade">
-        <div class="modal-header">
-            <a class="close" data-dismiss="modal">×</a>
-            <h3>{% trans "Delete Mapping:" %} "{{ mapping.name }}"?</h3>
+    <div id="delete-sql-mapping-{{ mapping.get_id }}" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{% trans "Delete Mapping:" %} "{{ mapping.name }}"?</h4>
+                </div>
+                {% if domain %}
+                    {% url "sql_mappings_delete" domain mapping.get_id as delete_url %}
+                {% else %}
+                    {% url "sql_mappings_delete" mapping.get_id as delete_url %}
+                {% endif %}
+                <form name="drop_report" action="{{ delete_url }}" method="delete">
+                    <div class="modal-body">
+                        <div class="checkbox">
+                            <label>
+                              <input name="clear_data" type="checkbox" checked>{% trans "Clear all data associated with this mapping" %}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-danger" type="submit"><i class="fa fa-remove"></i> {% trans "Delete" %}</button>
+                        <a href="#" class="btn btn-default" data-dismiss="modal">{% trans "Close" %}</a>
+                    </div>
+                </form>
+            </div>
         </div>
-        {% if domain %}
-            {% url "sql_mappings_delete" domain mapping.get_id as delete_url %}
-        {% else %}
-            {% url "sql_mappings_delete" mapping.get_id as delete_url %}
-        {% endif %}
-        <form name="drop_report" action="{{ delete_url }}" method="delete">
-            <div class="modal-body">
-                <label class="checkbox">
-                  <input name="clear_data" type="checkbox" checked>{% trans "Clear all data associated with this mapping" %}
-                </label>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger" type="submit"><i class="icon-remove icon-white"></i> {% trans "Delete" %}</button>
-                <a href="#" class="btn" data-dismiss="modal">{% trans "Close" %}</a>
-            </div>
-        </form>
     </div>
 {% endfor %}

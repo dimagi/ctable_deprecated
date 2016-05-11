@@ -7,7 +7,7 @@ function SqlExtractMapping(data) {
                 return new ColumnDef(options.data);
             }
         }
-    }
+    };
     self._id = ko.observable();
 
     ko.mapping.fromJS(data.sql_mapping, config, self);
@@ -21,11 +21,11 @@ function SqlExtractMapping(data) {
         });
         self.columns.push(d);
         d.startEditing();
-    }
+    };
 
     self.removeColumn = function(column) {
         self.columns.remove(column);
-    }
+    };
 
     self._id.show_hour = ko.computed(function() {
         return self.schedule_type() != 'hourly';
@@ -53,7 +53,7 @@ function SqlExtractMapping(data) {
             return false;
         }
         return true;
-    }
+    };
     self.validate.error = ko.observable('');
 
     self.save = function() {
@@ -69,12 +69,12 @@ function SqlExtractMapping(data) {
         } else {
             $('html,body').scrollTop(0);
         }
-    }
+    };
 
     self.showMessage = function(text, style) {
         $('#message p').text(text);
         $('#message').attr('class', 'alert alert-'+style);
-        $('#message').show();
+        $('#message').removeClass('hide');
         $('html,body').scrollTop(0);
     }
 }
@@ -90,11 +90,11 @@ function ColumnDef(json) {
        self.match_keys.push(ko.mapping.fromJS({
            index: 1, value: '', operator: '=='
        }, {}));
-   }
+   };
 
    self.removeMatcher = function(matcher) {
        self.match_keys.remove(matcher);
-   }
+   };
 
    self.data_type.show_date_format = ko.computed(function() {
        return self.data_type() == 'date';
@@ -124,7 +124,7 @@ function ColumnDef(json) {
            return false;
        }
        if (self.value_source() === 'key') {
-           self.value_attribute(null)
+           self.value_attribute(null);
            var index = self.value_index();
            if (index == null || index == NaN || index < 0) {
                self.validate.error('Must supply index > 0 for key value source.');
@@ -136,7 +136,7 @@ function ColumnDef(json) {
            }
        }
        return true;
-   }
+   };
    self.validate.error = ko.observable('');
 
    self.name.editing = ko.observable(false);

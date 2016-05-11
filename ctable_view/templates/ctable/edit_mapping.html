@@ -1,11 +1,9 @@
-{% extends 'style/bootstrap2/centered.html' %}
+{% extends 'style/bootstrap3/base_page.html' %}
 {% load i18n %}
 {% load hq_shared_tags %}
 {% load hqstyle_tags %}
 
 {% block js %}{{ block.super }}
-    <script type="text/javascript" src="{% static 'style/lib/knockout_plugins/knockout_mapping.ko.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'style/ko/knockout_bindings.ko.js' %}"></script>
     <script type="text/javascript" src="{% static 'ctable/js/sql_mappings.js' %}"></script>
 {% endblock %}
 
@@ -20,92 +18,92 @@
     </script>
 {% endblock %}
 
-{% block centered-content %}
+{% block page_content %}
 <div id="sql-extract-mapping">
     <div id="message" class="alert hide">
       <button type="button" class="close" data-dismiss="alert">&times;</button>
       <p></p>
     </div>
-    <div class="alert alert-error" data-bind="text: validate.error, visible: validate.error() != ''">
+    <div class="alert alert-danger" data-bind="text: validate.error, visible: validate.error() != ''">
     </div>
-    <form class="form form-horizontal" method="post" data-bind="submit: save">
+    <form class="form-horizontal" method="post" data-bind="submit: save">
         <fieldset>
             <legend data-bind="visible: _id()">{% trans "Edit data mapping" %}</legend>
             <legend data-bind="visible: !_id()">{% trans "Create new data mapping" %}</legend>
-            <div class="control-group">
-                <label class="control-label" for="id_name">
+            <div class="form-group">
+                <label class="control-label col-sm-3 col-md-2" for="id_name">
                     {%  trans "Name" %}
                 </label>
 
-                <div class="controls">
-                    <input id="id_name" type="text" name="name" maxlength="50" data-bind="value: name">
-                    <span class="help-inline"><small class="label">REQUIRED</small></span>
+                <div class="col-sm-9 col-md-10">
+                    <input id="id_name" class="form-control" type="text" name="name" maxlength="50" data-bind="value: name">
+                    <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
                 </div>
             </div>
             {% if not domain %}
-            <div class="control-group">
-                <label class="control-label" for="id_domains">
+            <div class="form-group">
+                <label class="control-label col-sm-3 col-md-2" for="id_domains">
                     {%  trans "Domains" %}
                 </label>
 
-                <div class="controls">
-                    <input id="id_name" type="text" name="domains" data-bind="csvValue: domains">
-                    <span class="help-inline"><small class="label">REQUIRED</small></span>
+                <div class="col-sm-9 col-md-10">
+                    <input id="id_name" class="form-control" type="text" name="domains" data-bind="csvValue: domains">
+                    <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
                     <p class="help-block">
                         {% trans "Comma separated values" %}
                     </p>
                 </div>
             </div>
             {% endif %}
-            <div class="control-group">
-                <label class="control-label" for="id_backene">
+            <div class="form-group">
+                <label class="control-label col-sm-3 col-md-2" for="id_backene">
                     {%  trans "Backend" %}
                 </label>
 
-                <div class="controls">
-                   <select name="backend" id="id_backend" data-bind="value: backend">
+                <div class="col-sm-9 col-md-10">
+                   <select name="backend" class="form-control" id="id_backend" data-bind="value: backend">
                        {% for backend in backends %}
                         <option value="{{ backend }}">{{ backend }}</option>
                        {% endfor %}
                     </select>
-                    <span class="help-inline"><small class="label">REQUIRED</small></span>
+                    <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
                 </div>
             </div>
-            <div class="well">
-                <div class="control-group">
-                    <label class="control-label" for="id_schedule_type">
+            <div class="well well-sm">
+                <div class="form-group">
+                    <label class="control-label col-sm-3 col-md-2" for="id_schedule_type">
                         {% trans "Schedule type" %}
                     </label>
 
-                    <div class="controls">
-                        <select name="schedule_type" id="id_schedule_type" data-bind="value: schedule_type">
+                    <div class="col-sm-9 col-md-10">
+                        <select name="schedule_type" class="form-control" id="id_schedule_type" data-bind="value: schedule_type">
                             <option value="hourly">{% trans "Hourly" %}</option>
                             <option value="daily">{% trans "Daily" %}</option>
                             <option value="weekly">{% trans "Weekly" %}</option>
                             <option value="monthly">{% trans "Monthly" %}</option>
                         </select>
-                        <span class="help-inline"><small class="label">REQUIRED</small></span>
+                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
                     </div>
                 </div>
-                <div class="control-group" data-bind="visible: _id.show_hour">
-                    <label class="control-label" for="id_schedule_hour">
+                <div class="form-group" data-bind="visible: _id.show_hour">
+                    <label class="control-label col-sm-3 col-md-2" for="id_schedule_hour">
                         {% trans "Schedule hour" %}
                     </label>
 
-                    <div class="controls">
-                        <input type="text" name="schedule_hour" id="id_schedule_hour" data-bind="numericValue: schedule_hour">
-                        <span class="help-inline"><small class="label">REQUIRED</small></span>
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" name="schedule_hour" id="id_schedule_hour" data-bind="numericValue: schedule_hour">
+                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
                     </div>
                 </div>
 
-                <div class="control-group" data-bind="visible: _id.show_day">
-                    <label class="control-label" for="id_schedule_day">
+                <div class="form-group" data-bind="visible: _id.show_day">
+                    <label class="control-label col-sm-3 col-md-2" for="id_schedule_day">
                         {% trans "Schedule day" %}
                     </label>
 
-                    <div class="controls">
-                        <input type="text" name="schedule_day" id="id_schedule_day" data-bind="numericValue: schedule_day">
-                        <span class="help-inline"><small class="label">REQUIRED</small></span>
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" name="schedule_day" id="id_schedule_day" data-bind="numericValue: schedule_day">
+                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
 
                         <p class="help-block">
                             {% trans "Day of week for weekly, day of month for monthly" %}
@@ -113,62 +111,62 @@
                     </div>
                 </div>
             </div>
-            <div class="well">
-                <div class="control-group">
-                    <label class="control-label" for="id_couch_view">
+            <div class="well well-sm">
+                <div class="form-group">
+                    <label class="control-label col-sm-3 col-md-2" for="id_couch_view">
                         {% trans "Couch view" %}
                     </label>
 
-                    <div class="controls">
-                        <input type="text" name="couch_view" id="id_couch_view" data-bind="value: couch_view">
-                        <span class="help-inline"><small class="label">REQUIRED</small></span>
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" name="couch_view" id="id_couch_view" data-bind="value: couch_view">
+                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
                     </div>
                 </div>
 
-                <div class="control-group">
-                    <label class="control-label" for="id_couch_key_prefix">
+                <div class="form-group">
+                    <label class="control-label col-sm-3 col-md-2" for="id_couch_key_prefix">
                         {% trans "Couch key prefix" %}
                     </label>
 
-                    <div class="controls">
-                        <input type="text" name="couch_key_prefix" id="id_couch_key_prefix"  data-bind="csvValue: couch_key_prefix">
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" name="couch_key_prefix" id="id_couch_key_prefix"  data-bind="csvValue: couch_key_prefix">
                         <p class="help-block">
                             {% trans "Comma separated values e.g. 'all, by_user' results key_prefix=['all', 'by_user']" %}
                         </p>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label" for="id_couch_group_level">
+                <div class="form-group">
+                    <label class="control-label col-sm-3 col-md-2" for="id_couch_group_level">
                         {% trans "Couch group level" %}
                     </label>
 
-                    <div class="controls">
-                        <input type="text" name="couch_group_level" id="id_"  data-bind="numericValue: couch_group_level">
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" name="couch_group_level" id="id_"  data-bind="numericValue: couch_group_level">
                         <p class="help-block">
                             {% trans "Group level parameter for CouchDB query. Leave blank for 'exact' grouping." %}
                         </p>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label" for="id_couch_date_range">
+                <div class="form-group">
+                    <label class="control-label col-sm-3 col-md-2" for="id_couch_date_range">
                         {% trans "Couch date range" %}
                     </label>
 
-                    <div class="controls">
-                        <input type="text" name="couch_date_range" id="id_couch_date_range"  data-bind="numericValue: couch_date_range">
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" name="couch_date_range" id="id_couch_date_range"  data-bind="numericValue: couch_date_range">
                         <p class="help-block">
                             {% trans "Number of days in the past to query data for. This assumes that the last element in the view key is a date. -1 to process ALL data." %}
                         </p>
                     </div>
                 </div>
-                <div class="control-group" data-bind="visible: couch_date_range() > 0">
-                    <label class="control-label" for="id_couch_date_format">
+                <div class="form-group" data-bind="visible: couch_date_range() > 0">
+                    <label class="control-label col-sm-3 col-md-2" for="id_couch_date_format">
                         {% trans "Couch date format" %}
                     </label>
 
-                    <div class="controls">
-                        <input type="text" name="couch_date_format" id="id_couch_date_format"  data-bind="value: couch_date_format">
-                        <span class="help-inline"><small class="label">REQUIRED</small></span>
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" name="couch_date_format" id="id_couch_date_format"  data-bind="value: couch_date_format">
+                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
 
                         <p class="help-block">
                             {% trans "Used when appending the date to the key (in cases where couch_date_range &gt; 0)" %}
@@ -193,25 +191,27 @@
                     </tbody>
                 </table>
                 {% if not mapping.auto_generated %}
-                <button class="btn" data-bind="click: addColumn">
-                    <i class="icon-add"></i>
+                <button class="btn btn-default" data-bind="click: addColumn">
+                    <i class="fa fa-plus"></i>
                     {% trans "Add column" %}
                 </button>
                 {% endif %}
             </div>
         </fieldset>
         <div class="form-actions">
-            {% if domain %}
-                {% url "sql_mappings_list" domain as list_url%}
-            {% else %}
-                {% url "sql_mappings_list" as list_url%}
-            {% endif %}
-            {% if mapping.auto_generated %}
-                <a class="btn" href="{{ list_url }}">{% trans "Back" %}</a>
-            {% else %}
-                <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
-                <a class="btn" href="{{ list_url }}">{% trans "Cancel" %}</a>
-            {% endif  %}
+            <div class="col-sm-9 col-md-10 col-sm-offset-3 col-md-offset-2">
+                {% if domain %}
+                    {% url "sql_mappings_list" domain as list_url%}
+                {% else %}
+                    {% url "sql_mappings_list" as list_url%}
+                {% endif %}
+                {% if mapping.auto_generated %}
+                    <a class="btn btn-default" href="{{ list_url }}">{% trans "Back" %}</a>
+                {% else %}
+                    <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+                    <a class="btn btn-default" href="{{ list_url }}">{% trans "Cancel" %}</a>
+                {% endif  %}
+            </div>
         </div>
     </form>
 
@@ -228,125 +228,127 @@
             </td>
             {% if not mapping.auto_generated %}
             <td>
-                <button class="btn" data-bind="click: startEditing">
-                    <i class="icon-edit"></i>
+                <button class="btn btn-default" data-bind="click: startEditing">
+                    <i class="fa fa-edit"></i>
                     {% trans "Edit" %}
                 </button>
                 <button class="btn btn-danger" data-bind="click: $parent.removeColumn">
-                    <i class="icon-trash"></i>
+                    <i class="fa fa-trash"></i>
                 </button>
+                <div class="modal fade" data-bind="modal: name.editing">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">{% trans "Edit Column" %}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-danger" data-bind="text: validate.error, visible: validate.error() != ''">
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3" for="id_name">
+                                        {% trans "Name" %}
+                                    </label>
 
+                                    <div class="col-sm-9">
+                                        <input id="id_name" class="form-control" type="text" name="name" maxlength="50"  data-bind="value: name">
+                                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3" for="id_data_type">
+                                        {% trans "Data type" %}
+                                    </label>
 
-                <div class="modal hide fade" data-bind="modal: name.editing" style="width: 750px; margin-left: -375px">
-                    <div class="alert alert-error" data-bind="text: validate.error, visible: validate.error() != ''">
-                    </div>
-                    <div class="modal-header">
-                        <h3>{% trans "Edit Column" %}</h3>
-                    </div>
-                    <div class="modal-body">
-                        <div class="control-group">
-                            <label class="control-label" for="id_name">
-                                {% trans "Name" %}
-                            </label>
+                                    <div class="col-sm-9">
+                                        <select name="data_type" class="form-control" id="id_data_type"  data-bind="value: data_type">
+                                            <option value="string">{% trans "String" %}</option>
+                                            <option value="integer">{% trans "Integer" %}</option>
+                                            <option value="date">{% trans "Date" %}</option>
+                                            <option value="datetime">{% trans "DateTime" %}</option>
+                                        </select>
+                                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
+                                    </div>
+                                </div>
+                                <div class="form-group" data-bind="visible: match_keys().length == 0">
+                                    <label class="control-label col-sm-3" for="id_null_value_placeholder">
+                                        {% trans "Value when empty" %}
+                                    </label>
 
-                            <div class="controls">
-                                <input id="id_name" type="text" name="name" maxlength="50"  data-bind="value: name">
-                                <span class="help-inline"><small class="label">REQUIRED</small></span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label" for="id_data_type">
-                                {% trans "Data type" %}
-                            </label>
+                                    <div class="col-sm-9">
+                                        <input id="id_null_value_placeholder" class="form-control" type="text" name="null_value_placeholder" data-bind="value: null_value_placeholder" />
+                                        <p class="help-block">{% trans "Leave blank for default." %}</p>
+                                    </div>
+                                </div>
+                                <div class="form-group" data-bind="visible: data_type.show_date_format">
+                                    <label class="control-label col-sm-3" for="id_date_format">
+                                        {% trans "Date Format" %}
+                                    </label>
 
-                            <div class="controls">
-                                <select name="data_type" id="id_data_type"  data-bind="value: data_type">
-                                    <option value="string">{% trans "String" %}</option>
-                                    <option value="integer">{% trans "Integer" %}</option>
-                                    <option value="date">{% trans "Date" %}</option>
-                                    <option value="datetime">{% trans "DateTime" %}</option>
-                                </select>
-                                <span class="help-inline"><small class="label">REQUIRED</small></span>
-                            </div>
-                        </div>
-                        <div class="control-group" data-bind="visible: match_keys().length == 0">
-                            <label class="control-label" for="id_null_value_placeholder">
-                                {% trans "Value when empty" %}
-                            </label>
+                                    <div class="col-sm-9">
+                                        <input id="id_date_format" type="text" class="form-control" name="date_format" maxlength="50"  data-bind="value: date_format">
+                                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
 
-                            <div class="controls">
-                                <input id="id_null_value_placeholder" type="text" name="null_value_placeholder" data-bind="value: null_value_placeholder" />
-                                <p class="help-block">{% trans "Leave blank for default." %}</p>
+                                        <p class="help-block">{% trans "Format string for date columns. Default: %Y-%m-%dT%H:%M:%SZ" %}</p>
+                                    </div>
+                                </div>
+                                <div class="form-group" data-bind="visible: data_type.show_max_length">
+                                    <label class="control-label col-sm-3" for="id_max_length">
+                                        {% trans "Max Length" %}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" name="max_length" value="8" id="id_max_length"  data-bind="numericValue: max_length">
+                                        <p class="help-block">{% trans "Max length for string columns (default is 255)" %}</p>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3" for="id_value_source">
+                                        {% trans "Value Source" %}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <select name="data_type" class="form-control" id="id_value_source" data-bind="value: value_source">
+                                            <option value="key">{% trans "Key" %}</option>
+                                            <option value="value">{% trans "Value" %}</option>
+                                        </select>
+                                        <span class="help-inline"><small class="label label-default">REQUIRED</small></span>
+                                    </div>
+                                </div>
+                                <div class="form-group" data-bind="visible: value_source() == 'value'">
+                                    <label class="control-label col-sm-3" for="id_value_attribute">
+                                        {% trans "Value Attribute" %}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <input id="id_value_attribute" class="form-control" type="text" name="value_attribute" maxlength="50"  data-bind="value: value_attribute">
+                                        <p class="help-block">{% trans "Attribute accessor for value e.g. 'sum' for value['sum']" %}</p>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3" for="id_value_index">
+                                        {% trans "Value Index" %}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" name="value_index" id="id_value_index" data-bind="numericValue: value_index">
+                                        <span class="help-inline" data-bind="visible: value_source() == 'key'"><small class="label label-default">REQUIRED</small></span>
+                                        <p class="help-block">{% trans "Index accessor for value e.g. 1 for key[1]" %}</p>
+                                    </div>
+                                </div>
+                                <div class="well">
+                                    <h4>{% trans "Matchers" %}</h4>
+                                    <div data-bind="template: { name: 'key-matcher-template', foreach: match_keys }"></div>
+                                    <button class="btn btn-default" data-bind="click: addMatcher">
+                                        <i class="fa fa-plus"></i>
+                                        {% trans "Add matcher" %}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-danger pull-left" type="button" data-bind="click: $parent.removeColumn">
+                                    <i class="fa fa-trash"></i> {% trans "Delete" %}
+                                </button>
+                                <button class="btn btn-primary" type="button" data-bind="click: stopEdit">
+                                    {% trans "Done" %}
+                                </button>
                             </div>
                         </div>
-                        <div class="control-group" data-bind="visible: data_type.show_date_format">
-                            <label class="control-label" for="id_date_format">
-                                {% trans "Date Format" %}
-                            </label>
-
-                            <div class="controls">
-                                <input id="id_date_format" type="text" name="date_format" maxlength="50"  data-bind="value: date_format">
-                                <span class="help-inline"><small class="label">REQUIRED</small></span>
-
-                                <p class="help-block">{% trans "Format string for date columns. Default: %Y-%m-%dT%H:%M:%SZ" %}</p>
-                            </div>
-                        </div>
-                        <div class="control-group" data-bind="visible: data_type.show_max_length">
-                            <label class="control-label" for="id_max_length">
-                                {% trans "Max Length" %}
-                            </label>
-                            <div class="controls">
-                                <input type="text" name="max_length" value="8" id="id_max_length"  data-bind="numericValue: max_length">
-                                <p class="help-block">{% trans "Max length for string columns (default is 255)" %}</p>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label" for="id_value_source">
-                                {% trans "Value Source" %}
-                            </label>
-                            <div class="controls">
-                                <select name="data_type" id="id_value_source" data-bind="value: value_source">
-                                    <option value="key">{% trans "Key" %}</option>
-                                    <option value="value">{% trans "Value" %}</option>
-                                </select>
-                                <span class="help-inline"><small class="label">REQUIRED</small></span>
-                            </div>
-                        </div>
-                        <div class="control-group" data-bind="visible: value_source() == 'value'">
-                            <label class="control-label" for="id_value_attribute">
-                                {% trans "Value Attribute" %}
-                            </label>
-                            <div class="controls">
-                                <input id="id_value_attribute" type="text" name="value_attribute" maxlength="50"  data-bind="value: value_attribute">
-                                <p class="help-block">{% trans "Attribute accessor for value e.g. 'sum' for value['sum']" %}</p>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label" for="id_value_index">
-                                {% trans "Value Index" %}
-                            </label>
-                            <div class="controls">
-                                <input type="text" name="value_index" id="id_value_index" data-bind="numericValue: value_index">
-                                <span class="help-inline" data-bind="visible: value_source() == 'key'"><small class="label">REQUIRED</small></span>
-                                <p class="help-block">{% trans "Index accessor for value e.g. 1 for key[1]" %}</p>
-                            </div>
-                        </div>
-                        <div class="well">
-                            <h4>{% trans "Matchers" %}</h4>
-                            <div data-bind="template: { name: 'key-matcher-template', foreach: match_keys }"></div>
-                            <button class="btn" data-bind="click: addMatcher">
-                                <i class="icon-add"></i>
-                                {% trans "Add matcher" %}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-primary" data-bind="click: stopEdit">
-                            {% trans "Done" %}
-                        </button>
-                        <button class="btn btn-danger" data-bind="click: $parent.removeColumn">
-                            {% trans "Delete" %}
-                        </button>
                     </div>
                 </div>
             </td>
@@ -355,17 +357,17 @@
     </script>
 
     <script type="text/html" id="key-matcher-template">
-        <div class="control-group">
-            <span class="control-label">{% trans "Matcher" %} <span data-bind="text: $index"></span></span>
-            <div class="controls form-inline">
+        <div class="form-group">
+            <span class="control-label col-sm-3 col-md-2">{% trans "Matcher" %} <span data-bind="text: $index"></span></span>
+            <div class="col-sm-9 col-md-10 form-inline">
                 <label for="id_match_index">Key [</label>
-                <input type="text" class="input-mini" id="id_match_index" data-bind="numericValue: index">
+                <input type="text" class="form-control" id="id_match_index" data-bind="numericValue: index">
                 <span> ]</span>
-                <select class="input-mini" name="operator" id="id_operator" data-bind="value: operator">
+                <select class="form-control" name="operator" id="id_operator" data-bind="value: operator">
                     <option value="==">==</option>
                     <option value="!=">!=</option>
                 </select>
-                <input type="text" class="input-medium" id="id_match_value" data-bind="value: value">
+                <input type="text" class="form-control" id="id_match_value" data-bind="value: value">
                 <button type="button" class="close" data-bind="click: $parent.removeMatcher">&times;</button></h4>
             </div>
         </div>

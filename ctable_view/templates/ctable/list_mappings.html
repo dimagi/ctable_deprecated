@@ -1,4 +1,4 @@
-{% extends base_template %}
+{% extends 'style/bootstrap3/base_page.html' %}
 {% load i18n %}
 {% load hq_shared_tags %}
 {% load hqstyle_tags %}
@@ -15,18 +15,17 @@
     </script>
 {% endblock %}
 
-{% block content %}
-
-<div class="row-fluid">
-    <div class="span10 offset1">
-        <h3>SQL Extract Mappings
+{% block page_content %}
+<div class="row">
+    <div class="col-sm-10 col-sm-offset-1">
+        <h3>{% trans 'SQL Extract Mappings' %}
         {% if domain %}
             {% url "sql_mappings_edit" domain '' as new_url %}
         {% else %}
             {% url "sql_mappings_edit" '' as new_url %}
         {% endif %}
-        <a class="btn pull-right" href="{{ new_url }}">
-            <i class="icon-edit"></i>
+        <a class="btn btn-default pull-right" href="{{ new_url }}">
+            <i class="fa fa-edit"></i>
             {% trans "New Mapping" %}
         </a>
         </h3>
@@ -79,10 +78,10 @@
                     <td>{{ mapping.couch_date_range }}</td>
                     <td>
                         {% if mapping.active %}
-                            <i class="icon-play"></i>
+                            <i class="fa fa-play"></i>
                             {% trans "Enabled" %}
                         {% else %}
-                            <i class="icon-stop"></i>
+                            <i class="fa fa-stop"></i>
                             {% trans "Disabled" %}
                         {% endif %}
                     </td>
@@ -99,25 +98,25 @@
                             {% url "sql_mappings_test" mapping.get_id as test_url%}
                         {% endif %}
                         <div class="btn-group">
-                          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                            <i class="icon-cog"></i>
+                          <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">
+                            <i class="fa fa-cog"></i>
                             <span class="caret"></span>
                           </a>
                           <ul class="dropdown-menu">
                               {% if not mapping.auto_generated %}
                                 {% if mapping.active %}
-                                  <li><a href="{{ toggle_url }}"><i class="icon-stop"></i>{% trans "Disable Schedule" %}</a></li>
+                                  <li><a href="{{ toggle_url }}"><i class="fa fa-stop"></i> {% trans "Disable Schedule" %}</a></li>
                                 {% else %}
-                                  <li><a href="{{ toggle_url }}"><i class="icon-play"></i>{% trans "Enable Schedule" %}</a></li>
+                                  <li><a href="{{ toggle_url }}"><i class="fa fa-play"></i> {% trans "Enable Schedule" %}</a></li>
                                 {% endif %}
                               {% endif %}
                               {% if mapping.auto_generated %}
-                                  <li><a href="{{ edit_url }}"><i class="icon-file-alt"></i>{% trans "View" %}</a></li>
+                                  <li><a href="{{ edit_url }}"><i class="fa fa-file-text-o"></i> {% trans "View" %}</a></li>
                               {% else %}
-                                  <li><a href="{{ edit_url }}"><i class="icon-edit"></i>{% trans "Edit" %}</a></li>
+                                  <li><a href="{{ edit_url }}"><i class="fa fa-edit"></i> {% trans "Edit" %}</a></li>
                               {% endif  %}
-                              <li><a href="{{ test_url }}"><i class="icon-beaker"></i>{% trans "Test" %}</a></li>
-                              <li><a data-toggle="modal" href="#delete-sql-mapping-{{ mapping.get_id }}"><i class="icon-remove icon-white"></i>{% trans "Delete" %}</a></li>
+                              <li><a href="{{ test_url }}"><i class="fa fa-flask"></i> {% trans "Test" %}</a></li>
+                              <li><a data-toggle="modal" href="#delete-sql-mapping-{{ mapping.get_id }}"><i class="fa fa-remove"></i> {% trans "Delete" %}</a></li>
                           </ul>
                         </div>
                     </td>
