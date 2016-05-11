@@ -1,12 +1,7 @@
-{% extends 'style/bootstrap2/centered.html' %}
+{% extends 'style/bootstrap3/base_page.html' %}
 {% load i18n %}
 {% load hq_shared_tags %}
 {% load hqstyle_tags %}
-
-{% block js %}{{ block.super }}
-    <script type="text/javascript" src="{% static 'style/lib/knockout_plugins/knockout_mapping.ko.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'style/ko/knockout_bindings.ko.js' %}"></script>
-{% endblock %}
 
 {% block js-inline %}{{ block.super }}
     <script type="text/javascript">
@@ -35,11 +30,11 @@
                     $.get(url, function(response) {
                         self.progress_url = response.redirect;
                         $('#run_mapping').modal('hide');
-                        $(".bar").width('0%');
+                        $(".progress-bar").width('0%');
                         $('#run_progress').modal('show');
                         window.setTimeout( self.updateProgress, 1000 );
                     })
-                }
+                };
 
                 self.updateProgress = function() {
                     if (self.progress_url) {
@@ -54,12 +49,12 @@
                                 self.resetProgress();
                                 self.showMessage(response.error, 'error');
                             } else {
-                                $('#loading').hide();
-                                $('#progress').show();
+                                $('#loading').addClass('hide');
+                                $('#progress').removeClass('show');
                                 self.total(response.total);
                                 self.current(response.current);
                                 var width = Math.round(response.current * 100 / response.total) + '%';
-                                $(".bar").width(width);
+                                $(".progress-bar").width(width);
                                 window.setTimeout( self.updateProgress, 1000 );
                             }
                         }).fail(function(){
@@ -67,13 +62,13 @@
                             self.showMessage('{% trans "An unknown error occurred." %}');
                         });
                     }
-                }
+                };
 
                 self.resetProgress = function() {
-                    $('#loading').show();
-                    $('#progress').hide();
+                    $('#loading').removeClass('hide');
+                    $('#progress').addClass('hide');
                     $('#run_progress').modal('hide');
-                }
+                };
 
                 self.showMessage = function(text, style) {
                     $('#message p').text(text);
@@ -87,9 +82,9 @@
     </script>
 {% endblock %}
 
-{% block centered-content %}
+{% block page_content %}
 <div id="test-sql-extract-mapping">
-    <div id="message" class="alert hide">
+    <div id="message" class="alert alert-warning hide">
       <button type="button" class="close" data-dismiss="alert">&times;</button>
       <p></p>
     </div>
@@ -106,7 +101,7 @@
                     {% url "sql_mappings_list" as list_url%}
                 {% endif %}
                 <div class="btn-group">
-                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">
                     {% trans "Test again" %}
                     <span class="caret"></span>
                     </a>
@@ -117,49 +112,53 @@
                         <li><a href="{{ test_url }}?limit=1000">1000 {% trans rows %}</a></li>
                     </ul>
                 </div>
-                <a class="btn" href="{{ edit_url }}">
+                <a class="btn btn-default" href="{{ edit_url }}">
                     {% if mapping.auto_generated %}
-                        <i class="icon-file-alt"></i>
+                        <i class="fa fa-file-text-o"></i>
                         {% trans "View" %}
                     {% else %}
-                        <i class="icon-edit"></i>
+                        <i class="fa fa-edit"></i>
                         {% trans "Edit" %}
                     {% endif  %}
                 </a>
-                <a class="btn" href="{{ list_url }}">{% trans "Back" %}</a>
+                <a class="btn btn-default" href="{{ list_url }}">{% trans "Back" %}</a>
             </div>
             <div class="btn-group">
                 <a class="btn btn-success {% if errors %}disabled{% endif %}" href="#run_mapping" role="button" {% if not errors %}data-toggle="modal"{% endif %}>
-                    <i class="icon-play"></i>
+                    <i class="fa fa-play"></i>
                     {% trans "Run" %}
                 </a>
                 <a class="btn btn-danger" href="#clear_data" role="button" data-toggle="modal">
-                    <i class="icon-remove icon-white"></i>
+                    <i class="fa fa-remove"></i>
                     {% trans "Clear existing data" %}
                 </a>
             </div>
         </div>
     </h3>
     {% if errors %}
-    <div class="alert alert-error">
-        <h5>{% trans "Some problems were found with the mapping that would prevent it from being run." %}</h5>
-        <ul>
-        {% for error in errors %}
-            <li>{{ error }}</li>
-        {% endfor %}
-        </ul>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger">
+                <h5>{% trans "Some problems were found with the mapping that would prevent it from being run." %}</h5>
+                <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            {% if warnings %}
+            <div class="alert alert-warning">
+                <h5>{% trans "Warnings" %}</h5>
+                <ul>
+                {% for warning in warnings %}
+                    <li>{{ warning }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
-    {% if warnings %}
-    <div class="alert alert-warning">
-        <h5>{% trans "Warnings" %}</h5>
-        <ul>
-        {% for warning in warnings %}
-            <li>{{ warning }}</li>
-        {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
     <ul>
         <li>{% blocktrans with processed=rows_processed matched=rows_with_value%}Rows processed: {{ processed }} ({{ matched }} matched a value column {% endblocktrans %})</li>
         <li>{% trans "Table name:" %} {{ data.table_name }}</li>
@@ -184,94 +183,111 @@
         </tbody>
     </table>
 
-    <div id="run_mapping" class="modal hide fade">
-        <div class="modal-header">
-            <a class="close" data-dismiss="modal">×</a>
-            <h3>{% trans "Run mapping" %}: "{{ mapping.name }}"?</h3>
+    <div id="run_mapping" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{% trans "Run mapping" %}: "{{ mapping.name }}"?</h4>
+                </div>
+                <form name="execute_mapping" data-bind="submit: execute">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="control-label col-sm-3" for="id_limit">
+                                {% trans "Limit rows processed" %}
+                            </label>
+
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" name="limit" id="id_limit" data-bind="value: limit">
+                            </div>
+                        </div>
+                        <div class="form-group" data-bind="visible: date_range() > 0">
+                            <label class="control-label col-sm-3" for="id_date_range">
+                                {% trans "Limit date range" %}
+                            </label>
+
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" name="date_range" id="id_date_range" data-bind="value: run_date_range">
+                            </div>
+                        </div>
+                        {% if not errors %}
+                        <div class="form-group">
+                            <label class="control-label col-sm-3" for="id_force">
+                                {% trans "Force creation of the database table" %}
+                            </label>
+
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="force" id="id_force" data-bind="checked: force">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <p>{% trans "Are you sure you want to execute this mapping?" %}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-default" data-dismiss="modal">{% trans "Close" %}</a>
+                        <button class="btn btn-success" type="submit"><i class="fa fa-play"></i> {% trans "Run" %}</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <form name="execute_mapping" data-bind="submit: execute">
-            <div class="modal-body">
-                <div class="control-group">
-                    <label class="control-label" for="id_limit">
-                        {% trans "Limit rows processed" %}
-                    </label>
 
-                    <div class="controls">
-                        <input type="text" name="limit" id="id_limit" data-bind="value: limit">
-                    </div>
-                </div>
-                <div class="control-group" data-bind="visible: date_range() > 0">
-                    <label class="control-label" for="id_date_range">
-                        {% trans "Limit date range" %}
-                    </label>
-
-                    <div class="controls">
-                        <input type="text" name="date_range" id="id_date_range" data-bind="value: run_date_range">
-                    </div>
-                </div>
-                {% if not errors %}
-                <div class="control-group">
-                    <label class="control-label" for="id_force">
-                        {% trans "Force creation of the database table" %}
-                    </label>
-
-                    <div class="controls">
-                        <input type="checkbox" name="force" id="id_force" data-bind="checked: force">
-                    </div>
-                </div>
-                {% endif %}
-                <p>{% trans "Are you sure you want to execute this mapping?" %}</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-success" type="submit"><i class="icon-play icon-white"></i> {% trans "Run" %}</button>
-                <a href="#" class="btn" data-dismiss="modal">{% trans "Close" %}</a>
-            </div>
-        </form>
     </div>
 
-    <div id="run_progress" class="modal hide fade">
-        <div class="modal-header">
-            <a class="close" data-dismiss="modal">×</a>
-            <h3>{% blocktrans with name=mapping.name%}Running "{{ name }}" extract{% endblocktrans %}</h3>
-        </div>
-        <div class="modal-body">
-            <div id="loading">
-            <img src="/static/hqwebapp/img/ajax-loader.gif" alt="loading indicator">
-                {% trans "Waiting for job to start" %}
-            </div>
-            <div id="progress" style="display: none">
-                <div class="progress progress-striped">
-                    <div class="bar" style="width: 0%;"></div>
+    <div id="run_progress" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{% blocktrans with name=mapping.name%}Running "{{ name }}" extract{% endblocktrans %}</h4>
                 </div>
-                <span data-bind="text: current"></span> of <span data-bind="text: total"></span> rows processed
+                <div class="modal-body">
+                    <div id="loading">
+                    <img src="/static/hqwebapp/img/ajax-loader.gif" alt="loading indicator">
+                        {% trans "Waiting for job to start" %}
+                    </div>
+                    <div id="progress" style="display: none">
+                        <div class="progress">
+                            <div class="progress-bar progress-striped" style="width: 0%;"></div>
+                        </div>
+                        <span data-bind="text: current"></span> of <span data-bind="text: total"></span> rows processed
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="clear_data" class="modal hide fade">
-        <form name="clear" action="{% url "sql_mappings_clear" domain mapping.get_id %}" method="post">
-        {% csrf_token %}
-        <div class="modal-header alert-error">
-            <a class="close" data-dismiss="modal">×</a>
-              <h4>{% trans "Clear existing data" %}</h4>
-        </div>
-        <div class="modal-body">
-            <p>
-            {% blocktrans with table_name=mapping.table_name %}
-                This will delete the mapping table '<strong>{{ table_name }}</strong>'.
-            {% endblocktrans %}
-            </p>
+    <div id="clear_data" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form name="clear" action="{% url "sql_mappings_clear" domain mapping.get_id %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">{% trans "Clear existing data" %}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                        {% blocktrans with table_name=mapping.table_name %}
+                            This will delete the mapping table '<strong>{{ table_name }}</strong>'.
+                        {% endblocktrans %}
+                        </p>
 
-            <p>{% blocktrans %}
-                The table will be re-created next time the mapping is run.
-                Until then any reports that query the table will not run.
-            {% endblocktrans %}</p>
+                        <p>{% blocktrans %}
+                            The table will be re-created next time the mapping is run.
+                            Until then any reports that query the table will not run.
+                        {% endblocktrans %}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-default" data-dismiss="modal">{% trans "Close" %}</a>
+                        <button type="submit" class="btn btn-warning">{% trans "Clear data" %}</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="modal-footer">
-            <button type="submit" class="btn btn-warning">{% trans "Clear data" %}</button>
-            <a href="#" class="btn" data-dismiss="modal">{% trans "Close" %}</a>
-        </div>
-        </form>
     </div>
 
     <div class="hq-loading" style="display: none">
