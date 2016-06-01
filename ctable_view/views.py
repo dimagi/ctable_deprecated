@@ -31,7 +31,6 @@ def _to_kwargs(req):
 
 @require_superuser
 def view(request, domain=None, template='ctable/list_mappings.html'):
-    request.use_bootstrap3 = True
     if domain:
         mappings = SqlExtractMapping.by_domain(domain)
     else:
@@ -45,7 +44,6 @@ def view(request, domain=None, template='ctable/list_mappings.html'):
 
 @require_superuser
 def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
-    request.use_bootstrap3 = True
     if request.method == 'POST':
         d = _to_kwargs(request)
         if domain and domain not in d['domains']:
@@ -103,7 +101,6 @@ def edit(request, mapping_id, domain=None, template='ctable/edit_mapping.html'):
 
 @require_superuser
 def test(request, mapping_id, domain=None, template='ctable/test_mapping.html'):
-    request.use_bootstrap3 = True
     if mapping_id:
         try:
             limit = request.GET.get('limit', 100)
